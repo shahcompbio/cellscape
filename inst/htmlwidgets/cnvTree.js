@@ -8,7 +8,8 @@ HTMLWidgets.widget({
 
         // defaults
         var defaults = {
-            widgetMargin: 10 // marging between widgets
+            widgetMargin: 10, // marging between widgets
+            tree_r: 3 // tree node radius
         };
 
         // global variable vizObj
@@ -24,7 +25,6 @@ HTMLWidgets.widget({
         // tree configurations
         config.treeWidth = config.width/2;
         config.treeHeight = config.height;
-        config.tree_r = 5;
 
         vizObj.generalConfig = config;
 
@@ -66,11 +66,15 @@ HTMLWidgets.widget({
 
         var force = d3.layout.force()
             .size([config.treeWidth, config.treeHeight])
+            .linkDistance(10)
+            .gravity(.09)
+            .charge(-20)
             .nodes(vizObj.data.tree_nodes)
             .links(vizObj.data.tree_edges)
             .start();
 
         // TOOLTIP FUNCTION
+
         var tip = d3.tip()
             .attr('class', 'd3-tip')
             .offset([-10, 0])
@@ -98,7 +102,7 @@ HTMLWidgets.widget({
             .data(vizObj.data.tree_nodes)
             .enter().append("circle")
             .attr("class", "node")
-            .attr("r", 5)
+            .attr("r", config.tree_r)
             .style("fill", "#52A783")
             .style("stroke", "#1C764F")
             .on('mouseover', tip.show)
