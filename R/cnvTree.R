@@ -4,12 +4,24 @@
 #'
 #' @import htmlwidgets
 #'
+#' @param cnv_data Single cell copy number data frame.
+#'   Format: columns are (1) {String} "single_cell_id" - single cell id
+#'                       (2) {String} "chr" - chromosome number
+#'                       (3) {Number} "start" - start position
+#'                       (4) {Number} "end" - end position
+#'                       (5) {Number} "integer_copy_number" - copy number state.
+#'
+#' @param tree_edges Edges for the single cell phylogenetic tree.
+#'   Format: columns are (1) {String} "source" - edge source
+#'                       (2) {String} "target" - edge target
+#'
 #' @export
-cnvTree <- function(message, width = NULL, height = NULL) {
+cnvTree <- function(cnv_data, tree_edges, width = NULL, height = NULL) {
 
   # forward options using x
   x = list(
-    message = message
+    cnv_data=jsonlite::toJSON(cnv_data),
+    tree_edges=jsonlite::toJSON(tree_edges)
   )
 
   # create widget

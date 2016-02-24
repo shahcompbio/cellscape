@@ -31,7 +31,8 @@ data <- data.frame(
 	state=integer(),
 	median=double(),
 	integer_median=double(),
-	integer_copy_number=integer())
+	integer_copy_number=integer(),
+	stringsAsFactors=FALSE)
 for (i in 1:length(files)) {
 	if (!(files[i] %in% files_to_remove)) { # not working
 
@@ -54,3 +55,11 @@ for (i in 1:length(files)) {
 		}
 	}
 }
+
+# convert factors to strings
+data$single_cell_id <- as.character(data$single_cell_id)
+data$chr <- as.character(data$chr)
+
+# drop unnecessary columns
+drops <- c("state", "median", "integer_median")
+data <- data[,!(colnames(data) %in% drops)]

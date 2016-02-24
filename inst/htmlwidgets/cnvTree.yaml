@@ -1,7 +1,31 @@
-# (uncomment to add a dependency)
-# dependencies:
-#  - name:
-#    version:
-#    src:
-#    script:
-#    stylesheet:
+dependencies:
+ - name: d3
+   version: 3.5.14
+   src: "htmlwidgets/lib"
+   script: d3.min.js
+ - name: jquery
+   version: 2.1.4
+   src: "htmlwidgets/lib"
+   script: jquery-2.1.4.js
+ - name: colorbrewer
+   version: 0.0.1
+   src: "htmlwidgets/lib"
+   script: colorbrewer.js
+ - name: underscore
+   version: 1.8.3
+   src: "htmlwidgets/lib"
+   script: underscore.js
+ - name: cnvTree_helpers
+   version: 0.0.1
+   src: "htmlwidgets/lib"
+   script: cnvTree_helpers.js
+   stylesheet: cnvTree.css
+ - name: gridster
+   version: 0.5.6
+   src: "htmlwidgets/lib"
+   script: jquery.gridster.js
+   stylesheet: jquery.gridster.css
+ - name: d3.tip
+   version: 0.6.3
+   src: "htmlwidgets/lib"
+   script: d3.tip.js
