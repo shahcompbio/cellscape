@@ -50,9 +50,25 @@ HTMLWidgets.widget({
 
         // GET CNV CONTENT
 
-        vizObj.data.sc_ids = _.uniq(_.pluck(vizObj.userConfig.cnv_data, "single_cell_id"));
+        // sorted single cell ids
+        var sc_id_order = vizObj.userConfig.sc_id_order;
+        var sc_ids = _.uniq(_.pluck(vizObj.userConfig.cnv_data, "single_cell_id"));
+        if (sc_id_order == "NA") {
+            vizObj.data.sc_ids = sc_ids;
+        }
+        else {
+            vizObj.data.sc_ids = [];
+            sc_id_order.forEach(function(key) {
+                if (sc_ids.indexOf(key) != -1) {
+                    vizObj.data.sc_ids.push(key);
+                }
+            })
+        }
+
+        // chromosomes
         vizObj.data.chroms = _.uniq(_.pluck(vizObj.userConfig.cnv_data, "chr")).sort(_sortAlphaNum);
 
+        // cnv plot number of rows & columns
         vizObj.view.cnv = {};
         vizObj.view.cnv.nrows = vizObj.data.sc_ids.length;
         vizObj.view.cnv.ncols = Math.floor(config.cnvWidth);

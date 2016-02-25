@@ -15,8 +15,10 @@
 #'   Format: columns are (1) {String} "source" - edge source
 #'                       (2) {String} "target" - edge target
 #'
+#' @param sc_id_order Order of single cell ids.
+#'
 #' @export
-cnvTree <- function(cnv_data, tree_edges, width = 1000, height = 1000) {
+cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", width = 1000, height = 1000) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
   if (missing(cnv_data)) {
@@ -54,7 +56,8 @@ cnvTree <- function(cnv_data, tree_edges, width = 1000, height = 1000) {
   # forward options using x
   x = list(
     cnv_data=jsonlite::toJSON(cnv_data),
-    tree_edges=jsonlite::toJSON(tree_edges)
+    tree_edges=jsonlite::toJSON(tree_edges),
+    sc_id_order=sc_id_order
   )
 
   # create widget

@@ -3,7 +3,7 @@ ul {
     -webkit-padding-start: 0px; /* override user agent stylesheet */
 }
 
-.cnvTree {
+.cnvSVG {
     overflow: scroll;
 }
 
