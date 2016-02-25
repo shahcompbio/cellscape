@@ -200,13 +200,30 @@ HTMLWidgets.widget({
             .attr("height", (1/vizObj.view.cnv.nrows)*config.cnvHeight)
             .attr("width", function(d) { return d.px_length; })
             .attr("fill", function(d) { 
-                if (d.mode_cnv > maxCNV) {
+                // no cnv data
+                if (isNaN(d.mode_cnv)) {
+                    // chromosome separator
+                    if (d.separator) {
+                        return "white";
+                    }
+                    // past the right side of the genome
+                    else if (d.chr == "NA") {
+                        return "white";
+                    }
+                    // NA value within the cnv data
+                    else {
+                        return "black";
+                    }
+                }
+                // cnv data, but above max cnv value
+                else if (d.mode_cnv > maxCNV) {
                     return colorScale(maxCNV);
                 }
+                // regular cnv data
                 return colorScale(d.mode_cnv);
             })
             .attr("fill-opacity", function(d) {
-                return (isNaN(d.mode_cnv)) ? 0 : 1;
+                // return (isNaN(d.mode_cnv)) ? 0 : 1;
             })
             .append("title")
             .text(function(d) { return d.sc_id});

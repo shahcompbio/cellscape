@@ -178,6 +178,9 @@ function _fillPixelWithChromInfo(vizObj) {
 
             // skip a pixel to leave chromosome separator
             i++;
+            if (i < pixels.length) {
+                pixels[i]["separator"] = true;
+            }
 
             cur_chr = vizObj.data.chroms[++chr_index]; // next chromosome
             start_bp = (cur_chr) ? vizObj.data.chrom_bounds[cur_chr]["start"] : NaN;  // new starting base pair
