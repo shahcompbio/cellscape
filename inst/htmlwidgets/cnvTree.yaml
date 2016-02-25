@@ -29,3 +29,7 @@ dependencies:
    version: 0.6.3
    src: "htmlwidgets/lib"
    script: d3.tip.js
+ - name: bundle
+   version: 0.0.0
+   src: "htmlwidgets/lib"
+   script: bundle.js

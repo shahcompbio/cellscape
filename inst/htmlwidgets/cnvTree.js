@@ -26,6 +26,10 @@ HTMLWidgets.widget({
         config.treeWidth = config.width/2;
         config.treeHeight = config.height;
 
+        // cnv configurations
+        config.cnvWidth = config.width/2;
+        config.cnvHeight = config.height;
+
         vizObj.generalConfig = config;
 
         return {}
@@ -40,10 +44,43 @@ HTMLWidgets.widget({
 
         vizObj.userConfig = x;
 
-        // GET CONTENT
+        // GET TREE CONTENT
 
-        // get tree edges and nodes
         _getTreeInfo(vizObj)
+
+        // GET CNV CONTENT
+
+        vizObj.data.sc_ids = _.uniq(_.pluck(vizObj.userConfig.cnv_data, "single_cell_id"));
+        vizObj.data.chroms = _.uniq(_.pluck(vizObj.userConfig.cnv_data, "chr")).sort(_sortAlphaNum);
+
+        vizObj.view.cnv = {};
+        vizObj.view.cnv.nrows = vizObj.data.sc_ids.length;
+        vizObj.view.cnv.ncols = Math.floor(config.cnvWidth);
+
+        // get bounds of chromosome
+        vizObj.data.chrom_bounds = _getChromBounds(vizObj);
+
+        // get the length of the genome 
+        _getGenomeLength(vizObj.data.chrom_bounds);
+
+        // create interval tree of segments for each chromosome of each single cell id
+        vizObj.data.itrees = _getIntervalTree(vizObj);
+
+        // set up empty pixel grid
+        vizObj.view.cnv.pixels = _getEmptyGrid(vizObj);
+
+        // fill pixel grid with chromosome information
+        _fillPixelWithChromInfo(vizObj);
+
+        console.log("vizObj");
+        console.log(vizObj);
+
+        // COLOUR SCALE
+
+        var maxCNV = 6;
+        var colorScale = d3.scale.ordinal()
+            .domain([0,1,2,3,4,5,6])
+            .range(["#176CA2", "#64A0D0", "#ABABAB", "#FEBC7E", "#FD7F25", "#C55215", "#8A390D"]);
 
         // CONTAINER DIV
 
@@ -62,6 +99,14 @@ HTMLWidgets.widget({
             .attr("width", config.treeWidth + "px")
             .attr("height", config.treeHeight + "px")
 
+        // CNV SVG
+
+        var cnvSVG = containerDIV
+            .append("svg:svg")
+            .attr("class", "cnvSVG")
+            .attr("width", config.cnvWidth + "px")
+            .attr("height", config.cnvHeight + "px")
+
         // FORCE FUNCTION
 
         var force = d3.layout.force()
@@ -73,7 +118,7 @@ HTMLWidgets.widget({
             .links(vizObj.data.tree_edges)
             .start();
 
-        // TOOLTIP FUNCTION
+        // NODE TOOLTIP FUNCTION
 
         var tip = d3.tip()
             .attr('class', 'd3-tip')
@@ -124,6 +169,32 @@ HTMLWidgets.widget({
                 .attr("y2", function(d) { return d.target.y; });
 
         });
+
+        // PLOT CNV 
+
+        var gridCell = cnvSVG
+            .append("g")
+            .attr("class", "gridCells")
+            .selectAll(".gridCell")
+            .data(vizObj.view.cnv.pixels)
+            .enter()
+            .append("rect")
+            .attr("x", function(d) { return d.col - d.px_length + 1; })
+            .attr("y", function(d) { return (d.row/vizObj.view.cnv.nrows)*config.cnvHeight; })
+            .attr("height", (1/vizObj.view.cnv.nrows)*config.cnvHeight)
+            .attr("width", function(d) { return d.px_length; })
+            .attr("fill", function(d) { 
+                if (d.mode_cnv > maxCNV) {
+                    return colorScale(maxCNV);
+                }
+                return colorScale(d.mode_cnv);
+            })
+            .attr("fill-opacity", function(d) {
+                return (isNaN(d.mode_cnv)) ? 0 : 1;
+            })
+            .append("title")
+            .text(function(d) { return d.sc_id});
+
 
     },
 
