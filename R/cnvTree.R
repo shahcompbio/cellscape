@@ -16,7 +16,40 @@
 #'                       (2) {String} "target" - edge target
 #'
 #' @export
-cnvTree <- function(cnv_data, tree_edges, width = NULL, height = NULL) {
+cnvTree <- function(cnv_data, tree_edges, width = 1000, height = 1000) {
+
+  # CHECK REQUIRED INPUTS ARE PRESENT 
+  if (missing(cnv_data)) {
+    stop("User must provide CNV data (parameter cnv_data).")
+  }
+  if (missing(tree_edges)) {
+    stop("User must provide tree edge data (parameter tree_edges).")
+  }
+
+  # CNV DATA
+  if (is.data.frame(cnv_data)) {
+
+    # ensure column names are correct
+    if (!("single_cell_id" %in% colnames(cnv_data)) ||
+        !("chr" %in% colnames(cnv_data)) ||
+        !("start" %in% colnames(cnv_data)) ||
+        !("end" %in% colnames(cnv_data)) ||
+        !("integer_copy_number" %in% colnames(cnv_data))) {
+      stop(paste("CNV data frame must have the following column names: ", 
+          "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"", sep=""))
+    }
+  }
+
+  # TREE EDGE DATA
+  if (is.data.frame(tree_edges)) {
+
+    # ensure column names are correct
+    if (!("source" %in% colnames(tree_edges)) ||
+        !("target" %in% colnames(tree_edges))) {
+      stop(paste("Tree edges data frame must have the following column names: ", 
+          "\"source\", \"target\"", sep=""))
+    }
+  }
 
   # forward options using x
   x = list(
