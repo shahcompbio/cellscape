@@ -55,6 +55,95 @@ function _getIntervalTree(vizObj) {
     return itrees;
 }
 
+// LINK FUNCTIONS
+
+/* function to get the link id for a link data object
+* @param {Object} d - link data object
+*/
+function _getLinkId(d) {
+   return "link_" + d.source.name + "_" + d.target.name;
+}
+
+/* function for mouseover of link
+* @param link_id -- id for the link that's currently highlighted
+* @param link_ids -- ids for all links in tree
+*/
+function _linkMouseover(link_id, link_ids) {
+
+    // dim nodes
+    d3.selectAll(".node")
+        .attr("fill-opacity", 0.2)
+        .attr("stroke-opacity", 0.2);
+
+    // dim links
+    d3.selectAll(".link")
+        .attr("stroke-opacity", 0.2);
+
+    // dim cnv heatmap
+    d3.selectAll(".gridCell")
+        .attr("fill-opacity", 0.2);
+
+    // get downstream links, highlight heatmap
+    _downstreamEffects(link_id, link_ids); 
+};
+
+/* function for mouseout of link
+*/
+function _linkMouseout() {
+    // reset nodes
+    d3.selectAll(".node")
+        .attr("fill-opacity", 1)
+        .attr("stroke-opacity", 1);
+
+    // reset links
+    d3.selectAll(".link")
+        .attr("stroke-opacity", 1);
+
+    // reset cnv heatmap
+    d3.selectAll(".gridCell")
+        .attr("fill-opacity", 1);
+
+};
+
+/* recursive function to perform downstream effects upon tree link highlighting
+* @param link_id -- id for the link that's currently highlighted
+* @param link_ids -- ids for all links in tree
+*/
+function _downstreamEffects(link_id, link_ids) {
+
+    // get target id & single cell id
+    var targetRX = new RegExp("link_.+_(.+)");  
+    var target_id = targetRX.exec(link_id)[1];
+
+    // highlight link 
+    d3.select("#"+link_id)
+        .attr("stroke-opacity", 1);
+
+    // highlight target in the heatmap
+    d3.select("#node_" + target_id)
+        .attr("fill-opacity", 1)
+        .attr("stroke-opacity", 1);
+
+    // highlight corresponding cnv heatmap row
+    d3.selectAll("#cnv_" + target_id)
+        .attr("fill-opacity", 1);
+
+    // get the targets of this target
+    var sourceRX = new RegExp("link_" + target_id + "_(.+)");
+    var targetLinks_of_targetNode = [];
+    link_ids.map(function(id) {
+        if (id.match(sourceRX)) {
+            targetLinks_of_targetNode.push(id);
+        }
+    });
+
+    // for each of the target's targets, highlight their downstream links
+    targetLinks_of_targetNode.map(function(target_link_id) {
+        _downstreamEffects(target_link_id, link_ids);
+    });
+};
+
+
 // CNV FUNCTIONS
 
 /* function to get chromosome min and max values

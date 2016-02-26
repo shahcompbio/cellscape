@@ -147,6 +147,7 @@ HTMLWidgets.widget({
 
         // PLOT NODES AND EDGES
 
+        var link_ids = []; // store link id's
         var link = treeSVG
             .append("g")
             .attr("class", "links")
@@ -154,7 +155,18 @@ HTMLWidgets.widget({
             .data(vizObj.data.tree_edges)
             .enter().append("line")
             .attr("class", "link")
-            .style("stroke","black");
+            .attr("id", function(d) { 
+                d.link_id = _getLinkId(d)
+                link_ids.push(d.link_id);
+                return d.link_id; 
+            })
+            .style("stroke","black")
+            .on("mouseover", function(d) { 
+                return _linkMouseover(d.link_id, link_ids); 
+            })
+            .on("mouseout", function(d) { 
+                return _linkMouseout(); 
+            });
 
         var node = treeSVG
             .append("g")
@@ -163,6 +175,9 @@ HTMLWidgets.widget({
             .data(vizObj.data.tree_nodes)
             .enter().append("circle")
             .attr("class", "node")
+            .attr("id", function(d) {
+                return "node_" + d.name;
+            })
             .attr("r", config.tree_r)
             .style("fill", "#52A783")
             .style("stroke", "#1C764F")
@@ -195,6 +210,10 @@ HTMLWidgets.widget({
             .data(vizObj.view.cnv.pixels)
             .enter()
             .append("rect")
+            .attr("class", "gridCell")
+            .attr("id", function(d) {
+                return "cnv_" + d.sc_id;
+            })
             .attr("x", function(d) { return d.col - d.px_length + 1; })
             .attr("y", function(d) { return (d.row/vizObj.view.cnv.nrows)*config.cnvHeight; })
             .attr("height", (1/vizObj.view.cnv.nrows)*config.cnvHeight)
@@ -221,9 +240,6 @@ HTMLWidgets.widget({
                 }
                 // regular cnv data
                 return colorScale(d.mode_cnv);
-            })
-            .attr("fill-opacity", function(d) {
-                // return (isNaN(d.mode_cnv)) ? 0 : 1;
             })
             .append("title")
             .text(function(d) { return d.sc_id});
