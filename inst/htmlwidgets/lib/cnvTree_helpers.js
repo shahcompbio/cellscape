@@ -219,6 +219,29 @@ function _getChromBounds(vizObj) {
     return chrom_bounds;
 }
 
+/* function to get chromosome box pixel info
+* @param {Object} vizObj
+*/
+function _getChromBoxInfo(vizObj) {
+    var chrom_bounds = vizObj.data.chrom_bounds;
+
+    var chrom_boxes = [];
+
+    var pixels_used = 0;
+    Object.keys(chrom_bounds).forEach(function(chrom) {
+        var box_width = Math.ceil(
+                (chrom_bounds[chrom]["end"] - chrom_bounds[chrom]["start"])/vizObj.data.n_bp_per_pixel
+            );
+        chrom_boxes.push({
+            "chr": chrom,
+            "x": pixels_used,
+            "width": box_width
+        })
+        pixels_used += box_width + 1;
+    })
+    vizObj.data.chrom_boxes = chrom_boxes;
+}
+
 /* function to get the genome length
 * @param {Object} chrom_bounds -- bounds of each chromosome (properties are chromosome names)
 */
@@ -264,11 +287,11 @@ function _fillPixelWithChromInfo(vizObj) {
     // - 1 for each separator
     // - 1 for the end of each chromosome (we don't want chromosomes to share pixels))
     var n_data_pixels = vizObj.view.cnv.ncols - 2*(vizObj.data.chroms.length + 1), 
-        n_bp_per_pixel = Math.ceil(vizObj.data.genome_length/n_data_pixels), // number of base pairs per pixel
         chr_index = 0, // index of current chromosome
         cur_chr = vizObj.data.chroms[chr_index], // current chromosome
         start_bp = vizObj.data.chrom_bounds[cur_chr]["start"], // start bp of the current pixel
         cur_sc_id = pixels[0]["sc_id"];
+    vizObj.data.n_bp_per_pixel = Math.ceil(vizObj.data.genome_length/n_data_pixels); // number of base pairs per pixel
 
     // for each pixel
     for (var i = 0; i < pixels.length; i++) {
@@ -292,7 +315,7 @@ function _fillPixelWithChromInfo(vizObj) {
         } 
 
         // get genomic region in this bin
-        var end_bp = start_bp + n_bp_per_pixel;
+        var end_bp = start_bp + vizObj.data.n_bp_per_pixel;
         pixel["start"] = start_bp;
         pixel["end"] = end_bp;
         pixel["chr"] = cur_chr;

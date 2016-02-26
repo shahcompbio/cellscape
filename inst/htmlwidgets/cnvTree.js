@@ -14,7 +14,8 @@ HTMLWidgets.widget({
             defaultNodeColour: "#3458A5",
             highlightRed: "#F73A3A",
             linkHighlightRed: "#FF5F5F",
-            defaultLinkColour: "#838181"
+            defaultLinkColour: "#838181",
+            chromLegendHeight: 15
         };
 
         // global variable vizObj
@@ -95,6 +96,9 @@ HTMLWidgets.widget({
 
         // fill pixel grid with chromosome information
         _fillPixelWithChromInfo(vizObj);
+
+        // get chromosome box info
+        _getChromBoxInfo(vizObj);
 
         console.log("vizObj");
         console.log(vizObj);
@@ -329,8 +333,10 @@ HTMLWidgets.widget({
                 return "cnv_" + d.sc_id;
             })
             .attr("x", function(d) { return d.col - d.px_length + 1; })
-            .attr("y", function(d) { return (d.row/vizObj.view.cnv.nrows)*config.cnvHeight; })
-            .attr("height", (1/vizObj.view.cnv.nrows)*config.cnvHeight)
+            .attr("y", function(d) { 
+                return (d.row/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
+            })
+            .attr("height", (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight))
             .attr("width", function(d) { return d.px_length; })
             .attr("fill", function(d) { 
                 // no cnv data
@@ -358,6 +364,38 @@ HTMLWidgets.widget({
             .append("title")
             .text(function(d) { return d.sc_id});
 
+        // PLOT CHROMOSOME LEGEND
+        var chromBoxes = cnvSVG
+            .append("g")
+            .classed("chromLegend", true)
+            .selectAll(".chromBoxG")
+            .data(vizObj.data.chrom_boxes)
+            .enter().append("g")
+            .attr("class", "chromBoxG")
+
+        var nextColour = "#FFFFFF";
+        chromBoxes.append("rect")
+            .attr("class", function(d) { return "chromBox chr" + d.chr; })
+            .attr("x", function(d) { return d.x; })
+            .attr("y", config.cnvHeight-config.chromLegendHeight)
+            .attr("height", config.chromLegendHeight)
+            .attr("width", function(d) { return d.width; })
+            .style("fill", function(d) { 
+                if (nextColour == "#FFFFFF")
+                    nextColour = "#F7F7F7";
+                else
+                    nextColour = "#FFFFFF";
+                return nextColour;
+            })
+
+        chromBoxes.append("text")
+            .attr("x", function(d) { return d.x + (d.width / 2); })
+            .attr("y", config.cnvHeight - (config.chromLegendHeight / 2))
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .text(function(d) { return d.chr; })
+            .attr("font-size", "8px");
+
         // PLOT INDICATOR RECTANGLES
 
         var indicators = indicatorSVG
@@ -374,9 +412,9 @@ HTMLWidgets.widget({
             .attr("x", 0)
             .attr("y", function(d) { 
                 var index = vizObj.data.sc_ids.indexOf(d);
-                return (index/vizObj.view.cnv.nrows)*config.cnvHeight; 
+                return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
             })
-            .attr("height", (1/vizObj.view.cnv.nrows)*config.cnvHeight)
+            .attr("height", (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight))
             .attr("width", config.indicatorWidth-3)
             .style("fill", config.highlightRed)
             .style("fill-opacity", 0)
@@ -429,14 +467,12 @@ HTMLWidgets.widget({
                     else {
                         d3.select("#node_" + d)
                             .classed("nodeSelected", false);
-                            
                         // reset node
                         _resetNode(d, vizObj);
 
                         // reset indicator
                         _resetIndicator(d);
                     }
-
                 }
             });
 
