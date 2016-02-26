@@ -405,6 +405,7 @@ HTMLWidgets.widget({
             .attr("y", config.cnvHeight - (config.chromLegendHeight / 2))
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
+            .attr("font-family", "sans-serif")
             .text(function(d) { return d.chr; })
             .attr("font-size", "8px");
 
