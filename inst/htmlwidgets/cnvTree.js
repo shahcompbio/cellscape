@@ -15,7 +15,8 @@ HTMLWidgets.widget({
             highlightRed: "#F73A3A",
             linkHighlightRed: "#FF5F5F",
             defaultLinkColour: "#838181",
-            chromLegendHeight: 15
+            chromLegendHeight: 15,
+            cnvLegendWidth: 50
         };
 
         // global variable vizObj
@@ -29,15 +30,18 @@ HTMLWidgets.widget({
         config.height = height - 15; // - 15 because vertical scrollbar takes 15 px
 
         // tree configurations
-        config.treeWidth = config.width/2 - config.indicatorWidth/2;
+        config.treeWidth = config.width/2 - config.indicatorWidth/2 - config.cnvLegendWidth/2;
         config.treeHeight = config.height;
 
         // cnv configurations
-        config.cnvWidth = config.width/2 - config.indicatorWidth/2;
+        config.cnvWidth = config.width/2 - config.indicatorWidth/2 - config.cnvLegendWidth/2;
         config.cnvHeight = config.height;
 
         // indicator configurations
         config.indicatorHeight = config.height;
+
+        // cnv legend configurations
+        config.cnvLegendHeight = config.height;
 
         vizObj.generalConfig = config;
 
@@ -155,6 +159,14 @@ HTMLWidgets.widget({
             .attr("class", "cnvSVG")
             .attr("width", config.cnvWidth + "px")
             .attr("height", config.cnvHeight + "px")
+
+        // CNV LEGEND SVG
+
+        var cnvLegendSVG = containerDIV
+            .append("svg:svg")
+            .attr("class", "cnvLegendSVG")
+            .attr("width", config.cnvLegendWidth + "px")
+            .attr("height", config.cnvLegendHeight + "px")
 
         // FORCE FUNCTION
 
@@ -475,6 +487,61 @@ HTMLWidgets.widget({
                     }
                 }
             });
+        
+        // PLOT CNV LEGEND
+
+        // legend title
+        var titleHeight = 14;
+        cnvLegendSVG.append("text")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("dy", "+0.71em")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", titleHeight)
+            .text("Legend");
+
+        // legend rectangle / text group
+        var rectHeight = 12;
+        var spacing = 2;
+        var cnvLegendG = cnvLegendSVG
+            .selectAll(".legendG")
+            .data(colorScale.domain())
+            .enter()
+            .append("g")
+            .classed("legendG", true);
+
+        // legend rectangles
+        cnvLegendG
+            .append("rect")
+            .attr("x", 0)
+            .attr("y", function(d,i) {
+                return titleHeight + spacing*2 + i*(rectHeight + spacing);
+            })
+            .attr("height", rectHeight)
+            .attr("width", rectHeight)
+            .attr("fill", function(d) {
+                return colorScale(d);
+            });
+
+        // legend text
+        var fontHeight = 12;
+        cnvLegendG
+            .append("text")
+            .attr("x", rectHeight + spacing)
+            .attr("y", function(d,i) {
+                return titleHeight + spacing*2 + i*(rectHeight + spacing) + (fontHeight/2);
+            })
+            .attr("dy", "+0.35em")
+            .text(function(d) { 
+                if (d==maxCNV) {
+                    return ">=" + d;
+                }
+                return d; 
+            })
+            .attr("font-family", "sans-serif")
+            .attr("font-size", fontHeight)
+            .style("fill", "black");
+
 
 
     },

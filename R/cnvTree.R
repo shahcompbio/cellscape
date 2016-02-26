@@ -18,7 +18,7 @@
 #' @param sc_id_order Order of single cell ids.
 #'
 #' @export
-cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", width = 1000, height = 1000) {
+cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", width = 1200, height = 1000) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
   if (missing(cnv_data)) {
