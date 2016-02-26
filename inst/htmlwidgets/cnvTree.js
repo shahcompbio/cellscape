@@ -9,7 +9,10 @@ HTMLWidgets.widget({
         // defaults
         var defaults = {
             widgetMargin: 10, // marging between widgets
-            tree_r: 3 // tree node radius
+            tree_r: 3, // tree node radius
+            indicatorWidth: 10, // width of the selected single cell indicator
+            defaultNodeColour: "#3458A5",
+            highlightRed: "#F73A3A"
         };
 
         // global variable vizObj
@@ -23,12 +26,15 @@ HTMLWidgets.widget({
         config.height = height - 15; // - 15 because vertical scrollbar takes 15 px
 
         // tree configurations
-        config.treeWidth = config.width/2;
+        config.treeWidth = config.width/2 - config.indicatorWidth/2;
         config.treeHeight = config.height;
 
         // cnv configurations
-        config.cnvWidth = config.width/2;
+        config.cnvWidth = config.width/2 - config.indicatorWidth/2;
         config.cnvHeight = config.height;
+
+        // indicator configurations
+        config.indicatorHeight = config.height;
 
         vizObj.generalConfig = config;
 
@@ -115,6 +121,14 @@ HTMLWidgets.widget({
             .attr("width", config.treeWidth + "px")
             .attr("height", config.treeHeight + "px")
 
+        // INDICATOR SVG
+
+        var indicatorSVG = containerDIV
+            .append("svg:svg")
+            .attr("class", "indicatorSVG")
+            .attr("width", config.indicatorWidth + "px")
+            .attr("height", config.indicatorHeight + "px")
+
         // CNV SVG
 
         var cnvSVG = containerDIV
@@ -160,12 +174,12 @@ HTMLWidgets.widget({
                 link_ids.push(d.link_id);
                 return d.link_id; 
             })
-            .style("stroke","black")
+            .style("stroke","#838181")
             .on("mouseover", function(d) { 
-                return _linkMouseover(d.link_id, link_ids); 
+                return _linkMouseover(vizObj, d.link_id, link_ids); 
             })
             .on("mouseout", function(d) { 
-                return _linkMouseout(); 
+                return _linkMouseout(vizObj); 
             });
 
         var node = treeSVG
@@ -179,8 +193,8 @@ HTMLWidgets.widget({
                 return "node_" + d.name;
             })
             .attr("r", config.tree_r)
-            .style("fill", "#52A783")
-            .style("stroke", "#1C764F")
+            .style("fill", config.defaultNodeColour)
+            .style("stroke", "#838181")
             .on('mouseover', tip.show)
             .on('mouseout', tip.hide)
             .call(force.drag);
@@ -243,6 +257,31 @@ HTMLWidgets.widget({
             })
             .append("title")
             .text(function(d) { return d.sc_id});
+
+        // PLOT INDICATOR RECTANGLES
+
+        var indicators = indicatorSVG
+            .append("g")
+            .attr("class", "indicators")
+            .selectAll(".indicator")
+            .data(vizObj.data.sc_ids)
+            .enter()
+            .append("rect")
+            .attr("class", "indicator")
+            .attr("id", function(d) {
+                return "indic_" + d;
+            })
+            .attr("x", 0)
+            .attr("y", function(d) { 
+                var index = vizObj.data.sc_ids.indexOf(d);
+                return (index/vizObj.view.cnv.nrows)*config.cnvHeight; 
+            })
+            .attr("height", (1/vizObj.view.cnv.nrows)*config.cnvHeight)
+            .attr("width", config.indicatorWidth-3)
+            .attr("fill", config.highlightRed)
+            .attr("fill-opacity", 0)
+            .append("title")
+            .text(function(d) { return d; });
 
 
     },
