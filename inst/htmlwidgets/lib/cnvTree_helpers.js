@@ -89,6 +89,31 @@ function _resetIndicator(sc_id) {
         .style("fill-opacity", 0);
 }
 
+/* function to reset all nodes in the tree
+* @param {Object} vizObj
+*/
+function _resetNodes(vizObj) {
+    d3.selectAll(".node")
+        .style("fill", vizObj.generalConfig.defaultNodeColour);
+}
+
+/* function to reset all indicators for a single cell
+* @param {String} sc_id -- single cell id
+*/
+function _resetIndicators() {
+    d3.selectAll(".indicator")
+        .style("fill-opacity", 0);
+}
+
+/* function to reset all links in the tree
+* @param {Object} vizObj
+*/
+function _resetLinks(vizObj) {
+    d3.selectAll(".link")
+        .style("stroke", vizObj.generalConfig.defaultLinkColour);
+}
+
+
 // LINK FUNCTIONS
 
 /* function to get the link id for a link data object

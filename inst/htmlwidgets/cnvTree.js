@@ -122,6 +122,19 @@ HTMLWidgets.widget({
             .attr("class", "treeSVG")
             .attr("width", config.treeWidth + "px")
             .attr("height", config.treeHeight + "px")
+            .on('dblclick', function() {
+
+                // turn off node & link selection
+                d3.selectAll(".nodeSelected")
+                    .classed("nodeSelected",false);
+                d3.selectAll(".linkSelected")
+                    .classed("linkSelected",false);
+
+                // reset nodes, links & indicators
+                _resetNodes(vizObj);
+                _resetLinks(vizObj);
+                _resetIndicators();
+            })
 
         // INDICATOR SVG
 
@@ -173,31 +186,55 @@ HTMLWidgets.widget({
         var link_ids = []; // store link id's
         var link = treeSVG
             .append("g")
-            .attr("class", "links")
+            .classed("links", true)
             .selectAll(".link")
             .data(vizObj.data.tree_edges)
             .enter().append("line")
-            .attr("class", "link")
+            .classed("link", true)
             .attr("id", function(d) { 
                 d.link_id = _getLinkId(d)
                 link_ids.push(d.link_id);
                 return d.link_id; 
             })
             .style("stroke","#838181")
-            .on("mouseover", function(d) { 
-                return _linkMouseover(vizObj, d.link_id, link_ids); 
+            .on("mouseover", function(d) {
+                // if there's no node or link selection taking place, highlight downstream links
+                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
+                    (d3.selectAll(".linkSelected")[0].length == 0)) {
+                    return _linkMouseover(vizObj, d.link_id, link_ids);                     
+                }
             })
             .on("mouseout", function(d) { 
-                return _linkMouseout(vizObj); 
-            });
+                // if there's no node or link selection taking place, reset the links
+                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
+                    (d3.selectAll(".linkSelected")[0].length == 0)) {
+                    return _linkMouseout(vizObj); 
+                }
+            })
+            .on("click", function(d) {
+                // if there's no node selection taking place
+                if (d3.selectAll(".nodeSelected")[0].length == 0) {
+                    
+                    // if this link is selected, unselect it
+                    if (d3.select(this).classed("linkSelected")) {
+                        d3.select(this)
+                            .classed("linkSelected", false);
+                    }
+                    // if link not selected, select it
+                    else {
+                        d3.select(this)
+                            .classed("linkSelected", true);
+                    }
+                }
+            })
 
         var node = treeSVG
             .append("g")
-            .attr("class", "nodes")
+            .classed("nodes", true)
             .selectAll(".node")
             .data(vizObj.data.tree_nodes)
             .enter().append("circle")
-            .attr("class", "node")
+            .classed("node", true)
             .attr("id", function(d) {
                 return "node_" + d.name;
             })
@@ -205,24 +242,60 @@ HTMLWidgets.widget({
             .style("fill", config.defaultNodeColour)
             .style("stroke", "#838181")
             .on('mouseover', function(d) {
+
                 // show tooltip
                 nodeTip.show(d);
 
-                // highlight node
-                _highlightNode(d.name, vizObj);
+                // if there's no node or link selection taking place
+                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
+                    (d3.selectAll(".linkSelected")[0].length == 0)) {
+                    // highlight node
+                    _highlightNode(d.name, vizObj);
 
-                // highlight indicator
-                _highlightIndicator(d.name);
+                    // highlight indicator
+                    _highlightIndicator(d.name);
+                }
             })
             .on('mouseout', function(d) {
+
                 // hide tooltip
                 nodeTip.hide(d);
 
-                // reset node
-                _resetNode(d.name, vizObj);
+                // if there's no node or link selection taking place
+                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
+                    (d3.selectAll(".linkSelected")[0].length == 0)) {
 
-                // reset indicator
-                _resetIndicator(d.name);
+                    // reset node
+                    _resetNode(d.name, vizObj);
+
+                    // reset indicator
+                    _resetIndicator(d.name);
+                }
+            })
+            .on('click', function(d) {
+                // if there's no link selection taking place
+                if (d3.selectAll(".linkSelected")[0].length == 0) {
+
+                    // hide tooltip
+                    nodeTip.hide(d);
+
+                    // if not already selected, add "selected" class
+                    if (!d3.select(this).classed("nodeSelected")) {
+                        d3.select(this)
+                            .classed("nodeSelected", true);
+                    }
+                    // if selected, unselect
+                    else {
+                        d3.select(this)
+                            .classed("nodeSelected", false);
+                    }
+
+                    // highlight node
+                    _highlightNode(d.name, vizObj);
+
+                    // highlight indicator
+                    _highlightIndicator(d.name);
+                }
             })
             .call(force.drag);
 
@@ -246,12 +319,12 @@ HTMLWidgets.widget({
 
         var gridCell = cnvSVG
             .append("g")
-            .attr("class", "gridCells")
+            .classed("gridCells", true)
             .selectAll(".gridCell")
             .data(vizObj.view.cnv.pixels)
             .enter()
             .append("rect")
-            .attr("class", "gridCell")
+            .classed("gridCell", true)
             .attr("id", function(d) {
                 return "cnv_" + d.sc_id;
             })
@@ -289,12 +362,12 @@ HTMLWidgets.widget({
 
         var indicators = indicatorSVG
             .append("g")
-            .attr("class", "indicators")
+            .classed("indicators", true)
             .selectAll(".indicator")
             .data(vizObj.data.sc_ids)
             .enter()
             .append("rect")
-            .attr("class", "indicator")
+            .classed("indicator", true)
             .attr("id", function(d) {
                 return "indic_" + d;
             })
@@ -308,27 +381,64 @@ HTMLWidgets.widget({
             .style("fill", config.highlightRed)
             .style("fill-opacity", 0)
             .on("mouseover", function(d) {
-
                 // show tooltip
                 indicatorTip.show(d);
 
-                // highlight node
-                _highlightNode(d, vizObj);
+                // if there's no node or link selection taking place
+                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
+                    (d3.selectAll(".linkSelected")[0].length == 0)) {
 
-                // highlight indicator
-                _highlightIndicator(d);
+                    // highlight node
+                    _highlightNode(d, vizObj);
+
+                    // highlight indicator
+                    _highlightIndicator(d);
+                }
             })
             .on("mouseout", function(d) {
-
                 // hide tooltip
                 indicatorTip.hide(d);
 
-                // reset node
-                _resetNode(d, vizObj);
+                // if there's no node or link selection taking place
+                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
+                    (d3.selectAll(".linkSelected")[0].length == 0)) {
 
-                // reset indicator
-                _resetIndicator(d);
-            });;
+                    // reset node
+                    _resetNode(d, vizObj);
+
+                    // reset indicator
+                    _resetIndicator(d);
+                }
+            })
+            .on("click", function(d) {
+                // if there's no link selection taking place
+                if (d3.selectAll(".linkSelected")[0].length == 0) {
+
+                    // if not already selected, add "selected" class
+                    if (!d3.select("#node_" + d).classed("nodeSelected")) {
+                        d3.select("#node_" + d)
+                            .classed("nodeSelected", true);
+
+                        // highlight node
+                        _highlightNode(d, vizObj);
+
+                        // highlight indicator
+                        _highlightIndicator(d);
+                    }
+                    // if selected, unselect
+                    else {
+                        d3.select("#node_" + d)
+                            .classed("nodeSelected", false);
+                            
+                        // reset node
+                        _resetNode(d, vizObj);
+
+                        // reset indicator
+                        _resetIndicator(d);
+                    }
+
+                }
+            });
 
 
     },
