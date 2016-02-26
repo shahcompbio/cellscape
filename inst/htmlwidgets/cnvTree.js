@@ -12,7 +12,9 @@ HTMLWidgets.widget({
             tree_r: 3, // tree node radius
             indicatorWidth: 10, // width of the selected single cell indicator
             defaultNodeColour: "#3458A5",
-            highlightRed: "#F73A3A"
+            highlightRed: "#F73A3A",
+            linkHighlightRed: "#FF5F5F",
+            defaultLinkColour: "#838181"
         };
 
         // global variable vizObj
@@ -148,16 +150,23 @@ HTMLWidgets.widget({
             .links(vizObj.data.tree_edges)
             .start();
 
-        // NODE TOOLTIP FUNCTION
+        // TOOLTIP FUNCTIONS
 
-        var tip = d3.tip()
+        var nodeTip = d3.tip()
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function(d) {
-                return "<strong>Node:</strong> <span style='color:white'>" + d.name + "</span>";
+                return "<strong>Cell:</strong> <span style='color:white'>" + d.name + "</span>";
             });
-        treeSVG.call(tip);
+        treeSVG.call(nodeTip);
 
+        var indicatorTip = d3.tip()
+            .attr('class', 'd3-tip')
+            .offset([-10, 0])
+            .html(function(d) {
+                return "<strong>Cell:</strong> <span style='color:white'>" + d + "</span>";
+            });
+        indicatorSVG.call(indicatorTip);
 
         // PLOT NODES AND EDGES
 
@@ -195,8 +204,26 @@ HTMLWidgets.widget({
             .attr("r", config.tree_r)
             .style("fill", config.defaultNodeColour)
             .style("stroke", "#838181")
-            .on('mouseover', tip.show)
-            .on('mouseout', tip.hide)
+            .on('mouseover', function(d) {
+                // show tooltip
+                nodeTip.show(d);
+
+                // highlight node
+                _highlightNode(d.name, vizObj);
+
+                // highlight indicator
+                _highlightIndicator(d.name);
+            })
+            .on('mouseout', function(d) {
+                // hide tooltip
+                nodeTip.hide(d);
+
+                // reset node
+                _resetNode(d.name, vizObj);
+
+                // reset indicator
+                _resetIndicator(d.name);
+            })
             .call(force.drag);
 
         force.on("tick", function() {
@@ -278,10 +305,30 @@ HTMLWidgets.widget({
             })
             .attr("height", (1/vizObj.view.cnv.nrows)*config.cnvHeight)
             .attr("width", config.indicatorWidth-3)
-            .attr("fill", config.highlightRed)
-            .attr("fill-opacity", 0)
-            .append("title")
-            .text(function(d) { return d; });
+            .style("fill", config.highlightRed)
+            .style("fill-opacity", 0)
+            .on("mouseover", function(d) {
+
+                // show tooltip
+                indicatorTip.show(d);
+
+                // highlight node
+                _highlightNode(d, vizObj);
+
+                // highlight indicator
+                _highlightIndicator(d);
+            })
+            .on("mouseout", function(d) {
+
+                // hide tooltip
+                indicatorTip.hide(d);
+
+                // reset node
+                _resetNode(d, vizObj);
+
+                // reset indicator
+                _resetIndicator(d);
+            });;
 
 
     },

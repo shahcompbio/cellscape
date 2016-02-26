@@ -55,6 +55,40 @@ function _getIntervalTree(vizObj) {
     return itrees;
 }
 
+/* function to highlight a node in the tree
+* @param {String} sc_id -- single cell id
+* @param {Object} vizObj
+*/
+function _highlightNode(sc_id, vizObj) {
+    d3.select("#node_" + sc_id)
+        .style("fill", vizObj.generalConfig.highlightRed);
+}
+
+/* function to highlight indicator for a single cell
+* @param {String} sc_id -- single cell id
+*/
+function _highlightIndicator(sc_id) {
+    d3.select("#indic_" + sc_id)
+        .style("fill-opacity", 1);
+}
+
+/* function to reset a node in the tree
+* @param {String} sc_id -- single cell id
+* @param {Object} vizObj
+*/
+function _resetNode(sc_id, vizObj) {
+    d3.select("#node_" + sc_id)
+        .style("fill", vizObj.generalConfig.defaultNodeColour);
+}
+
+/* function to reset indicator for a single cell
+* @param {String} sc_id -- single cell id
+*/
+function _resetIndicator(sc_id) {
+    d3.select("#indic_" + sc_id)
+        .style("fill-opacity", 0);
+}
+
 // LINK FUNCTIONS
 
 /* function to get the link id for a link data object
@@ -85,7 +119,12 @@ function _linkMouseout(vizObj) {
 
     // reset indicators
     d3.selectAll(".indicator")
-        .attr("fill-opacity", 0);
+        .style("fill-opacity", 0);
+
+    // reset links
+    d3.selectAll(".link")
+        .style("stroke", vizObj.generalConfig.defaultLinkColour);
+
 
 };
 
@@ -106,7 +145,11 @@ function _downstreamEffects(vizObj, link_id, link_ids) {
 
     // highlight indicator for target
     d3.select("#indic_" + target_id)
-        .attr("fill-opacity", 1);
+        .style("fill-opacity", 1);
+
+    // highlight link
+    d3.select("#"+link_id)
+        .style("stroke", vizObj.generalConfig.linkHighlightRed);
 
     // get the targets of this target
     var sourceRX = new RegExp("link_" + target_id + "_(.+)");
