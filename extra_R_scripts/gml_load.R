@@ -1,8 +1,17 @@
 # script to load in gml file and convert it to a list of edges
 library(stringr)
 
+# user inputs
+args = commandArgs(trailingOnly=TRUE)
+
+if (length(args)!=2) {
+	n_provided_args = length(args)
+  	stop(paste("Two arguments must be provided - the paths to the input and output files. ",
+  		"You provided ", n_provided_args, " arguments.", sep=""))
+}
+
 # parameters
-path <- "/Users/msmith/data/external/SA501_xenograft_data/all_symbols_low_path_CLG_tree.gml"
+path <- args[1] # e.g. "/Users/msmith/data/external/SA501_xenograft_data/all_symbols_low_path_CLG_tree.gml"
 
 # load graphml data
 string <- readChar(path, nchars=1e6)
@@ -32,3 +41,6 @@ edges <- data.frame(
 	source=edges$source, 
 	target=edges$target, 
 	stringsAsFactors=FALSE)
+
+tree_edges <- edges
+save(tree_edges, file = args[2]) # "/Users/msmith/data/internal/cnvTree/tree_edges.RData"

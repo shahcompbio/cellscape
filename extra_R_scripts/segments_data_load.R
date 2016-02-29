@@ -1,7 +1,18 @@
 # script for loading all single cell cnv segments data into an R data frame
+# Run like so:
+# Rscript --vanilla segments_data_load.R "<input_directory>" "<output_file>"
+
+# user inputs
+args = commandArgs(trailingOnly=TRUE)
+
+if (length(args)!=2) {
+	n_provided_args = length(args)
+  	stop(paste("Two arguments must be provided - the path to input files and the output file path. ",
+  		"You provided ", n_provided_args, " arguments.", sep=""))
+}
 
 # parameters
-path <- "/Users/msmith/data/external/SA501_xenograft_data/hmmcopy_all/"
+path <- args[1] # e.g. "/Users/msmith/data/external/SA501_xenograft_data/hmmcopy_all/"
 fileRX <- "SA501.*segments.csv"
 singleCellIdRX <- "SA501X3F-([0-9]+).segments.csv"
 
@@ -63,3 +74,6 @@ data$chr <- as.character(data$chr)
 # drop unnecessary columns
 drops <- c("state", "median", "integer_median")
 data <- data[,!(colnames(data) %in% drops)]
+
+cnv_data <- data
+save(cnv_data, file = args[2]) # e.g. "/Users/msmith/data/internal/cnvTree/cnv_data.RData"
