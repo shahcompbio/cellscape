@@ -1,7 +1,12 @@
 #' cnvTree
 #'
-#' explores single cell copy number profiles in the context of a single cell tree.
-#'
+#' Explores single cell copy number profiles in the context of a single cell tree.
+#' To use: Hover over nodes to inspect them. Click on nodes to select them.
+#' Hover over branches to inspect the downstream nodes. Click on branches to select the downstream nodes.
+#' To inspect a copy number profile, hover just to the left of the profile. Click this same region to select 
+#' single cell(s). 
+#' To exit any selection, double click near the single cell tree.
+#'   
 #' @import htmlwidgets
 #'
 #' @param cnv_data Single cell copy number data frame.
@@ -12,10 +17,12 @@
 #'                       (5) {Number} "integer_copy_number" - copy number state.
 #'
 #' @param tree_edges Edges for the single cell phylogenetic tree.
-#'   Format: columns are (1) {String} "source" - edge source
-#'                       (2) {String} "target" - edge target
+#'   Format: columns are (1) {String} "source" - edge source (single cell id)
+#'                       (2) {String} "target" - edge target (single cell id)
 #'
 #' @param sc_id_order Order of single cell ids.
+#' @param width Width of the plot.
+#' @param height Height of the plot.
 #'
 #' @export
 cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", width = 1200, height = 1000) {
