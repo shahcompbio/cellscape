@@ -1,4 +1,6 @@
 # script to load in gml file and convert it to a list of edges
+# Run like so:
+# Rscript --vanilla gml_load.R "<input_directory>" "<output_file>"
 library(stringr)
 
 # user inputs
@@ -17,7 +19,7 @@ path <- args[1] # e.g. "/Users/msmith/data/external/SA501_xenograft_data/all_sym
 string <- readChar(path, nchars=1e6)
 
 # parse nodes from gml string
-nodeRXPattern <- "id ([:alnum:]+)\r\n    label \"([:alnum:]+)\"\r\n"
+nodeRXPattern <- "id ([:alnum:]+)[:space:]+label \"([:alnum:]+)\"[:space:]+"
 node_extractions <- stringr::str_match_all(string, nodeRXPattern)
 nodes <- data.frame(
 	id=node_extractions[[1]][,2], 
@@ -25,7 +27,7 @@ nodes <- data.frame(
 	stringsAsFactors=FALSE)
 
 # parse edges from gml string
-edgeRXPattern <- "source ([:alnum:]+)\r\n    target ([:alnum:]+)\r\n"
+edgeRXPattern <- "source ([:alnum:]+)[:space:]+target ([:alnum:]+)[:space:]+"
 edge_extractions <- stringr::str_match_all(string, edgeRXPattern)
 edges_by_id <- data.frame(
 	source_id=edge_extractions[[1]][,2], 
