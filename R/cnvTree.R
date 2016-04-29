@@ -9,23 +9,27 @@
 #'   
 #' @import htmlwidgets
 #'
-#' @param cnv_data Single cell copy number data frame.
+#' @param cnv_data {Data frame} Single cell copy number data frame.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "chr" - chromosome number
 #'                       (3) {Number} "start" - start position
 #'                       (4) {Number} "end" - end position
 #'                       (5) {Number} "integer_copy_number" - copy number state.
 #'
-#' @param tree_edges Edges for the single cell phylogenetic tree.
+#' @param tree_edges {Data frame} Edges for the single cell phylogenetic tree.
 #'   Format: columns are (1) {String} "source" - edge source (single cell id)
 #'                       (2) {String} "target" - edge target (single cell id)
 #'
-#' @param sc_id_order Order of single cell ids.
-#' @param width Width of the plot.
-#' @param height Height of the plot.
+#' @param sc_groups {Data frame} (Optional) Group assignment (annotation) for each single cell.
+#'   Format: columns are (1) {String} "single_cell_id" - single cell id
+#'                       (2) {String} "group" - group assignment
+#'
+#' @param sc_id_order {Array} (Optional) Order of single cell ids.
+#' @param width {Number} (Optional) Width of the plot.
+#' @param height {Number} (Optional) Height of the plot.
 #'
 #' @export
-cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", width = 1200, height = 1000) {
+cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", sc_groups = NULL, width = 1200, height = 1000) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
   if (missing(cnv_data)) {
@@ -47,6 +51,13 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", width = 1200, heig
       stop(paste("CNV data frame must have the following column names: ", 
           "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"", sep=""))
     }
+
+    # ensure data is of the correct type
+    cnv_data$single_cell_id <- as.character(cnv_data$single_cell_id)
+    cnv_data$chr <- as.character(cnv_data$chr)
+    cnv_data$start <- as.numeric(as.character(cnv_data$start))
+    cnv_data$end <- as.numeric(as.character(cnv_data$end))
+    cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
   }
 
   # TREE EDGE DATA
@@ -58,13 +69,35 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", width = 1200, heig
       stop(paste("Tree edges data frame must have the following column names: ", 
           "\"source\", \"target\"", sep=""))
     }
+
+    # ensure data is of the correct type
+    tree_edges$source <- as.character(tree_edges$source)
+    tree_edges$target <- as.character(tree_edges$target)
+  }
+
+  # SINGLE CELL GROUPS
+  if (!is.null(sc_groups)) {
+    # ensure column names are correct
+    if (!("single_cell_id" %in% colnames(sc_groups)) ||
+        !("group" %in% colnames(sc_groups))) {
+      stop(paste("Single cell group assignment data frame must have the following column names: ", 
+          "\"single_cell_id\", \"group\"", sep=""))
+    }
+
+    # ensure data is of the correct type
+    sc_groups$single_cell_id <- as.character(sc_groups$single_cell_id)
+    sc_groups$group <- as.character(sc_groups$group)
+
+    # to json
+    sc_groups <- jsonlite::toJSON(sc_groups)
   }
 
   # forward options using x
   x = list(
     cnv_data=jsonlite::toJSON(cnv_data),
     tree_edges=jsonlite::toJSON(tree_edges),
-    sc_id_order=sc_id_order
+    sc_id_order=sc_id_order,
+    sc_groups=sc_groups
   )
 
   # create widget

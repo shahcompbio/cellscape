@@ -11,6 +11,7 @@ HTMLWidgets.widget({
             widgetMargin: 10, // marging between widgets
             tree_r: 3, // tree node radius
             indicatorWidth: 10, // width of the selected single cell indicator
+            groupAnnotWidth: 10, // width of the selected single cell group annotation
             defaultNodeColour: "#3458A5",
             highlightRed: "#F73A3A",
             linkHighlightRed: "#FF5F5F",
@@ -40,6 +41,9 @@ HTMLWidgets.widget({
         // indicator configurations
         config.indicatorHeight = config.height;
 
+        // group annotation configurations
+        config.groupAnnotHeight = config.height;
+
         // cnv legend configurations
         config.cnvLegendHeight = config.height;
 
@@ -56,6 +60,15 @@ HTMLWidgets.widget({
         // GET PARAMS FROM R
 
         vizObj.userConfig = x;
+        vizObj.view.groupsSpecified = (vizObj.userConfig.sc_groups != null); // (T/F) group annotation is specified
+
+        // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
+
+        // if group annotation specified, reduce the width of the tree and cnv
+        if (vizObj.view.groupsSpecified) {
+            config.treeWidth -= config.groupAnnotWidth/2;
+            config.cnvWidth -= config.groupAnnotWidth/2;
+        }
 
         // GET TREE CONTENT
 
@@ -107,12 +120,18 @@ HTMLWidgets.widget({
         console.log("vizObj");
         console.log(vizObj);
 
-        // COLOUR SCALE
+        // COLOURS
 
+        // cnv colour scale
         var maxCNV = 6;
         var colorScale = d3.scale.ordinal()
             .domain([0,1,2,3,4,5,6])
             .range(["#176CA2", "#64A0D0", "#ABABAB", "#FEBC7E", "#FD7F25", "#C55215", "#8A390D"]);
+
+        // group annotation colours
+        if (vizObj.view.groupsSpecified) {
+            vizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(vizObj.userConfig.sc_groups, "group")));
+        }
 
         // CONTAINER DIV
 
@@ -151,6 +170,16 @@ HTMLWidgets.widget({
             .attr("class", "indicatorSVG")
             .attr("width", config.indicatorWidth + "px")
             .attr("height", config.indicatorHeight + "px")
+
+        // GROUP ANNOTATION SVG
+
+        if (vizObj.view.groupsSpecified) {
+            var groupAnnotSVG = containerDIV
+                .append("svg:svg")
+                .attr("class", "groupAnnotSVG")
+                .attr("width", config.groupAnnotWidth + "px")
+                .attr("height", config.groupAnnotHeight + "px")
+        }
 
         // CNV SVG
 
@@ -255,7 +284,15 @@ HTMLWidgets.widget({
                 return "node_" + d.name;
             })
             .attr("r", config.tree_r)
-            .style("fill", config.defaultNodeColour)
+            .style("fill", function(d) {
+                // group annotations specified -- colour by group
+                if (vizObj.view.groupsSpecified) {
+                    var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.name}).group;
+                    return vizObj.view.colour_assignment[group];
+                }
+                // no group annotations -- default colour
+                return config.defaultNodeColour;
+            })
             .style("stroke", "#838181")
             .on('mouseover', function(d) {
 
@@ -489,6 +526,33 @@ HTMLWidgets.widget({
                 }
             });
         
+        // PLOT GROUP ANNOTATION COLUMN
+
+        if (vizObj.view.groupsSpecified) {
+            var groupAnnot = groupAnnotSVG
+                .append("g")
+                .classed("groupAnnots", true)
+                .selectAll(".groupAnnot")
+                .data(vizObj.data.sc_ids)
+                .enter()
+                .append("rect")
+                .classed("groupAnnot", true)
+                .attr("id", function(d) {
+                    return "groupAnnot_sc_" + d;
+                })
+                .attr("x", 0)
+                .attr("y", function(d) { 
+                    var index = vizObj.data.sc_ids.indexOf(d);
+                    return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
+                })
+                .attr("height", (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight))
+                .attr("width", config.groupAnnotWidth-3)
+                .style("fill", function(d) {
+                    var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d}).group;
+                    return vizObj.view.colour_assignment[group];
+                });
+        }
+
         // PLOT CNV LEGEND
 
         // legend title

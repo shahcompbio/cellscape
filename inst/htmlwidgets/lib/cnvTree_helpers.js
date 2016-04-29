@@ -78,7 +78,15 @@ function _highlightIndicator(sc_id) {
 */
 function _resetNode(sc_id, vizObj) {
     d3.select("#node_" + sc_id)
-        .style("fill", vizObj.generalConfig.defaultNodeColour);
+        .style("fill", function(d) {
+            // group annotations specified -- colour by group
+            if (vizObj.view.groupsSpecified) {
+                var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.name}).group;
+                return vizObj.view.colour_assignment[group];
+            }
+            // no group annotations -- default colour
+            return vizObj.generalConfig.defaultNodeColour;
+        });
 }
 
 /* function to reset indicator for a single cell
@@ -94,7 +102,15 @@ function _resetIndicator(sc_id) {
 */
 function _resetNodes(vizObj) {
     d3.selectAll(".node")
-        .style("fill", vizObj.generalConfig.defaultNodeColour);
+        .style("fill", function(d) {
+            // group annotations specified -- colour by group
+            if (vizObj.view.groupsSpecified) {
+                var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.name}).group;
+                return vizObj.view.colour_assignment[group];
+            }
+            // no group annotations -- default colour
+            return vizObj.generalConfig.defaultNodeColour;
+        });
 }
 
 /* function to reset all indicators for a single cell
@@ -140,7 +156,15 @@ function _linkMouseover(vizObj, link_id, link_ids) {
 function _linkMouseout(vizObj) {
     // reset nodes
     d3.selectAll(".node")
-        .style("fill", vizObj.generalConfig.defaultNodeColour);
+        .style("fill", function(d) {
+            // group annotations specified -- colour by group
+            if (vizObj.view.groupsSpecified) {
+                var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.name}).group;
+                return vizObj.view.colour_assignment[group];
+            }
+            // no group annotations -- default colour
+            return vizObj.generalConfig.defaultNodeColour;
+        });
 
     // reset indicators
     d3.selectAll(".indicator")
@@ -389,6 +413,84 @@ function _fillPixelWithChromInfo(vizObj) {
 
     vizObj.view.cnv.pixels = new_pixels;
 
+}
+
+// COLOUR FUNCTIONS
+
+
+/* function to calculate colours for group annotations
+* @param {Array} groups -- groups in dataset, for which we need colours
+*/
+function _getColours(groups) {
+
+    var colour_assignment = {};
+
+    var s = 0.95, // saturation
+        l = 0.7; // lightness
+
+    // number of nodes
+    var n_nodes = groups.length;
+
+    for (var i = 0; i < n_nodes; i++) {
+        var h = i/n_nodes;
+        var rgb = _hslToRgb(h, s, l); // hsl to rgb
+        var col = _rgb2hex("rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")"); // rgb to hex
+
+        colour_assignment[groups[i]] = col;
+    }
+
+    return colour_assignment;  
+}
+
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param   Number  h       The hue
+ * @param   Number  s       The saturation
+ * @param   Number  l       The lightness
+ * @return  Array           The RGB representation
+ */
+function _hslToRgb(h, s, l){
+    var r, g, b;
+
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var hue2rgb = function hue2rgb(p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+
+// convert RGB to hex
+// http://stackoverflow.com/questions/1740700/get-hex-value-rather-than-rgb-value-using-jquery
+function _rgb2hex(rgb) {
+     if (  rgb.search("rgb") == -1 ) {
+          return rgb;
+     } else {
+          rgb = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+))?\)$/);
+          function hex(x) {
+               return ("0" + parseInt(x).toString(16)).slice(-2);
+          }
+          return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]); 
+     }
 }
 
 // GENERAL FUNCTIONS

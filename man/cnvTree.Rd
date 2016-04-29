@@ -4,26 +4,30 @@
 \alias{cnvTree}
 \title{cnvTree}
 \usage{
-cnvTree(cnv_data, tree_edges, sc_id_order = "NA", width = 1200,
-  height = 1000)
+cnvTree(cnv_data, tree_edges, sc_id_order = "NA", sc_groups = NULL,
+  width = 1200, height = 1000)
 }
 \arguments{
-\item{cnv_data}{Single cell copy number data frame.
+\item{cnv_data}{{Data frame} Single cell copy number data frame.
 Format: columns are (1) {String} "single_cell_id" - single cell id
                     (2) {String} "chr" - chromosome number
                     (3) {Number} "start" - start position
                     (4) {Number} "end" - end position
                     (5) {Number} "integer_copy_number" - copy number state.}
 
-\item{tree_edges}{Edges for the single cell phylogenetic tree.
+\item{tree_edges}{{Data frame} Edges for the single cell phylogenetic tree.
 Format: columns are (1) {String} "source" - edge source (single cell id)
                     (2) {String} "target" - edge target (single cell id)}
 
-\item{sc_id_order}{Order of single cell ids.}
+\item{sc_id_order}{{Array} (Optional) Order of single cell ids.}
 
-\item{width}{Width of the plot.}
+\item{sc_groups}{{Data frame} (Optional) Group assignment (annotation) for each single cell.
+Format: columns are (1) {String} "single_cell_id" - single cell id
+                    (2) {String} "group" - group assignment}
 
-\item{height}{Height of the plot.}
+\item{width}{{Number} (Optional) Width of the plot.}
+
+\item{height}{{Number} (Optional) Height of the plot.}
 }
 \description{
 Explores single cell copy number profiles in the context of a single cell tree.
