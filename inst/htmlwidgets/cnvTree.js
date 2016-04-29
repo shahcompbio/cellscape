@@ -13,8 +13,8 @@ HTMLWidgets.widget({
             indicatorWidth: 10, // width of the selected single cell indicator
             groupAnnotWidth: 10, // width of the selected single cell group annotation
             defaultNodeColour: "#3458A5",
-            highlightRed: "#F73A3A",
-            linkHighlightRed: "#FF5F5F",
+            highlightColour: "#000000",
+            linkHighlightColour: "#000000",
             defaultLinkColour: "#838181",
             chromLegendHeight: 15,
             cnvLegendWidth: 50,
@@ -42,6 +42,8 @@ HTMLWidgets.widget({
         // cnv configurations
         config.cnvWidth = config.width/2 - config.indicatorWidth/2 - config.cnvLegendWidth/2;
         config.cnvHeight = config.height;
+        config.cnvTop = 0;
+        config.cnvBottom = (config.cnvHeight-config.chromLegendHeight);
 
         // indicator configurations
         config.indicatorHeight = config.height;
@@ -103,6 +105,9 @@ HTMLWidgets.widget({
         vizObj.view.cnv = {};
         vizObj.view.cnv.nrows = vizObj.data.sc_ids.length;
         vizObj.view.cnv.ncols = Math.floor(config.cnvWidth);
+
+        // height of each cnv row
+        vizObj.view.cnv.rowHeight = (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
         // get bounds of chromosome
         vizObj.data.chrom_bounds = _getChromBounds(vizObj);
@@ -311,7 +316,7 @@ HTMLWidgets.widget({
                     _highlightNode(d.name, vizObj);
 
                     // highlight indicator
-                    _highlightIndicator(d.name);
+                    _highlightIndicator(d.name, vizObj);
                 }
             })
             .on('mouseout', function(d) {
@@ -352,7 +357,7 @@ HTMLWidgets.widget({
                     _highlightNode(d.name, vizObj);
 
                     // highlight indicator
-                    _highlightIndicator(d.name);
+                    _highlightIndicator(d.name, vizObj);
                 }
             })
             .call(force.drag);
@@ -390,7 +395,7 @@ HTMLWidgets.widget({
             .attr("y", function(d) { 
                 return (d.row/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
             })
-            .attr("height", (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight))
+            .attr("height", vizObj.view.cnv.rowHeight)
             .attr("width", function(d) { return d.px_length; })
             .attr("fill", function(d) { 
                 // no cnv data
@@ -469,9 +474,9 @@ HTMLWidgets.widget({
                 var index = vizObj.data.sc_ids.indexOf(d);
                 return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
             })
-            .attr("height", (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight))
+            .attr("height", vizObj.view.cnv.rowHeight)
             .attr("width", config.indicatorWidth-3)
-            .style("fill", config.highlightRed)
+            .style("fill", config.highlightColour)
             .style("fill-opacity", 0)
             .on("mouseover", function(d) {
                 // show tooltip
@@ -485,7 +490,7 @@ HTMLWidgets.widget({
                     _highlightNode(d, vizObj);
 
                     // highlight indicator
-                    _highlightIndicator(d);
+                    _highlightIndicator(d, vizObj);
                 }
             })
             .on("mouseout", function(d) {
@@ -516,7 +521,7 @@ HTMLWidgets.widget({
                         _highlightNode(d, vizObj);
 
                         // highlight indicator
-                        _highlightIndicator(d);
+                        _highlightIndicator(d, vizObj);
                     }
                     // if selected, unselect
                     else {
@@ -550,7 +555,7 @@ HTMLWidgets.widget({
                     var index = vizObj.data.sc_ids.indexOf(d);
                     return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
                 })
-                .attr("height", (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight))
+                .attr("height", vizObj.view.cnv.rowHeight)
                 .attr("width", config.groupAnnotWidth-3)
                 .style("fill", function(d) {
                     var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d}).group;

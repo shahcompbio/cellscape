@@ -61,13 +61,16 @@ function _getIntervalTree(vizObj) {
 */
 function _highlightNode(sc_id, vizObj) {
     d3.select("#node_" + sc_id)
-        .style("fill", vizObj.generalConfig.highlightRed);
+        .style("fill", vizObj.generalConfig.highlightColour);
 }
 
 /* function to highlight indicator for a single cell
 * @param {String} sc_id -- single cell id
+* @param {Object} vizObj
 */
-function _highlightIndicator(sc_id) {
+function _highlightIndicator(sc_id, vizObj) {
+    var config = vizObj.generalConfig;
+
     d3.select("#indic_" + sc_id)
         .style("fill-opacity", 1);
 }
@@ -190,7 +193,7 @@ function _downstreamEffects(vizObj, link_id, link_ids) {
 
     // highlight node
     d3.select("#node_" + target_id)
-        .style("fill", vizObj.generalConfig.highlightRed);
+        .style("fill", vizObj.generalConfig.highlightColour);
 
     // highlight indicator for target
     d3.select("#indic_" + target_id)
@@ -198,7 +201,7 @@ function _downstreamEffects(vizObj, link_id, link_ids) {
 
     // highlight link
     d3.select("#"+link_id)
-        .style("stroke", vizObj.generalConfig.linkHighlightRed);
+        .style("stroke", vizObj.generalConfig.linkHighlightColour);
 
     // get the targets of this target
     var sourceRX = new RegExp("link_" + target_id + "_(.+)");
