@@ -126,8 +126,8 @@ HTMLWidgets.widget({
         var maxCNV = 6;
         var colorScale = d3.scale.ordinal()
             .domain([0,1,2,3,4,5,6])
-            .range(["#176CA2", "#64A0D0", "#ABABAB", "#FEBC7E", "#FD7F25", "#C55215", "#8A390D"]);
-
+            .range(["#2e7aab", "#73a9d4", "#D6D5D5", "#fec28b", "#fd8b3a", "#ca632c", "#954c25"]);
+            
         // group annotation colours
         if (vizObj.view.groupsSpecified) {
             vizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(vizObj.userConfig.sc_groups, "group")));
@@ -400,7 +400,7 @@ HTMLWidgets.widget({
                     }
                     // NA value within the cnv data
                     else {
-                        return "black";
+                        return "white";
                     }
                 }
                 // cnv data, but above max cnv value

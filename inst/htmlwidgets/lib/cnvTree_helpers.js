@@ -426,7 +426,7 @@ function _getColours(groups) {
     var colour_assignment = {};
 
     var s = 0.95, // saturation
-        l = 0.7; // lightness
+        l = 0.76; // lightness
 
     // number of nodes
     var n_nodes = groups.length;
