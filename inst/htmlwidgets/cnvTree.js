@@ -17,7 +17,12 @@ HTMLWidgets.widget({
             linkHighlightRed: "#FF5F5F",
             defaultLinkColour: "#838181",
             chromLegendHeight: 15,
-            cnvLegendWidth: 50
+            cnvLegendWidth: 50,
+            groupAnnotStart: 140, // starting y-pixel for group annotation legend
+            titleHeight: 14, // height of legend titles
+            rectHeight: 12, // rectangle in legend
+            spacing: 2, // spacing between legend rectangles
+            fontHeight: 12
         };
 
         // global variable vizObj
@@ -127,7 +132,7 @@ HTMLWidgets.widget({
         var colorScale = d3.scale.ordinal()
             .domain([0,1,2,3,4,5,6])
             .range(["#2e7aab", "#73a9d4", "#D6D5D5", "#fec28b", "#fd8b3a", "#ca632c", "#954c25"]);
-            
+
         // group annotation colours
         if (vizObj.view.groupsSpecified) {
             vizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(vizObj.userConfig.sc_groups, "group")));
@@ -555,46 +560,43 @@ HTMLWidgets.widget({
 
         // PLOT CNV LEGEND
 
-        // legend title
-        var titleHeight = 14;
+        // CNV legend title
         cnvLegendSVG.append("text")
             .attr("x", 0)
             .attr("y", 0)
             .attr("dy", "+0.71em")
             .attr("font-family", "sans-serif")
-            .attr("font-size", titleHeight)
-            .text("Legend");
+            .attr("font-size", config.titleHeight)
+            .text("CNV");
 
-        // legend rectangle / text group
-        var rectHeight = 12;
-        var spacing = 2;
+        // CNV legend rectangle / text group
         var cnvLegendG = cnvLegendSVG
-            .selectAll(".legendG")
+            .selectAll(".cnvLegendG")
             .data(colorScale.domain())
             .enter()
             .append("g")
-            .classed("legendG", true);
+            .classed("cnvLegendG", true);
 
-        // legend rectangles
+        // CNV legend rectangles
         cnvLegendG
             .append("rect")
             .attr("x", 0)
             .attr("y", function(d,i) {
-                return titleHeight + spacing*2 + i*(rectHeight + spacing);
+                return config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing);
             })
-            .attr("height", rectHeight)
-            .attr("width", rectHeight)
+            .attr("height", config.rectHeight)
+            .attr("width", config.rectHeight)
             .attr("fill", function(d) {
                 return colorScale(d);
             });
 
-        // legend text
-        var fontHeight = 12;
+        // CNV legend text
         cnvLegendG
             .append("text")
-            .attr("x", rectHeight + spacing)
+            .attr("x", config.rectHeight + config.spacing)
             .attr("y", function(d,i) {
-                return titleHeight + spacing*2 + i*(rectHeight + spacing) + (fontHeight/2);
+                return config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing) + 
+                    (config.fontHeight/2);
             })
             .attr("dy", "+0.35em")
             .text(function(d) { 
@@ -604,10 +606,55 @@ HTMLWidgets.widget({
                 return d; 
             })
             .attr("font-family", "sans-serif")
-            .attr("font-size", fontHeight)
+            .attr("font-size", config.fontHeight)
             .style("fill", "black");
 
+        // GROUP ANNOTATION LEGEND
+        if (vizObj.view.groupsSpecified) {
 
+            // group annotation legend title
+            cnvLegendSVG.append("text")
+                .attr("x", 0)
+                .attr("y", config.groupAnnotStart)
+                .attr("dy", "+0.71em")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", config.titleHeight)
+                .text("Group");
+
+            // group annotation legend rectangle / text group
+            var groupAnnotLegendG = cnvLegendSVG
+                .selectAll(".groupAnnotLegendG")
+                .data(_.uniq(_.pluck(vizObj.userConfig.sc_groups, "group")))
+                .enter()
+                .append("g")
+                .classed("groupAnnotLegendG", true);
+
+            // group annotation legend rectangles
+            groupAnnotLegendG
+                .append("rect")
+                .attr("x", 0)
+                .attr("y", function(d,i) {
+                    return config.groupAnnotStart + config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing);
+                })
+                .attr("height", config.rectHeight)
+                .attr("width", config.rectHeight)
+                .attr("fill", function(d) {
+                    return vizObj.view.colour_assignment[d];
+                });
+
+            // group annotation legend text
+            groupAnnotLegendG
+                .append("text")
+                .attr("x", config.rectHeight + config.spacing)
+                .attr("y", function(d,i) {
+                    return config.groupAnnotStart + config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing) + (config.fontHeight/2);
+                })
+                .attr("dy", "+0.35em")
+                .text(function(d) { return d; })
+                .attr("font-family", "sans-serif")
+                .attr("font-size", config.fontHeight)
+                .style("fill", "black");
+        }
 
     },
 
