@@ -420,8 +420,22 @@ HTMLWidgets.widget({
                 // regular cnv data
                 return colorScale(d.mode_cnv);
             })
-            .append("title")
-            .text(function(d) { return d.sc_id});
+            .on("mouseover", function(d) {
+                // show indicator tooltip & highlight indicator
+                indicatorTip.show(d.sc_id, d3.select("#indic_" + d.sc_id).node());
+                _highlightIndicator(d.sc_id, vizObj);
+
+                // highlight node
+                _highlightNode(d.sc_id, vizObj);
+            })
+            .on("mouseout", function(d) {
+                // hide indicator tooltip & unhighlight indicator
+                indicatorTip.hide(d.sc_id);
+                _resetIndicator(d.sc_id);
+
+                // reset node
+                _resetNode(d.sc_id, vizObj);
+            });
 
         // PLOT CHROMOSOME LEGEND
         var chromBoxes = cnvSVG
@@ -480,7 +494,7 @@ HTMLWidgets.widget({
             .style("fill-opacity", 0)
             .on("mouseover", function(d) {
                 // show tooltip
-                indicatorTip.show(d);
+                indicatorTip.show(d, d3.select(this).node());
 
                 // if there's no node or link selection taking place
                 if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
@@ -522,6 +536,7 @@ HTMLWidgets.widget({
 
                         // highlight indicator
                         _highlightIndicator(d, vizObj);
+
                     }
                     // if selected, unselect
                     else {
