@@ -265,23 +265,7 @@ HTMLWidgets.widget({
                     (d3.selectAll(".linkSelected")[0].length == 0)) {
                     return _linkMouseout(vizObj); 
                 }
-            })
-            .on("click", function(d) {
-                // if there's no node selection taking place
-                if (d3.selectAll(".nodeSelected")[0].length == 0) {
-                    
-                    // if this link is selected, unselect it
-                    if (d3.select(this).classed("linkSelected")) {
-                        d3.select(this)
-                            .classed("linkSelected", false);
-                    }
-                    // if link not selected, select it
-                    else {
-                        d3.select(this)
-                            .classed("linkSelected", true);
-                    }
-                }
-            })
+            });
 
         var node = treeSVG
             .append("g")
@@ -333,31 +317,6 @@ HTMLWidgets.widget({
 
                     // reset indicator
                     _resetIndicator(d.name);
-                }
-            })
-            .on('click', function(d) {
-                // if there's no link selection taking place
-                if (d3.selectAll(".linkSelected")[0].length == 0) {
-
-                    // hide tooltip
-                    nodeTip.hide(d);
-
-                    // if not already selected, add "selected" class
-                    if (!d3.select(this).classed("nodeSelected")) {
-                        d3.select(this)
-                            .classed("nodeSelected", true);
-                    }
-                    // if selected, unselect
-                    else {
-                        d3.select(this)
-                            .classed("nodeSelected", false);
-                    }
-
-                    // highlight node
-                    _highlightNode(d.name, vizObj);
-
-                    // highlight indicator
-                    _highlightIndicator(d.name, vizObj);
                 }
             })
             .call(force.drag);
@@ -520,34 +479,6 @@ HTMLWidgets.widget({
 
                     // reset indicator
                     _resetIndicator(d);
-                }
-            })
-            .on("click", function(d) {
-                // if there's no link selection taking place
-                if (d3.selectAll(".linkSelected")[0].length == 0) {
-
-                    // if not already selected, add "selected" class
-                    if (!d3.select("#node_" + d).classed("nodeSelected")) {
-                        d3.select("#node_" + d)
-                            .classed("nodeSelected", true);
-
-                        // highlight node
-                        _highlightNode(d, vizObj);
-
-                        // highlight indicator
-                        _highlightIndicator(d, vizObj);
-
-                    }
-                    // if selected, unselect
-                    else {
-                        d3.select("#node_" + d)
-                            .classed("nodeSelected", false);
-                        // reset node
-                        _resetNode(d, vizObj);
-
-                        // reset indicator
-                        _resetIndicator(d);
-                    }
                 }
             });
         
