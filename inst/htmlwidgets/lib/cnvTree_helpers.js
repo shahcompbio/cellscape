@@ -1,3 +1,34 @@
+// D3 EFFECTS FUNCTIONS
+
+/* mouseover function for group annotations
+* highlights indicator & node for all sc's with this group annotation id, highlights group annotation rectangle in legend
+* @param {String} group -- group to highlight
+* @param {Object} vizObj
+*/
+function _mouseoverGroupAnnot(group, vizObj) {
+    // highlight indicator & node for all sc's with this group annotation id
+    vizObj.data.groups[group].forEach(function(sc) {
+        _highlightIndicator(sc, vizObj);
+        _highlightNode(sc, vizObj);
+    })
+
+    // highlight group annotation rectangle in legend
+    _highlightGroupAnnotLegendRect(group, vizObj);
+}
+
+/* mouseover function for group annotations
+* reset indicators, nodes, group annotation rectangles in legend
+* @param {Object} vizObj
+*/
+function _mouseoutGroupAnnot(vizObj) {
+    // reset indicators & nodes
+    _resetIndicators();
+    _resetNodes(vizObj);
+
+    // reset group annotation rectangles in legend
+    _resetGroupAnnotLegendRects();
+}
+
 // TREE FUNCTIONS
 
 /* function to get tree edges and nodes from user data
@@ -64,6 +95,22 @@ function _highlightNode(sc_id, vizObj) {
         .style("fill", vizObj.generalConfig.highlightColour);
 }
 
+/* function to highlight a group annotation rectangle in the legend
+* @param {String} group_id -- group id
+* @param {Object} vizObj
+*/
+function _highlightGroupAnnotLegendRect(group_id, vizObj) {
+    d3.select(".legendGroupRect.group_" + group_id)
+        .attr("stroke", vizObj.generalConfig.highlightColour);
+}
+
+/* function to unhighlight group annotation rectangles in the legend
+*/
+function _resetGroupAnnotLegendRects() {
+    d3.selectAll(".legendGroupRect")
+        .attr("stroke", "none");
+}
+
 /* function to highlight indicator for a single cell
 * @param {String} sc_id -- single cell id
 * @param {Object} vizObj
@@ -71,7 +118,7 @@ function _highlightNode(sc_id, vizObj) {
 function _highlightIndicator(sc_id, vizObj) {
     var config = vizObj.generalConfig;
 
-    d3.select("#indic_" + sc_id)
+    d3.select(".indic.sc_" + sc_id)
         .style("fill-opacity", 1);
 }
 
@@ -96,7 +143,7 @@ function _resetNode(sc_id, vizObj) {
 * @param {String} sc_id -- single cell id
 */
 function _resetIndicator(sc_id) {
-    d3.select("#indic_" + sc_id)
+    d3.select(".indic.sc_" + sc_id)
         .style("fill-opacity", 0);
 }
 
@@ -120,7 +167,7 @@ function _resetNodes(vizObj) {
 * @param {String} sc_id -- single cell id
 */
 function _resetIndicators() {
-    d3.selectAll(".indicator")
+    d3.selectAll(".indic")
         .style("fill-opacity", 0);
 }
 
@@ -170,7 +217,7 @@ function _linkMouseout(vizObj) {
         });
 
     // reset indicators
-    d3.selectAll(".indicator")
+    d3.selectAll(".indic")
         .style("fill-opacity", 0);
 
     // reset links
@@ -196,7 +243,7 @@ function _downstreamEffects(vizObj, link_id, link_ids) {
         .style("fill", vizObj.generalConfig.highlightColour);
 
     // highlight indicator for target
-    d3.select("#indic_" + target_id)
+    d3.select(".indic.sc_" + target_id)
         .style("fill-opacity", 1);
 
     // highlight link
@@ -218,6 +265,23 @@ function _downstreamEffects(vizObj, link_id, link_ids) {
     });
 };
 
+// GROUP ANNOTATION FUNCTIONS
+
+/* function to get group annotations as object w/properties group : [array of single cells]
+* @param {Object} vizObj
+*/
+function _reformatGroupAnnots(vizObj) {
+    var groups = {};
+
+    vizObj.userConfig.sc_groups.forEach(function(sc) {
+        if (!groups[sc.group]) {
+            groups[sc.group] = [];
+        }
+        groups[sc.group].push(sc.single_cell_id);
+    });
+
+    vizObj.data.groups = groups;
+}
 
 // CNV FUNCTIONS
 

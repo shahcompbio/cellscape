@@ -127,6 +127,11 @@ HTMLWidgets.widget({
         // get chromosome box info
         _getChromBoxInfo(vizObj);
 
+        // get group annotation info as object w/properties group : [array of single cells]
+        if (vizObj.view.groupsSpecified) {
+            _reformatGroupAnnots(vizObj);
+        }
+
         console.log("vizObj");
         console.log(vizObj);
 
@@ -347,8 +352,11 @@ HTMLWidgets.widget({
             .enter()
             .append("rect")
             .classed("gridCell", true)
-            .attr("id", function(d) {
-                return "cnv_" + d.sc_id;
+            .attr("class", function(d) {
+                // group annotation
+                var group = (vizObj.view.groupsSpecified) ?
+                    _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.sc_id}).group : "none";
+                return "gridCell sc_" + d.sc_id + " group_" + group;
             })
             .attr("x", function(d) { return d.col - d.px_length + 1; })
             .attr("y", function(d) { 
@@ -381,7 +389,7 @@ HTMLWidgets.widget({
             })
             .on("mouseover", function(d) {
                 // show indicator tooltip & highlight indicator
-                indicatorTip.show(d.sc_id, d3.select("#indic_" + d.sc_id).node());
+                indicatorTip.show(d.sc_id, d3.select(".indic.sc_" + d.sc_id).node());
                 _highlightIndicator(d.sc_id, vizObj);
 
                 // highlight node
@@ -434,13 +442,12 @@ HTMLWidgets.widget({
         var indicators = indicatorSVG
             .append("g")
             .classed("indicators", true)
-            .selectAll(".indicator")
+            .selectAll(".indic")
             .data(vizObj.data.sc_ids)
             .enter()
             .append("rect")
-            .classed("indicator", true)
-            .attr("id", function(d) {
-                return "indic_" + d;
+            .attr("class", function(d) {
+                return "indic sc_" + d;
             })
             .attr("x", 0)
             .attr("y", function(d) { 
@@ -449,8 +456,9 @@ HTMLWidgets.widget({
             })
             .attr("height", vizObj.view.cnv.rowHeight)
             .attr("width", config.indicatorWidth)
-            .style("fill", config.highlightColour)
-            .style("fill-opacity", 0)
+            .attr("fill", config.highlightColour)
+            .attr("fill-opacity", 0)
+            .attr("stroke", "none")
             .on("mouseover", function(d) {
                 // show tooltip
                 indicatorTip.show(d, d3.select(this).node());
@@ -487,41 +495,33 @@ HTMLWidgets.widget({
         if (vizObj.view.groupsSpecified) {
             var groupAnnot = groupAnnotSVG
                 .append("g")
-                .classed("groupAnnots", true)
+                .classed("groupAnnotG", true)
                 .selectAll(".groupAnnot")
-                .data(vizObj.data.sc_ids)
+                .data(vizObj.userConfig.sc_groups)
                 .enter()
                 .append("rect")
-                .classed("groupAnnot", true)
-                .attr("id", function(d) {
-                    return "groupAnnot_sc_" + d;
+                .attr("class", function(d) {
+                    return "groupAnnot group_" + d.group;
                 })
                 .attr("x", 0)
                 .attr("y", function(d) { 
-                    var index = vizObj.data.sc_ids.indexOf(d);
+                    var index = vizObj.data.sc_ids.indexOf(d.single_cell_id);
                     return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
                 })
                 .attr("height", vizObj.view.cnv.rowHeight)
                 .attr("width", config.groupAnnotWidth-3)
-                .style("fill", function(d) {
-                    var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d}).group;
-                    return vizObj.view.colour_assignment[group];
+                .attr("fill", function(d) {
+                    return vizObj.view.colour_assignment[d.group];
                 })
+                .attr("stroke", "none")
                 .on("mouseover", function(d) {
-                    // show indicator tooltip & highlight indicator
-                    indicatorTip.show(d, d3.select("#indic_" + d).node());
-                    _highlightIndicator(d, vizObj);
-
-                    // highlight node
-                    _highlightNode(d, vizObj);
+                    // highlight indicator & node for all sc's with this group annotation id,
+                    // highlight group annotation rectangle in legend
+                    _mouseoverGroupAnnot(d.group, vizObj);
                 })
                 .on("mouseout", function(d) {
-                    // hide indicator tooltip & unhighlight indicator
-                    indicatorTip.hide(d);
-                    _resetIndicator(d);
-
-                    // reset node
-                    _resetNode(d, vizObj);
+                    // reset indicators, nodes, group annotation rectangles in legend
+                    _mouseoutGroupAnnot(vizObj);
                 });
         }
 
@@ -591,7 +591,7 @@ HTMLWidgets.widget({
             // group annotation legend rectangle / text group
             var groupAnnotLegendG = cnvLegendSVG
                 .selectAll(".groupAnnotLegendG")
-                .data(_.uniq(_.pluck(vizObj.userConfig.sc_groups, "group")))
+                .data(Object.keys(vizObj.data.groups))
                 .enter()
                 .append("g")
                 .classed("groupAnnotLegendG", true);
@@ -599,6 +599,7 @@ HTMLWidgets.widget({
             // group annotation legend rectangles
             groupAnnotLegendG
                 .append("rect")
+                .attr("class", function(d) { return "legendGroupRect group_" + d; })
                 .attr("x", 0)
                 .attr("y", function(d,i) {
                     return config.groupAnnotStart + config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing);
@@ -607,11 +608,21 @@ HTMLWidgets.widget({
                 .attr("width", config.rectHeight)
                 .attr("fill", function(d) {
                     return vizObj.view.colour_assignment[d];
+                })
+                .on("mouseover", function(d) {
+                    // highlight indicator & node for all sc's with this group annotation id,
+                    // highlight group annotation rectangle in legend
+                    _mouseoverGroupAnnot(d, vizObj);
+                })
+                .on("mouseout", function(d) {
+                    // reset indicators, nodes, group annotation rectangles in legend
+                    _mouseoutGroupAnnot(vizObj);
                 });
 
             // group annotation legend text
             groupAnnotLegendG
                 .append("text")
+                .attr("class", function(d) { return "legendGroupText group_" + d; })
                 .attr("x", config.rectHeight + config.spacing)
                 .attr("y", function(d,i) {
                     return config.groupAnnotStart + config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing) + (config.fontHeight/2);
@@ -620,7 +631,16 @@ HTMLWidgets.widget({
                 .text(function(d) { return d; })
                 .attr("font-family", "sans-serif")
                 .attr("font-size", config.fontHeight)
-                .style("fill", "black");
+                .attr("fill", "black")
+                .on("mouseover", function(d) {
+                    // highlight indicator & node for all sc's with this group annotation id,
+                    // highlight group annotation rectangle in legend
+                    _mouseoverGroupAnnot(d, vizObj);
+                })
+                .on("mouseout", function(d) {
+                    // reset indicators, nodes, group annotation rectangles in legend
+                    _mouseoutGroupAnnot(vizObj);
+                });
         }
 
     },
