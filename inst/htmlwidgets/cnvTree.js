@@ -10,7 +10,7 @@ HTMLWidgets.widget({
         var defaults = {
             widgetMargin: 10, // marging between widgets
             tree_r: 3, // tree node radius
-            indicatorWidth: 10, // width of the selected single cell indicator
+            indicatorWidth: 7, // width of the selected single cell indicator
             groupAnnotWidth: 10, // width of the selected single cell group annotation
             defaultNodeColour: "#3458A5",
             highlightColour: "#000000",
@@ -79,7 +79,7 @@ HTMLWidgets.widget({
 
         // GET TREE CONTENT
 
-        _getTreeInfo(vizObj)
+        _getTreeInfo(vizObj);
 
         // GET CNV CONTENT
 
@@ -448,7 +448,7 @@ HTMLWidgets.widget({
                 return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
             })
             .attr("height", vizObj.view.cnv.rowHeight)
-            .attr("width", config.indicatorWidth-3)
+            .attr("width", config.indicatorWidth)
             .style("fill", config.highlightColour)
             .style("fill-opacity", 0)
             .on("mouseover", function(d) {
