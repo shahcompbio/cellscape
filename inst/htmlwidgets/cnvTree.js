@@ -77,10 +77,6 @@ HTMLWidgets.widget({
             config.cnvWidth -= config.groupAnnotWidth/2;
         }
 
-        // GET TREE CONTENT
-
-        _getTreeInfo(vizObj);
-
         // GET CNV CONTENT
 
         // sorted single cell ids
@@ -97,9 +93,6 @@ HTMLWidgets.widget({
                 }
             })
         }
-
-        // chromosomes
-        vizObj.data.chroms = _.uniq(_.pluck(vizObj.userConfig.cnv_data, "chr")).sort(_sortAlphaNum);
 
         // cnv plot number of rows & columns
         vizObj.view.cnv = {};
@@ -219,8 +212,8 @@ HTMLWidgets.widget({
             .linkDistance(10)
             .gravity(.09)
             .charge(-20)
-            .nodes(vizObj.data.tree_nodes)
-            .links(vizObj.data.tree_edges)
+            .nodes(vizObj.userConfig.tree_nodes)
+            .links(vizObj.userConfig.tree_edges)
             .start();
 
         // TOOLTIP FUNCTIONS
@@ -243,17 +236,14 @@ HTMLWidgets.widget({
 
         // PLOT NODES AND EDGES
 
-        var link_ids = []; // store link id's
         var link = treeSVG
             .append("g")
             .classed("links", true)
             .selectAll(".link")
-            .data(vizObj.data.tree_edges)
+            .data(vizObj.userConfig.tree_edges)
             .enter().append("line")
             .classed("link", true)
             .attr("id", function(d) { 
-                d.link_id = _getLinkId(d)
-                link_ids.push(d.link_id);
                 return d.link_id; 
             })
             .style("stroke","#838181")
@@ -261,7 +251,7 @@ HTMLWidgets.widget({
                 // if there's no node or link selection taking place, highlight downstream links
                 if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
                     (d3.selectAll(".linkSelected")[0].length == 0)) {
-                    return _linkMouseover(vizObj, d.link_id, link_ids);                     
+                    return _linkMouseover(vizObj, d.link_id);                     
                 }
             })
             .on("mouseout", function(d) { 
@@ -276,7 +266,7 @@ HTMLWidgets.widget({
             .append("g")
             .classed("nodes", true)
             .selectAll(".node")
-            .data(vizObj.data.tree_nodes)
+            .data(vizObj.userConfig.tree_nodes)
             .enter().append("circle")
             .classed("node", true)
             .attr("id", function(d) {

@@ -29,29 +29,6 @@ function _mouseoutGroupAnnot(vizObj) {
     _resetGroupAnnotLegendRects();
 }
 
-// TREE FUNCTIONS
-
-/* function to get tree edges and nodes from user data
-* @param {Object} vizObj
-*/
-function _getTreeInfo(vizObj) {
-
-    // tree nodes
-    var unique_nodes = _.uniq(
-        _.pluck(vizObj.userConfig.tree_edges, "source").concat(
-        _.pluck(vizObj.userConfig.tree_edges, "target")));
-    vizObj.data.tree_nodes = unique_nodes.map(function(node, node_idx) {
-        return {"name": node,
-                "index": node_idx}
-    });
-
-    // tree edges (with source/target as indices in tree nodes array)
-    vizObj.data.tree_edges = vizObj.userConfig.tree_edges.map(function(edge) {
-        return {"source": unique_nodes.indexOf(edge.source),
-                "target": unique_nodes.indexOf(edge.target)}
-    });
-}
-
 /* function to get interval tree of segments for each chromosome
 * @param {Object} vizObj
 */
@@ -194,10 +171,10 @@ function _getLinkId(d) {
 * @param link_id -- id for the link that's currently highlighted
 * @param link_ids -- ids for all links in tree
 */
-function _linkMouseover(vizObj, link_id, link_ids) {
+function _linkMouseover(vizObj, link_id) {
 
     // get downstream links, highlight heatmap
-    _downstreamEffects(vizObj, link_id, link_ids); 
+    _downstreamEffects(vizObj, link_id); 
 };
 
 /* function for mouseout of link
@@ -230,12 +207,11 @@ function _linkMouseout(vizObj) {
 /* recursive function to perform downstream effects upon tree link highlighting
 * @param {Object} vizObj
 * @param link_id -- id for the link that's currently highlighted
-* @param link_ids -- ids for all links in tree
 */
-function _downstreamEffects(vizObj, link_id, link_ids) {
+function _downstreamEffects(vizObj, link_id) {
 
     // get target id & single cell id
-    var targetRX = new RegExp("link_.+_(.+)");  
+    var targetRX = new RegExp("link_source_.+_target_(.+)");  
     var target_id = targetRX.exec(link_id)[1];
 
     // highlight node
@@ -251,9 +227,9 @@ function _downstreamEffects(vizObj, link_id, link_ids) {
         .style("stroke", vizObj.generalConfig.linkHighlightColour);
 
     // get the targets of this target
-    var sourceRX = new RegExp("link_" + target_id + "_(.+)");
+    var sourceRX = new RegExp("link_source_" + target_id + "_target_(.+)");
     var targetLinks_of_targetNode = [];
-    link_ids.map(function(id) {
+    vizObj.userConfig.link_ids.map(function(id) {
         if (id.match(sourceRX)) {
             targetLinks_of_targetNode.push(id);
         }
@@ -261,7 +237,7 @@ function _downstreamEffects(vizObj, link_id, link_ids) {
 
     // for each of the target's targets, highlight their downstream links
     targetLinks_of_targetNode.map(function(target_link_id) {
-        _downstreamEffects(vizObj, target_link_id, link_ids);
+        _downstreamEffects(vizObj, target_link_id);
     });
 };
 
@@ -289,7 +265,7 @@ function _reformatGroupAnnots(vizObj) {
 * @param {Object} vizObj
 */
 function _getChromBounds(vizObj) {
-    var chroms = vizObj.data.chroms;
+    var chroms = vizObj.userConfig.chroms;
     var chrom_bounds = {};
 
     // for each chromosome
@@ -377,9 +353,9 @@ function _fillPixelWithChromInfo(vizObj) {
     // (subtract number chromosome separators:
     // - 1 for each separator
     // - 1 for the end of each chromosome (we don't want chromosomes to share pixels))
-    var n_data_pixels = vizObj.view.cnv.ncols - 2*(vizObj.data.chroms.length + 1), 
+    var n_data_pixels = vizObj.view.cnv.ncols - 2*(vizObj.userConfig.chroms.length + 1), 
         chr_index = 0, // index of current chromosome
-        cur_chr = vizObj.data.chroms[chr_index], // current chromosome
+        cur_chr = vizObj.userConfig.chroms[chr_index], // current chromosome
         start_bp = vizObj.data.chrom_bounds[cur_chr]["start"], // start bp of the current pixel
         cur_sc_id = pixels[0]["sc_id"];
     vizObj.data.n_bp_per_pixel = Math.ceil(vizObj.data.genome_length/n_data_pixels); // number of base pairs per pixel
@@ -401,7 +377,7 @@ function _fillPixelWithChromInfo(vizObj) {
         if (pixel["sc_id"] != cur_sc_id) {
             cur_sc_id = pixel["sc_id"];
             chr_index = 0;
-            cur_chr = vizObj.data.chroms[chr_index];
+            cur_chr = vizObj.userConfig.chroms[chr_index];
             start_bp = vizObj.data.chrom_bounds[cur_chr]["start"]; // start bp of the current pixel             
         } 
 
@@ -433,7 +409,7 @@ function _fillPixelWithChromInfo(vizObj) {
                 pixels[i]["separator"] = true;
             }
 
-            cur_chr = vizObj.data.chroms[++chr_index]; // next chromosome
+            cur_chr = vizObj.userConfig.chroms[++chr_index]; // next chromosome
             start_bp = (cur_chr) ? vizObj.data.chrom_bounds[cur_chr]["start"] : NaN;  // new starting base pair
         }       
     };
