@@ -506,6 +506,22 @@ HTMLWidgets.widget({
                 .style("fill", function(d) {
                     var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d}).group;
                     return vizObj.view.colour_assignment[group];
+                })
+                .on("mouseover", function(d) {
+                    // show indicator tooltip & highlight indicator
+                    indicatorTip.show(d, d3.select("#indic_" + d).node());
+                    _highlightIndicator(d, vizObj);
+
+                    // highlight node
+                    _highlightNode(d, vizObj);
+                })
+                .on("mouseout", function(d) {
+                    // hide indicator tooltip & unhighlight indicator
+                    indicatorTip.hide(d);
+                    _resetIndicator(d);
+
+                    // reset node
+                    _resetNode(d, vizObj);
                 });
         }
 
