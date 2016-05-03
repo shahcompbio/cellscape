@@ -29,7 +29,7 @@
 #' @param height {Number} (Optional) Height of the plot.
 #'
 #' @export
-cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", sc_groups = NULL, width = 1200, height = 1000) {
+cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, width = 1200, height = 1000) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
   if (missing(cnv_data)) {
@@ -124,9 +124,15 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", sc_groups = NULL, 
   # SINGLE CELL IDS
 
   # if order is not specified, grab the order of the single cells in the cnv data
-  if (sc_id_order == "NA") {
+  if (is.null(sc_id_order)) {
     sc_id_order = unique(cnv_data$single_cell_id)
   }
+
+  # GET GRID OF PIXELS
+  tmp_ncols <- 500 # temporary number of columns
+  empty_pixels <- getEmptyGrid(sc_id_order, tmp_ncols)
+  tmp <- getChromBounds(chroms, cnv_data) # TODO "x" "y"
+  print(tmp)
 
   # forward options using x
   x = list(
@@ -136,7 +142,8 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", sc_groups = NULL, 
     sc_groups=sc_groups,
     link_ids=link_ids,
     tree_nodes=jsonlite::toJSON(tree_nodes_for_layout),
-    chroms=chroms
+    chroms=chroms,
+    empty_pixels=jsonlite::toJSON(empty_pixels)
   )
 
   # create widget
@@ -165,4 +172,155 @@ renderCnvTree <- function(expr, env = parent.frame(), quoted = FALSE) {
 }
 
 # HELPER FUNCTIONS
+
+
+#' Function to get data frame of pixels
+getEmptyGrid <- function(sc_ids_ordered, ncols) {
+  sc_ids <- rep(sc_ids_ordered, each=ncols)
+  cols <- rep(seq(0:(ncols-1)), length(sc_ids_ordered))
+
+  return(data.frame(col=cols, sc_id=sc_ids, stringsAsFactors=FALSE))
+}
+
+
+#' function to get chromosome min and max values
+#' @param chroms -- vector of chromosome names
+getChromBounds <- function(chroms, cnv_data) {
+    chrom_bounds = lapply(chroms, function(chrom) {
+        chrom_cnv_data <- cnv_data[which(cnv_data$chr == chrom),]
+        start <- min(chrom_cnv_data$start)
+        end <- max(chrom_cnv_data$end)
+        return(c(start=start, end=end))
+      })
+
+    return(chrom_bounds)
+}
+
+
+#' function to fill the pixel grid with chromosome info (chr, start, end, mode_cnv)
+#' @param pixels -- empty data frame of pixels
+#' @param sc_ids -- single cell ids (in order)
+#' @param chroms -- vector of chromosomes
+fillPixelWithChromInfo <- function(cnv_data, ncols, pixels, sc_ids, chroms) {
+  chr_index <- 0 # index of current chromosome
+  cur_chr <- chroms[chr_index] # current chromosome
+}
+
+# /* function to fill the pixel grid with chromosome info (chr, start, end, mode_cnv)
+# * @param {Object} vizObj
+# */
+# function _fillPixelWithChromInfo(vizObj) {
+#     var cnv_data = vizObj.userConfig.cnv_data, // cnv data from user
+#         nCols = vizObj.view.cnv.ncols,
+#         pixels = vizObj.view.cnv.pixels, // empty grid of pixels
+#         sc_ids = vizObj.userConfig.sc_ids_ordered; // single cell ids
+
+#     // number of pixels filled with data 
+#     // (subtract number chromosome separators:
+#     // - 1 for each separator
+#     // - 1 for the end of each chromosome (we don't want chromosomes to share pixels))
+#     var n_data_pixels = vizObj.view.cnv.ncols - 2*(vizObj.userConfig.chroms.length + 1), 
+#         chr_index = 0, // index of current chromosome
+#         cur_chr = vizObj.userConfig.chroms[chr_index], // current chromosome
+#         start_bp = vizObj.data.chrom_bounds[cur_chr]["start"], // start bp of the current pixel
+#         cur_sc_id = pixels[0]["sc_id"];
+#     vizObj.data.n_bp_per_pixel = Math.ceil(vizObj.data.genome_length/n_data_pixels); // number of base pairs per pixel
+
+#     // for each pixel
+#     for (var i = 0; i < pixels.length; i++) {
+#         var pixel = pixels[i];
+
+#         // if we're at the end of the single cell's genome, but excess pixels are on this row 
+#         if (!cur_chr && (pixel["sc_id"] == cur_sc_id)) {
+#             pixel["start"] = NaN;
+#             pixel["end"] = NaN;
+#             pixel["chr"] = "NA";
+#             pixel["mode_cnv"] = NaN;
+#             continue;                
+#         }
+
+#         // we're onto a new single cell
+#         if (pixel["sc_id"] != cur_sc_id) {
+#             cur_sc_id = pixel["sc_id"];
+#             chr_index = 0;
+#             cur_chr = vizObj.userConfig.chroms[chr_index];
+#             start_bp = vizObj.data.chrom_bounds[cur_chr]["start"]; // start bp of the current pixel             
+#         } 
+
+#         // get genomic region in this bin
+#         var end_bp = start_bp + vizObj.data.n_bp_per_pixel;
+#         pixel["start"] = start_bp;
+#         pixel["end"] = end_bp;
+#         pixel["chr"] = cur_chr;
+        
+#         // get segments for this bin
+#         var segments = vizObj.data.itrees[pixel["sc_id"]][cur_chr].search(start_bp, end_bp);
+
+#         // copy numbers for each segment in this bin
+#         var integer_copy_numbers = [];
+#         _.pluck(segments, "id").forEach(function(segment_id) {
+#             integer_copy_numbers.push(cnv_data[segment_id]["integer_copy_number"]);
+#         });
+#         pixel["mode_cnv"] = _arrayMode(integer_copy_numbers);
+
+#         // update starting base pair
+#         start_bp = end_bp + 1;
+
+#         // check if we're onto a new chromosome
+#         if (start_bp > vizObj.data.chrom_bounds[cur_chr]["end"]) {
+
+#             // skip a pixel to leave chromosome separator
+#             i++;
+#             if (i < pixels.length) {
+#                 pixels[i]["separator"] = true;
+#             }
+
+#             cur_chr = vizObj.userConfig.chroms[++chr_index]; // next chromosome
+#             start_bp = (cur_chr) ? vizObj.data.chrom_bounds[cur_chr]["start"] : NaN;  // new starting base pair
+#         }       
+#     };
+
+#     // group consecutive pixels in the same single cell & same chromosome with the same copy number
+#     var new_pixels = [], // condensed array of pixels
+#         prev_start = pixels[0]["start"]; // starting bp for the current cnv
+#     pixels[0]["px_length"] = 1; // length of the first pixel
+#     for (var i = 1; i < pixels.length; i++) {
+
+#         // a new chromosome (a new single cell is automatically a new chromosome too)
+#         if (pixels[i-1]["chr"] != pixels[i]["chr"]) {
+#             prev_start = pixels[i]["start"]; 
+
+#             // pixel length is 1
+#             pixels[i]["px_length"] = 1;
+
+#             // append the previous pixel to the list
+#             new_pixels.push(pixels[i-1]);
+#         }
+
+#         // the same chromosome
+#         else {
+#             // same cnv value as the previous pixel
+#             if (pixels[i-1]["mode_cnv"] == pixels[i]["mode_cnv"]) {
+
+#                 // bring forward the start of this pixel
+#                 pixels[i]["start"] = prev_start;
+#                 pixels[i]["px_length"] = pixels[i-1]["px_length"] + 1;
+#             }
+#             // different cnv value
+#             else {
+#                 // update the starting bp for this cnv
+#                 prev_start = pixels[i]["start"];
+
+#                 // pixel length is 1
+#                 pixels[i]["px_length"] = 1;
+
+#                 // append the previous pixel to the list
+#                 new_pixels.push(pixels[i-1]);
+#             }
+#         }
+#     }
+
+#     vizObj.view.cnv.pixels = new_pixels;
+
+# }
 
