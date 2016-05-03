@@ -94,8 +94,8 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", sc_groups = NULL, 
     for (i in 1:nrow(tree_edges)) {
       tree_edges_for_layout$source[i] <- which(tree_nodes_for_layout$name == tree_edges$source[i]) - 1
       tree_edges_for_layout$target[i] <- which(tree_nodes_for_layout$name == tree_edges$target[i]) - 1
-      tree_edges_for_layout$link_id[i] <- paste("link_source_", tree_edges_for_layout$source[i], 
-        "_target_", tree_edges_for_layout$target[i], sep="")
+      tree_edges_for_layout$link_id[i] <- paste("link_source_", tree_edges$source[i], 
+        "_target_", tree_edges$target[i], sep="")
     }
     tree_edges_for_layout$source <- as.numeric(as.character(tree_edges_for_layout$source))
     tree_edges_for_layout$target <- as.numeric(as.character(tree_edges_for_layout$target))
@@ -121,11 +121,18 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = "NA", sc_groups = NULL, 
     sc_groups <- jsonlite::toJSON(sc_groups)
   }
 
+  # SINGLE CELL IDS
+
+  # if order is not specified, grab the order of the single cells in the cnv data
+  if (sc_id_order == "NA") {
+    sc_id_order = unique(cnv_data$single_cell_id)
+  }
+
   # forward options using x
   x = list(
     cnv_data=jsonlite::toJSON(cnv_data),
     tree_edges=jsonlite::toJSON(tree_edges_for_layout),
-    sc_id_order=sc_id_order,
+    sc_ids_ordered=sc_id_order,
     sc_groups=sc_groups,
     link_ids=link_ids,
     tree_nodes=jsonlite::toJSON(tree_nodes_for_layout),
@@ -156,3 +163,6 @@ renderCnvTree <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   shinyRenderWidget(expr, cnvTreeOutput, env, quoted = TRUE)
 }
+
+# HELPER FUNCTIONS
+

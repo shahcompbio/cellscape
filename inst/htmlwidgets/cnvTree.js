@@ -71,32 +71,16 @@ HTMLWidgets.widget({
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
-        // if group annotation specified, reduce the width of the tree and cnv
+        // if group annotation specified, reduce the width of the tree
         if (vizObj.view.groupsSpecified) {
-            config.treeWidth -= config.groupAnnotWidth/2;
-            config.cnvWidth -= config.groupAnnotWidth/2;
+            config.treeWidth -= config.groupAnnotWidth;
         }
 
         // GET CNV CONTENT
 
-        // sorted single cell ids
-        var sc_id_order = vizObj.userConfig.sc_id_order;
-        var sc_ids = _.uniq(_.pluck(vizObj.userConfig.cnv_data, "single_cell_id"));
-        if (sc_id_order == "NA") {
-            vizObj.data.sc_ids = sc_ids;
-        }
-        else {
-            vizObj.data.sc_ids = [];
-            sc_id_order.forEach(function(key) {
-                if (sc_ids.indexOf(key) != -1) {
-                    vizObj.data.sc_ids.push(key);
-                }
-            })
-        }
-
         // cnv plot number of rows & columns
         vizObj.view.cnv = {};
-        vizObj.view.cnv.nrows = vizObj.data.sc_ids.length;
+        vizObj.view.cnv.nrows = vizObj.userConfig.sc_ids_ordered.length;
         vizObj.view.cnv.ncols = Math.floor(config.cnvWidth);
 
         // height of each cnv row
@@ -433,7 +417,7 @@ HTMLWidgets.widget({
             .append("g")
             .classed("indicators", true)
             .selectAll(".indic")
-            .data(vizObj.data.sc_ids)
+            .data(vizObj.userConfig.sc_ids_ordered)
             .enter()
             .append("rect")
             .attr("class", function(d) {
@@ -441,7 +425,7 @@ HTMLWidgets.widget({
             })
             .attr("x", 0)
             .attr("y", function(d) { 
-                var index = vizObj.data.sc_ids.indexOf(d);
+                var index = vizObj.userConfig.sc_ids_ordered.indexOf(d);
                 return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
             })
             .attr("height", vizObj.view.cnv.rowHeight)
@@ -495,7 +479,7 @@ HTMLWidgets.widget({
                 })
                 .attr("x", 0)
                 .attr("y", function(d) { 
-                    var index = vizObj.data.sc_ids.indexOf(d.single_cell_id);
+                    var index = vizObj.userConfig.sc_ids_ordered.indexOf(d.single_cell_id);
                     return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
                 })
                 .attr("height", vizObj.view.cnv.rowHeight)

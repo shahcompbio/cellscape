@@ -325,7 +325,7 @@ function _getGenomeLength(chrom_bounds) {
 */
 function _getEmptyGrid(vizObj) {
     var pixels = [];
-    var sc_ids = vizObj.data.sc_ids; // single cell ids
+    var sc_ids = vizObj.userConfig.sc_ids_ordered; // single cell ids
 
     for (var row = 0; row < sc_ids.length; row++) {
         for (var col = 0; col < vizObj.view.cnv.ncols; col++) {
@@ -347,7 +347,7 @@ function _fillPixelWithChromInfo(vizObj) {
     var cnv_data = vizObj.userConfig.cnv_data, // cnv data from user
         nCols = vizObj.view.cnv.ncols,
         pixels = vizObj.view.cnv.pixels, // empty grid of pixels
-        sc_ids = vizObj.data.sc_ids; // single cell ids
+        sc_ids = vizObj.userConfig.sc_ids_ordered; // single cell ids
 
     // number of pixels filled with data 
     // (subtract number chromosome separators:
