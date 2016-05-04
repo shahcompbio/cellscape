@@ -7,7 +7,7 @@
 #' single cell(s). 
 #' To exit any selection, double click near the single cell tree.
 #'   
-#' @import htmlwidgets, gtools, jsonlite, reshape2, stringr
+#' @import htmlwidgets, gtools, jsonlite, reshape2, stringr, dplyr
 #'
 #' @param cnv_data {Data frame} Single cell copy number data frame.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
@@ -59,8 +59,10 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     cnv_data$end <- as.numeric(as.character(cnv_data$end))
     cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
 
-    # get chromosomes
+    # get chromosomes, chromosome bounds (min & max bp), genome length
     chroms <- gtools::mixedsort(unique(cnv_data$chr))
+    chrom_bounds <- getChromBounds(chroms, cnv_data) 
+    genome_length <- getGenomeLength(chrom_bounds)
   }
 
   # TREE EDGE DATA
@@ -129,10 +131,10 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
   }
 
   # GET GRID OF PIXELS
-  tmp_ncols <- 500 # temporary number of columns
-  empty_pixels <- getEmptyGrid(sc_id_order, tmp_ncols)
-  tmp <- getChromBounds(chroms, cnv_data) # TODO "x" "y"
-  print(tmp)
+
+  tmp_ncols <- 564 # temporary number of columns
+  pixel_info <- getPixelsForEachSC(cnv_data, tmp_ncols, chrom_bounds, genome_length)
+  
 
   # forward options using x
   x = list(
@@ -143,7 +145,7 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     link_ids=link_ids,
     tree_nodes=jsonlite::toJSON(tree_nodes_for_layout),
     chroms=chroms,
-    empty_pixels=jsonlite::toJSON(empty_pixels)
+    pixel_info=jsonlite::toJSON(pixel_info)
   )
 
   # create widget
@@ -183,144 +185,123 @@ getEmptyGrid <- function(sc_ids_ordered, ncols) {
 }
 
 
-#' function to get chromosome min and max values
+#' function to get min and max values for each chromosome
 #' @param chroms -- vector of chromosome names
 getChromBounds <- function(chroms, cnv_data) {
-    chrom_bounds = lapply(chroms, function(chrom) {
-        chrom_cnv_data <- cnv_data[which(cnv_data$chr == chrom),]
-        start <- min(chrom_cnv_data$start)
-        end <- max(chrom_cnv_data$end)
-        return(c(start=start, end=end))
-      })
 
-    return(chrom_bounds)
+  # get min & max for each chromosome
+  chrom_bounds = sapply(chroms, function(chrom) {
+    chrom_cnv_data <- cnv_data[which(cnv_data$chr == chrom),]
+    start <- min(chrom_cnv_data$start)
+    end <- max(chrom_cnv_data$end)
+    return(c(chrom=chrom, bp_start=start, bp_end=end))
+  })
+
+  # flip data frame
+  chrom_bounds_t <- as.data.frame(t(as.matrix(chrom_bounds)))
+
+  # ensure correct data types
+  chrom_bounds_t$bp_start <- as.numeric(as.character(chrom_bounds_t$bp_start))
+  chrom_bounds_t$bp_end <- as.numeric(as.character(chrom_bounds_t$bp_end))
+
+  # get the ADDITIVE chromosome start and end bps
+  chrom_bounds_t$chrom_start <- NA
+  chrom_bounds_t$chrom_end <- NA
+  next_chr_start_bp <- 0 # base pair BEFORE the next chromosome
+  for (i in 1:nrow(chrom_bounds_t)) {
+    chrom_bounds_t$chrom_start[i] <- next_chr_start_bp
+    this_chr_end_bp <- next_chr_start_bp + (chrom_bounds_t$bp_end[i] - chrom_bounds_t$bp_start[i])
+    chrom_bounds_t$chrom_end[i] <- this_chr_end_bp
+    next_chr_start_bp <- this_chr_end_bp + 1
+  }
+  return (chrom_bounds_t)
 }
 
+#' function to get the genome length
+#' @param {Data Frame} chrom_bounds -- chromosome boundaries
+getGenomeLength <- function(chrom_bounds) {
 
-#' function to fill the pixel grid with chromosome info (chr, start, end, mode_cnv)
-#' @param pixels -- empty data frame of pixels
-#' @param sc_ids -- single cell ids (in order)
-#' @param chroms -- vector of chromosomes
-fillPixelWithChromInfo <- function(cnv_data, ncols, pixels, sc_ids, chroms) {
-  chr_index <- 0 # index of current chromosome
-  cur_chr <- chroms[chr_index] # current chromosome
+  tmp_chrom_bounds <- chrom_bounds
+  tmp_chrom_bounds$n_bps <- tmp_chrom_bounds$bp_end - tmp_chrom_bounds$bp_start + 1
+  genome_length <- sum(tmp_chrom_bounds$n_bps)
+
+  return(genome_length)
 }
 
-# /* function to fill the pixel grid with chromosome info (chr, start, end, mode_cnv)
-# * @param {Object} vizObj
-# */
-# function _fillPixelWithChromInfo(vizObj) {
-#     var cnv_data = vizObj.userConfig.cnv_data, // cnv data from user
-#         nCols = vizObj.view.cnv.ncols,
-#         pixels = vizObj.view.cnv.pixels, // empty grid of pixels
-#         sc_ids = vizObj.userConfig.sc_ids_ordered; // single cell ids
+#' function to get information (chr, start, end, mode_cnv) for each pixel
+#' @param {Data Frame} cnv_data -- copy number variant segments data
+#' @param {Integer} ncols -- number of columns (pixels) to fill
+#' @param {Data Frame} chrom_bounds -- chromosome boundaries
+#' @param {Integer} genome_length -- length of the genome
+getPixelsForEachSC <- function(cnv_data, ncols, chrom_bounds, genome_length) {
+  
+  n_data_pixels <- ncols - 2*(nrow(chrom_bounds) + 1) # number of pixels filled with data 
+                                                      # (subtract number chromosome separators:
+                                                      # - 1 for each separator
+                                                      # - 1 for the end of each chromosome 
+                                                      # (we don't want chromosomes to share pixels))
+  n_bp_per_pixel <- ceiling(genome_length/n_data_pixels) # number of bps per pixel
 
-#     // number of pixels filled with data 
-#     // (subtract number chromosome separators:
-#     // - 1 for each separator
-#     // - 1 for the end of each chromosome (we don't want chromosomes to share pixels))
-#     var n_data_pixels = vizObj.view.cnv.ncols - 2*(vizObj.userConfig.chroms.length + 1), 
-#         chr_index = 0, // index of current chromosome
-#         cur_chr = vizObj.userConfig.chroms[chr_index], // current chromosome
-#         start_bp = vizObj.data.chrom_bounds[cur_chr]["start"], // start bp of the current pixel
-#         cur_sc_id = pixels[0]["sc_id"];
-#     vizObj.data.n_bp_per_pixel = Math.ceil(vizObj.data.genome_length/n_data_pixels); // number of base pairs per pixel
+  # get the pixel start and end for each segment
+  pixel_info <- cnv_data
+  pixel_info <- merge(cnv_data, chrom_bounds, by.x="chr", by.y="chrom")
+  pixel_info$start_px <- floor((pixel_info$chrom_start + pixel_info$start) / n_bp_per_pixel)
+  pixel_info$end_px <- floor((pixel_info$chrom_start + pixel_info$end) / n_bp_per_pixel)
+  pixel_info$px_width <- pixel_info$end_px - pixel_info$start_px + 1
 
-#     // for each pixel
-#     for (var i = 0; i < pixels.length; i++) {
-#         var pixel = pixels[i];
+  # note any segments whose start_px != end_px --> these will be the separated end pixels
+  segment_ends_info <- pixel_info[which(pixel_info$start_px != pixel_info$end_px),]
 
-#         // if we're at the end of the single cell's genome, but excess pixels are on this row 
-#         if (!cur_chr && (pixel["sc_id"] == cur_sc_id)) {
-#             pixel["start"] = NaN;
-#             pixel["end"] = NaN;
-#             pixel["chr"] = "NA";
-#             pixel["mode_cnv"] = NaN;
-#             continue;                
-#         }
+  # save their left ends (starts)
+  starts <- segment_ends_info
+  colnames(starts)[which(colnames(starts) == "start_px")] <- "px"
+  starts <- starts[ , !(names(starts) %in% c("end_px"))] # drop end_px column
+  starts$px_width <- 1 # set pixel width to 1
 
-#         // we're onto a new single cell
-#         if (pixel["sc_id"] != cur_sc_id) {
-#             cur_sc_id = pixel["sc_id"];
-#             chr_index = 0;
-#             cur_chr = vizObj.userConfig.chroms[chr_index];
-#             start_bp = vizObj.data.chrom_bounds[cur_chr]["start"]; // start bp of the current pixel             
-#         } 
+  # save their right ends (ends)
+  ends <- segment_ends_info
+  colnames(ends)[which(colnames(ends) == "end_px")] <- "px"
+  ends <- ends[ , !(names(ends) %in% c("start_px"))] # drop start_px column
+  ends$px_width <- 1 # set pixel width to 1
 
-#         // get genomic region in this bin
-#         var end_bp = start_bp + vizObj.data.n_bp_per_pixel;
-#         pixel["start"] = start_bp;
-#         pixel["end"] = end_bp;
-#         pixel["chr"] = cur_chr;
-        
-#         // get segments for this bin
-#         var segments = vizObj.data.itrees[pixel["sc_id"]][cur_chr].search(start_bp, end_bp);
+  # save their middles (for segments with length greater than 2)
+  segs_gt_2 <- segment_ends_info[which(segment_ends_info$px_width > 2),]
+  segs_gt_2$px_width <- segs_gt_2$px_width - 2 # subtract 2 (for 2 ends) from pixel width
+  middles <- segs_gt_2[,c("single_cell_id", "start_px", "px_width", "integer_copy_number")]
+  colnames(middles)[which(colnames(middles) == "start_px")] <- "px"
+  colnames(middles)[which(colnames(middles) == "integer_copy_number")] <- "mode_cnv"
+  middles$px <- middles$px + 1 # first pixel will be a start pixel, so we shift 1
 
-#         // copy numbers for each segment in this bin
-#         var integer_copy_numbers = [];
-#         _.pluck(segments, "id").forEach(function(segment_id) {
-#             integer_copy_numbers.push(cnv_data[segment_id]["integer_copy_number"]);
-#         });
-#         pixel["mode_cnv"] = _arrayMode(integer_copy_numbers);
+  # note any segments that occupy one pixel only
+  singles <- pixel_info[which(pixel_info$start_px == pixel_info$end_px),]
+  colnames(singles)[which(colnames(singles) == "end_px")] <- "px"
+  singles <- singles[ , !(names(singles) %in% c("start_px"))] # drop start_px column
+  singles$px_width <- 1 # set pixel width to 1
 
-#         // update starting base pair
-#         start_bp = end_bp + 1;
+  # bind starts, ends, and singles
+  starts_ends_singles <- rbind(starts, ends, singles)
 
-#         // check if we're onto a new chromosome
-#         if (start_bp > vizObj.data.chrom_bounds[cur_chr]["end"]) {
+  # find the mode cnv of all starts, ends, and singles
+  starts_ends_singles_w_mode <- starts_ends_singles %>%
+     group_by(single_cell_id, px, px_width) %>%
+     summarise(mode_cnv=findMode(integer_copy_number)[["mode"]])
+  starts_ends_singles_w_mode <- as.data.frame(starts_ends_singles_w_mode)
 
-#             // skip a pixel to leave chromosome separator
-#             i++;
-#             if (i < pixels.length) {
-#                 pixels[i]["separator"] = true;
-#             }
+  # bind the starts, ends, singles and middles
+  final_pixels <- rbind(starts_ends_singles_w_mode, middles)
+  final_pixels <- final_pixels[with(final_pixels, order(single_cell_id, px)), ]
 
-#             cur_chr = vizObj.userConfig.chroms[++chr_index]; // next chromosome
-#             start_bp = (cur_chr) ? vizObj.data.chrom_bounds[cur_chr]["start"] : NaN;  // new starting base pair
-#         }       
-#     };
+  # TODO merge consecutive pixels with the same mode_cnv
 
-#     // group consecutive pixels in the same single cell & same chromosome with the same copy number
-#     var new_pixels = [], // condensed array of pixels
-#         prev_start = pixels[0]["start"]; // starting bp for the current cnv
-#     pixels[0]["px_length"] = 1; // length of the first pixel
-#     for (var i = 1; i < pixels.length; i++) {
+  # separate pixels by single cell id
+  sc_final_pixels <- split(final_pixels , f = final_pixels$single_cell_id)
 
-#         // a new chromosome (a new single cell is automatically a new chromosome too)
-#         if (pixels[i-1]["chr"] != pixels[i]["chr"]) {
-#             prev_start = pixels[i]["start"]; 
+  return (sc_final_pixels)
+}
 
-#             // pixel length is 1
-#             pixels[i]["px_length"] = 1;
-
-#             // append the previous pixel to the list
-#             new_pixels.push(pixels[i-1]);
-#         }
-
-#         // the same chromosome
-#         else {
-#             // same cnv value as the previous pixel
-#             if (pixels[i-1]["mode_cnv"] == pixels[i]["mode_cnv"]) {
-
-#                 // bring forward the start of this pixel
-#                 pixels[i]["start"] = prev_start;
-#                 pixels[i]["px_length"] = pixels[i-1]["px_length"] + 1;
-#             }
-#             // different cnv value
-#             else {
-#                 // update the starting bp for this cnv
-#                 prev_start = pixels[i]["start"];
-
-#                 // pixel length is 1
-#                 pixels[i]["px_length"] = 1;
-
-#                 // append the previous pixel to the list
-#                 new_pixels.push(pixels[i-1]);
-#             }
-#         }
-#     }
-
-#     vizObj.view.cnv.pixels = new_pixels;
-
-# }
-
+# function to find the mode of a vector
+findMode <- function(x) {
+  ux <- unique(x) # each unique value
+  n_appearances <- tabulate(match(x, ux)) # number of appearances for each unique value
+  return(list(mode=ux[which.max(n_appearances)], n_with_max=max(n_appearances)))
+}

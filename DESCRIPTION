@@ -1,6 +1,6 @@
 Package: cnvTree
 Title: Explores single cell copy number profiles in the context of a single cell tree.
-Version: 0.0.0.9030
+Version: 0.0.0.9031
 Authors@R: person("Maia", "Smith", email = "maiaannesmith@gmail.com", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
 Depends:
@@ -10,7 +10,8 @@ Imports:
     jsonlite (>= 0.9.19),
     reshape2 (>= 1.4.1),
     stringr (>= 1.0.0),
-    gtools (>= 3.5.0)
+    gtools (>= 3.5.0),
+    dplyr (>= 0.4.3)
 License: What license is it under?
 LazyData: true
 RoxygenNote: 5.0.1
