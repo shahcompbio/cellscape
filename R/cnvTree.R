@@ -218,6 +218,10 @@ getChromBounds <- function(chroms, cnv_data) {
     chrom_bounds_t$chrom_end[i] <- this_chr_end_bp
     next_chr_start_bp <- this_chr_end_bp + 1
   }
+
+  # get the chromosome index
+  chrom_bounds_t$chrom_index <- seq(1:nrow(chrom_bounds_t))
+
   return (chrom_bounds_t)
 }
 
@@ -225,19 +229,14 @@ getChromBounds <- function(chroms, cnv_data) {
 #' @param {Object} vizObj
 #'
 getChromBoxInfo <- function(chrom_bounds, n_bp_per_pixel) {
-    chrom_boxes <- data.frame(chr=chrom_bounds$chrom, 
-                              x=rep(-1, nrow(chrom_bounds)), 
-                              width=rep(-1, nrow(chrom_bounds)))
+  chrom_boxes <- data.frame(chr=chrom_bounds$chrom, 
+                            # x coordinate (start of chromosome)
+                            x=floor(chrom_bounds$chrom_start/n_bp_per_pixel) + 2*(chrom_bounds$chrom_index - 1), 
+                            width=rep(-1, nrow(chrom_bounds)))
+  # width = end - start + 1
+  chrom_boxes$width <- (floor(chrom_bounds$chrom_end/n_bp_per_pixel) + 2*(chrom_bounds$chrom_index - 1)) - chrom_boxes$x + 1
 
-    pixels_used <- 0
-    for (i in 1:nrow(chrom_boxes)) {
-      box_width <- ceiling((chrom_bounds[i,"bp_end"] - chrom_bounds[i,"bp_start"])/n_bp_per_pixel)
-      chrom_boxes$width[i] <- box_width
-      chrom_boxes$x[i] <- pixels_used
-      pixels_used <- pixels_used + box_width + 1
-    }
-
-    return(chrom_boxes)
+  return(chrom_boxes)
 }
 
 #' function to get the genome length
@@ -274,7 +273,6 @@ getPixelsForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
   # get the pixel start and end for each segment (account for chromosome separators in pixel info)
   pixel_info <- cnv_data
   pixel_info <- merge(cnv_data, chrom_bounds, by.x="chr", by.y="chrom")
-  pixel_info$chrom_index <- sapply(pixel_info$chr, function(x) { which(chrom_bounds$chrom == x) })
   pixel_info$start_px <- floor((pixel_info$chrom_start + pixel_info$start) / n_bp_per_pixel) + 2*(pixel_info$chrom_index-1)
   pixel_info$end_px <- floor((pixel_info$chrom_start + pixel_info$end) / n_bp_per_pixel) + 2*(pixel_info$chrom_index-1)
   pixel_info$px_width <- pixel_info$end_px - pixel_info$start_px + 1
