@@ -249,6 +249,11 @@ getPixelsForEachSC <- function(cnv_data, ncols, chrom_bounds, genome_length) {
   pixel_info$end_px <- floor((pixel_info$chrom_start + pixel_info$end) / n_bp_per_pixel)
   pixel_info$px_width <- pixel_info$end_px - pixel_info$start_px + 1
 
+  # account for chrommosome separators in pixel info
+  pixel_info$chrom_index <- sapply(pixel_info$chr, function(x) { which(chrom_bounds$chrom == x) })
+  pixel_info$start_px <- pixel_info$start_px + (pixel_info$chrom_index-1)
+  pixel_info$end_px <- pixel_info$end_px + (pixel_info$chrom_index-1)
+
   # note any segments whose start_px != end_px --> these will be the separated end pixels
   segment_ends_info <- pixel_info[which(pixel_info$start_px != pixel_info$end_px),]
 
