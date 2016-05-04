@@ -215,15 +215,13 @@ HTMLWidgets.widget({
             .style("stroke","#838181")
             .on("mouseover", function(d) {
                 // if there's no node or link selection taking place, highlight downstream links
-                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
-                    (d3.selectAll(".linkSelected")[0].length == 0)) {
+                if (_checkForSelections()) {
                     return _linkMouseover(vizObj, d.link_id);                     
                 }
             })
             .on("mouseout", function(d) { 
                 // if there's no node or link selection taking place, reset the links
-                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
-                    (d3.selectAll(".linkSelected")[0].length == 0)) {
+                if (_checkForSelections()) {
                     return _linkMouseout(vizObj); 
                 }
             });
@@ -250,13 +248,11 @@ HTMLWidgets.widget({
             })
             .style("stroke", "#838181")
             .on('mouseover', function(d) {
-
-                // show tooltip
-                nodeTip.show(d);
-
                 // if there's no node or link selection taking place
-                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
-                    (d3.selectAll(".linkSelected")[0].length == 0)) {
+                if (_checkForSelections()) {
+                    // show tooltip
+                    nodeTip.show(d);
+
                     // highlight node
                     _highlightNode(d.name, vizObj);
 
@@ -265,13 +261,10 @@ HTMLWidgets.widget({
                 }
             })
             .on('mouseout', function(d) {
-
-                // hide tooltip
-                nodeTip.hide(d);
-
                 // if there's no node or link selection taking place
-                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
-                    (d3.selectAll(".linkSelected")[0].length == 0)) {
+                if (_checkForSelections()) {
+                    // hide tooltip
+                    nodeTip.hide(d);
 
                     // reset node
                     _resetNode(d.name, vizObj);
@@ -323,7 +316,8 @@ HTMLWidgets.widget({
                 .attr("x", function(d) { return d.px; })
                 .attr("y", function(d) { 
                     var sc_index = vizObj.userConfig.sc_ids_ordered.indexOf(cur_sc);
-                    return (sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
+                    d.y = (sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
+                    return d.y; 
                 })
                 .attr("height", vizObj.view.cnv.rowHeight)
                 .attr("width", function(d) { return d.px_width; })
@@ -336,20 +330,24 @@ HTMLWidgets.widget({
                     return colorScale(d.mode_cnv);
                 })
                 .on("mouseover", function(d) {
-                    // show indicator tooltip & highlight indicator
-                    indicatorTip.show(d.sc_id, d3.select(".indic.sc_" + d.sc_id).node());
-                    _highlightIndicator(d.sc_id, vizObj);
+                    if (_checkForSelections()) {
+                        // show indicator tooltip & highlight indicator
+                        indicatorTip.show(d.sc_id, d3.select(".indic.sc_" + d.sc_id).node());
+                        _highlightIndicator(d.sc_id, vizObj);
 
-                    // highlight node
-                    _highlightNode(d.sc_id, vizObj);
+                        // highlight node
+                        _highlightNode(d.sc_id, vizObj);
+                    }
                 })
                 .on("mouseout", function(d) {
-                    // hide indicator tooltip & unhighlight indicator
-                    indicatorTip.hide(d.sc_id);
-                    _resetIndicator(d.sc_id);
+                    if (_checkForSelections()) {
+                        // hide indicator tooltip & unhighlight indicator
+                        indicatorTip.hide(d.sc_id);
+                        _resetIndicator(d.sc_id);
 
-                    // reset node
-                    _resetNode(d.sc_id, vizObj);
+                        // reset node
+                        _resetNode(d.sc_id, vizObj);
+                    }
                 });
 
         }
@@ -410,12 +408,11 @@ HTMLWidgets.widget({
             .attr("fill-opacity", 0)
             .attr("stroke", "none")
             .on("mouseover", function(d) {
-                // show tooltip
-                indicatorTip.show(d, d3.select(this).node());
-
                 // if there's no node or link selection taking place
-                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
-                    (d3.selectAll(".linkSelected")[0].length == 0)) {
+                if (_checkForSelections()) {
+
+                    // show tooltip
+                    indicatorTip.show(d, d3.select(this).node());
 
                     // highlight node
                     _highlightNode(d, vizObj);
@@ -425,12 +422,11 @@ HTMLWidgets.widget({
                 }
             })
             .on("mouseout", function(d) {
-                // hide tooltip
-                indicatorTip.hide(d);
-
                 // if there's no node or link selection taking place
-                if ((d3.selectAll(".nodeSelected")[0].length == 0) &&
-                    (d3.selectAll(".linkSelected")[0].length == 0)) {
+                if (_checkForSelections()) {
+
+                    // hide tooltip
+                    indicatorTip.hide(d);
 
                     // reset node
                     _resetNode(d, vizObj);
@@ -465,13 +461,17 @@ HTMLWidgets.widget({
                 })
                 .attr("stroke", "none")
                 .on("mouseover", function(d) {
-                    // highlight indicator & node for all sc's with this group annotation id,
-                    // highlight group annotation rectangle in legend
-                    _mouseoverGroupAnnot(d.group, vizObj);
+                    if (_checkForSelections()) {
+                        // highlight indicator & node for all sc's with this group annotation id,
+                        // highlight group annotation rectangle in legend
+                        _mouseoverGroupAnnot(d.group, vizObj);
+                    }
                 })
                 .on("mouseout", function(d) {
-                    // reset indicators, nodes, group annotation rectangles in legend
-                    _mouseoutGroupAnnot(vizObj);
+                    if (_checkForSelections()) {
+                        // reset indicators, nodes, group annotation rectangles in legend
+                        _mouseoutGroupAnnot(vizObj);
+                    }
                 });
         }
 
@@ -560,13 +560,17 @@ HTMLWidgets.widget({
                     return vizObj.view.colour_assignment[d];
                 })
                 .on("mouseover", function(d) {
-                    // highlight indicator & node for all sc's with this group annotation id,
-                    // highlight group annotation rectangle in legend
-                    _mouseoverGroupAnnot(d, vizObj);
+                    if (_checkForSelections()) {
+                        // highlight indicator & node for all sc's with this group annotation id,
+                        // highlight group annotation rectangle in legend
+                        _mouseoverGroupAnnot(d, vizObj);
+                    }
                 })
                 .on("mouseout", function(d) {
-                    // reset indicators, nodes, group annotation rectangles in legend
-                    _mouseoutGroupAnnot(vizObj);
+                    if (_checkForSelections()) {
+                        // reset indicators, nodes, group annotation rectangles in legend
+                        _mouseoutGroupAnnot(vizObj);
+                    }
                 });
 
             // group annotation legend text
@@ -583,14 +587,62 @@ HTMLWidgets.widget({
                 .attr("font-size", config.fontHeight)
                 .attr("fill", "black")
                 .on("mouseover", function(d) {
-                    // highlight indicator & node for all sc's with this group annotation id,
-                    // highlight group annotation rectangle in legend
-                    _mouseoverGroupAnnot(d, vizObj);
+                    if (_checkForSelections()) {
+                        // highlight indicator & node for all sc's with this group annotation id,
+                        // highlight group annotation rectangle in legend
+                        _mouseoverGroupAnnot(d, vizObj);
+                    }
                 })
                 .on("mouseout", function(d) {
-                    // reset indicators, nodes, group annotation rectangles in legend
-                    _mouseoutGroupAnnot(vizObj);
+                    if (_checkForSelections()) {
+                        // reset indicators, nodes, group annotation rectangles in legend
+                        _mouseoutGroupAnnot(vizObj);
+                    }
                 });
+        }
+
+
+        // brush selection
+        var brush = d3.svg.brush()
+            .y(d3.scale.linear().domain([0, config.cnvHeight]).range([0, config.cnvHeight]))
+            .on("brushstart", function() { d3.select(".cnvSVG").classed("brushed", true); })
+            .on("brushend", brushEnd);
+
+        cnvSVG.append("g")
+            .attr("class", "brush")
+            .call(brush)
+            .selectAll('rect')
+            .attr('width', config.cnvWidth)
+
+        function brushEnd() {
+            var selectedSCs = [];
+            var extent = d3.event.target.extent();
+            if (!brush.empty()) {
+
+                // highlight selected grid cell rows
+                d3.selectAll(".gridCell").classed("active", function(d) {
+                    var brushed = extent[0] <= (d.y+vizObj.view.cnv.rowHeight) && d.y <= extent[1];
+                    if (brushed) {
+                        selectedSCs.push(d.sc_id);
+                    }
+                    return brushed;
+                });
+
+                // highlight selected sc's indicators & nodes
+                selectedSCs.forEach(function(sc_id) {
+                    _highlightIndicator(sc_id, vizObj);   
+                    _highlightNode(sc_id, vizObj);    
+                });
+            } else {
+                d3.select(".cnvSVG").classed("brushed", false)
+
+                // reset nodes and indicators
+                _resetNodes(vizObj);
+                _resetIndicators();
+            }
+
+            // clear brush
+            d3.select(".brush").call(brush.clear());
         }
 
     },

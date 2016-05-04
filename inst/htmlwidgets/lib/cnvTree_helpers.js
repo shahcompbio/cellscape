@@ -1,5 +1,13 @@
 // D3 EFFECTS FUNCTIONS
 
+/* function to check for selections
+*/
+function _checkForSelections() {
+    return ((d3.selectAll(".nodeSelected")[0].length == 0) && // node selection
+            (d3.selectAll(".linkSelected")[0].length == 0) && // link selection
+            (d3.selectAll(".active")[0].length == 0)) // no brushed cells
+}
+
 /* mouseover function for group annotations
 * highlights indicator & node for all sc's with this group annotation id, highlights group annotation rectangle in legend
 * @param {String} group -- group to highlight
@@ -59,8 +67,6 @@ function _resetGroupAnnotLegendRects() {
 * @param {Object} vizObj
 */
 function _highlightIndicator(sc_id, vizObj) {
-    var config = vizObj.generalConfig;
-
     d3.select(".indic.sc_" + sc_id)
         .style("fill-opacity", 1);
 }

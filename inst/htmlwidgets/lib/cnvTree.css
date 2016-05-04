@@ -35,3 +35,11 @@ ul {
     top: 100%;
     left: 0;
 }
+
+/* brush */
+
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: .4;
+  shape-rendering: crispEdges;
+}
