@@ -92,9 +92,6 @@ HTMLWidgets.widget({
         // get the length of the genome 
         _getGenomeLength(vizObj.data.chrom_bounds);
 
-        // create interval tree of segments for each chromosome of each single cell id
-        vizObj.data.itrees = _getIntervalTree(vizObj);
-
         // set up empty pixel grid
         vizObj.view.cnv.pixels = _getEmptyGrid(vizObj);
 
@@ -318,65 +315,59 @@ HTMLWidgets.widget({
 
         // PLOT CNV 
 
-        var gridCell = cnvSVG
+        var gridCellsG = cnvSVG
             .append("g")
             .classed("gridCells", true)
-            .selectAll(".gridCell")
-            .data(vizObj.view.cnv.pixels)
-            .enter()
-            .append("rect")
-            .classed("gridCell", true)
-            .attr("class", function(d) {
-                // group annotation
-                var group = (vizObj.view.groupsSpecified) ?
-                    _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.sc_id}).group : "none";
-                return "gridCell sc_" + d.sc_id + " group_" + group;
-            })
-            .attr("x", function(d) { return d.col - d.px_length + 1; })
-            .attr("y", function(d) { 
-                return (d.row/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
-            })
-            .attr("height", vizObj.view.cnv.rowHeight)
-            .attr("width", function(d) { return d.px_length; })
-            .attr("fill", function(d) { 
-                // no cnv data
-                if (isNaN(d.mode_cnv)) {
-                    // chromosome separator
-                    if (d.separator) {
-                        return "white";
-                    }
-                    // past the right side of the genome
-                    else if (d.chr == "NA") {
-                        return "white";
-                    }
-                    // NA value within the cnv data
-                    else {
-                        return "white";
-                    }
-                }
-                // cnv data, but above max cnv value
-                else if (d.mode_cnv > maxCNV) {
-                    return colorScale(maxCNV);
-                }
-                // regular cnv data
-                return colorScale(d.mode_cnv);
-            })
-            .on("mouseover", function(d) {
-                // show indicator tooltip & highlight indicator
-                indicatorTip.show(d.sc_id, d3.select(".indic.sc_" + d.sc_id).node());
-                _highlightIndicator(d.sc_id, vizObj);
 
-                // highlight node
-                _highlightNode(d.sc_id, vizObj);
-            })
-            .on("mouseout", function(d) {
-                // hide indicator tooltip & unhighlight indicator
-                indicatorTip.hide(d.sc_id);
-                _resetIndicator(d.sc_id);
+        // for each single cell
+        for (var i = 0; i < vizObj.userConfig.sc_ids_ordered.length; i++) {
+            var cur_sc = vizObj.userConfig.sc_ids_ordered[i];
+            var cur_data = vizObj.userConfig.pixel_info[[cur_sc]]; 
+               
+            gridCellsG
+                .selectAll(".gridCell.sc_"+cur_sc)
+                .data(cur_data)
+                .enter()
+                .append("rect")
+                .attr("class", function(d) {
+                    // group annotation
+                    var group = (vizObj.view.groupsSpecified) ?
+                        _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.sc_id}).group : "none";
+                    return "gridCell sc_" + d.sc_id + " group_" + group;
+                })
+                .attr("x", function(d) { return d.px; })
+                .attr("y", function(d) { 
+                    var sc_index = vizObj.userConfig.sc_ids_ordered.indexOf(cur_sc);
+                    return (sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
+                })
+                .attr("height", vizObj.view.cnv.rowHeight)
+                .attr("width", function(d) { return d.px_width; })
+                .attr("fill", function(d) { 
+                    // cnv data, but above max cnv value
+                    if (d.mode_cnv > maxCNV) {
+                        return colorScale(maxCNV);
+                    }
+                    // regular cnv data
+                    return colorScale(d.mode_cnv);
+                })
+                .on("mouseover", function(d) {
+                    // show indicator tooltip & highlight indicator
+                    indicatorTip.show(d.sc_id, d3.select(".indic.sc_" + d.sc_id).node());
+                    _highlightIndicator(d.sc_id, vizObj);
 
-                // reset node
-                _resetNode(d.sc_id, vizObj);
-            });
+                    // highlight node
+                    _highlightNode(d.sc_id, vizObj);
+                })
+                .on("mouseout", function(d) {
+                    // hide indicator tooltip & unhighlight indicator
+                    indicatorTip.hide(d.sc_id);
+                    _resetIndicator(d.sc_id);
+
+                    // reset node
+                    _resetNode(d.sc_id, vizObj);
+                });
+
+        }
 
         // PLOT CHROMOSOME LEGEND
         var chromBoxes = cnvSVG

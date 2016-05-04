@@ -272,7 +272,7 @@ getPixelsForEachSC <- function(cnv_data, ncols, chrom_bounds, genome_length) {
   # save their middles (for segments with length greater than 2)
   segs_gt_2 <- segment_ends_info[which(segment_ends_info$px_width > 2),]
   segs_gt_2$px_width <- segs_gt_2$px_width - 2 # subtract 2 (for 2 ends) from pixel width
-  middles <- segs_gt_2[,c("single_cell_id", "start_px", "px_width", "integer_copy_number")]
+  middles <- segs_gt_2[,c("single_cell_id", "start_px", "px_width", "integer_copy_number", "chr")]
   colnames(middles)[which(colnames(middles) == "start_px")] <- "px"
   colnames(middles)[which(colnames(middles) == "integer_copy_number")] <- "mode_cnv"
   middles$px <- middles$px + 1 # first pixel will be a start pixel, so we shift 1
@@ -288,18 +288,21 @@ getPixelsForEachSC <- function(cnv_data, ncols, chrom_bounds, genome_length) {
 
   # find the mode cnv of all starts, ends, and singles
   starts_ends_singles_w_mode <- starts_ends_singles %>%
-     group_by(single_cell_id, px, px_width) %>%
+     group_by(single_cell_id, px, px_width, chr) %>%
      summarise(mode_cnv=findMode(integer_copy_number)[["mode"]])
   starts_ends_singles_w_mode <- as.data.frame(starts_ends_singles_w_mode)
 
   # bind the starts, ends, singles and middles
   final_pixels <- rbind(starts_ends_singles_w_mode, middles)
   final_pixels <- final_pixels[with(final_pixels, order(single_cell_id, px)), ]
+  colnames(final_pixels)[which(colnames(final_pixels) == "single_cell_id")] <- "sc_id"
+
+    write.table(final_pixels, file="/Users/msmith/Desktop/final_pixels.csv", sep=",", row.names=FALSE)
 
   # TODO merge consecutive pixels with the same mode_cnv
 
   # separate pixels by single cell id
-  sc_final_pixels <- split(final_pixels , f = final_pixels$single_cell_id)
+  sc_final_pixels <- split(final_pixels , f = final_pixels$sc_id)
 
   return (sc_final_pixels)
 }
