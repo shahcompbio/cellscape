@@ -132,8 +132,8 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
 
   # GET PIXELS FOR EACH SINGLE CELL
 
-  tmp_ncols <- 564 # temporary number of columns
-  n_bp_per_pixel <- getNBPPerPixel(tmp_ncols, chrom_bounds, genome_length) # number bps per pixel
+  ncols <- (width/2) - 40 # number of columns (pixels)
+  n_bp_per_pixel <- getNBPPerPixel(ncols, chrom_bounds, genome_length) # number bps per pixel
   pixel_info <- getPixelsForEachSC(cnv_data, chrom_bounds, n_bp_per_pixel)
   
   # GET CHROMOSOME BOX INFO
@@ -149,7 +149,8 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     tree_nodes=jsonlite::toJSON(tree_nodes_for_layout),
     chroms=chroms,
     pixel_info=jsonlite::toJSON(pixel_info),
-    chrom_boxes=jsonlite::toJSON(chrom_boxes)
+    chrom_boxes=jsonlite::toJSON(chrom_boxes),
+    cnvWidth=ncols
   )
 
   # create widget

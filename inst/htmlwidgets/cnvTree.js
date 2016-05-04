@@ -35,12 +35,7 @@ HTMLWidgets.widget({
         config.width = width - 15; // - 15 because vertical scrollbar takes 15 px
         config.height = height - 15; // - 15 because vertical scrollbar takes 15 px
 
-        // tree configurations
-        config.treeWidth = config.width/2 - config.indicatorWidth/2 - config.cnvLegendWidth/2;
-        config.treeHeight = config.height;
-
         // cnv configurations
-        config.cnvWidth = config.width/2 - config.indicatorWidth/2 - config.cnvLegendWidth/2;
         config.cnvHeight = config.height;
         config.cnvTop = 0;
         config.cnvBottom = (config.cnvHeight-config.chromLegendHeight);
@@ -71,6 +66,10 @@ HTMLWidgets.widget({
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
+        // tree configurations
+        config.treeWidth = config.width - config.indicatorWidth - config.cnvLegendWidth - vizObj.userConfig.cnvWidth;
+        config.treeHeight = config.height;
+
         // if group annotation specified, reduce the width of the tree
         if (vizObj.view.groupsSpecified) {
             config.treeWidth -= config.groupAnnotWidth;
@@ -78,10 +77,9 @@ HTMLWidgets.widget({
 
         // GET CNV CONTENT
 
-        // cnv plot number of rows & columns
+        // cnv plot number of rows
         vizObj.view.cnv = {};
         vizObj.view.cnv.nrows = vizObj.userConfig.sc_ids_ordered.length;
-        vizObj.view.cnv.ncols = Math.floor(config.cnvWidth);
 
         // height of each cnv row
         vizObj.view.cnv.rowHeight = (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
@@ -160,7 +158,7 @@ HTMLWidgets.widget({
         var cnvSVG = containerDIV
             .append("svg:svg")
             .attr("class", "cnvSVG")
-            .attr("width", config.cnvWidth + "px")
+            .attr("width", vizObj.userConfig.cnvWidth + "px")
             .attr("height", config.cnvHeight + "px")
 
         // CNV LEGEND SVG
@@ -612,7 +610,7 @@ HTMLWidgets.widget({
             .attr("class", "brush")
             .call(brush)
             .selectAll('rect')
-            .attr('width', config.cnvWidth)
+            .attr('width', vizObj.userConfig.cnvWidth)
 
         function brushEnd() {
             var selectedSCs = [];
@@ -635,6 +633,7 @@ HTMLWidgets.widget({
                 });
             } else {
                 d3.select(".cnvSVG").classed("brushed", false)
+                d3.selectAll(".gridCell").classed("active", false)
 
                 // reset nodes and indicators
                 _resetNodes(vizObj);
