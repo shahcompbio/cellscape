@@ -130,11 +130,14 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     sc_id_order = unique(cnv_data$single_cell_id)
   }
 
-  # GET GRID OF PIXELS
+  # GET PIXELS FOR EACH SINGLE CELL
 
   tmp_ncols <- 564 # temporary number of columns
-  pixel_info <- getPixelsForEachSC(cnv_data, tmp_ncols, chrom_bounds, genome_length)
+  n_bp_per_pixel <- getNBPPerPixel(tmp_ncols, chrom_bounds, genome_length) # number bps per pixel
+  pixel_info <- getPixelsForEachSC(cnv_data, chrom_bounds, n_bp_per_pixel)
   
+  # GET CHROMOSOME BOX INFO
+  chrom_boxes <- getChromBoxInfo(chrom_bounds, n_bp_per_pixel)
 
   # forward options using x
   x = list(
@@ -145,7 +148,8 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     link_ids=link_ids,
     tree_nodes=jsonlite::toJSON(tree_nodes_for_layout),
     chroms=chroms,
-    pixel_info=jsonlite::toJSON(pixel_info)
+    pixel_info=jsonlite::toJSON(pixel_info),
+    chrom_boxes=jsonlite::toJSON(chrom_boxes)
   )
 
   # create widget
@@ -217,6 +221,25 @@ getChromBounds <- function(chroms, cnv_data) {
   return (chrom_bounds_t)
 }
 
+#' function to get chromosome box pixel info
+#' @param {Object} vizObj
+#'
+getChromBoxInfo <- function(chrom_bounds, n_bp_per_pixel) {
+    chrom_boxes <- data.frame(chr=chrom_bounds$chrom, 
+                              x=rep(-1, nrow(chrom_bounds)), 
+                              width=rep(-1, nrow(chrom_bounds)))
+
+    pixels_used <- 0
+    for (i in 1:nrow(chrom_boxes)) {
+      box_width <- ceiling((chrom_bounds[i,"bp_end"] - chrom_bounds[i,"bp_start"])/n_bp_per_pixel)
+      chrom_boxes$width[i] <- box_width
+      chrom_boxes$x[i] <- pixels_used
+      pixels_used <- pixels_used + box_width + 1
+    }
+
+    return(chrom_boxes)
+}
+
 #' function to get the genome length
 #' @param {Data Frame} chrom_bounds -- chromosome boundaries
 getGenomeLength <- function(chrom_bounds) {
@@ -228,31 +251,33 @@ getGenomeLength <- function(chrom_bounds) {
   return(genome_length)
 }
 
-#' function to get information (chr, start, end, mode_cnv) for each pixel
-#' @param {Data Frame} cnv_data -- copy number variant segments data
+#' function to get the number of base pairs per pixel
 #' @param {Integer} ncols -- number of columns (pixels) to fill
 #' @param {Data Frame} chrom_bounds -- chromosome boundaries
 #' @param {Integer} genome_length -- length of the genome
-getPixelsForEachSC <- function(cnv_data, ncols, chrom_bounds, genome_length) {
-  
+getNBPPerPixel <- function(ncols, chrom_bounds, genome_length) {
   n_data_pixels <- ncols - 2*(nrow(chrom_bounds) + 1) # number of pixels filled with data 
                                                       # (subtract number chromosome separators:
                                                       # - 1 for each separator
                                                       # - 1 for the end of each chromosome 
                                                       # (we don't want chromosomes to share pixels))
   n_bp_per_pixel <- ceiling(genome_length/n_data_pixels) # number of bps per pixel
+  return(n_bp_per_pixel)
+}
 
-  # get the pixel start and end for each segment
+#' function to get information (chr, start, end, mode_cnv) for each pixel
+#' @param {Data Frame} cnv_data -- copy number variant segments data
+#' @param {Data Frame} chrom_bounds -- chromosome boundaries
+#' @param {Integer} n_bp_per_pixel -- number of base pairs per pixel
+getPixelsForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
+
+  # get the pixel start and end for each segment (account for chromosome separators in pixel info)
   pixel_info <- cnv_data
   pixel_info <- merge(cnv_data, chrom_bounds, by.x="chr", by.y="chrom")
-  pixel_info$start_px <- floor((pixel_info$chrom_start + pixel_info$start) / n_bp_per_pixel)
-  pixel_info$end_px <- floor((pixel_info$chrom_start + pixel_info$end) / n_bp_per_pixel)
-  pixel_info$px_width <- pixel_info$end_px - pixel_info$start_px + 1
-
-  # account for chrommosome separators in pixel info
   pixel_info$chrom_index <- sapply(pixel_info$chr, function(x) { which(chrom_bounds$chrom == x) })
-  pixel_info$start_px <- pixel_info$start_px + 2*(pixel_info$chrom_index-1)
-  pixel_info$end_px <- pixel_info$end_px + 2*(pixel_info$chrom_index-1)
+  pixel_info$start_px <- floor((pixel_info$chrom_start + pixel_info$start) / n_bp_per_pixel) + 2*(pixel_info$chrom_index-1)
+  pixel_info$end_px <- floor((pixel_info$chrom_start + pixel_info$end) / n_bp_per_pixel) + 2*(pixel_info$chrom_index-1)
+  pixel_info$px_width <- pixel_info$end_px - pixel_info$start_px + 1
 
   # note any segments whose start_px != end_px --> these will be the separated end pixels
   segment_ends_info <- pixel_info[which(pixel_info$start_px != pixel_info$end_px),]
@@ -272,7 +297,7 @@ getPixelsForEachSC <- function(cnv_data, ncols, chrom_bounds, genome_length) {
   # save their middles (for segments with length greater than 2)
   segs_gt_2 <- segment_ends_info[which(segment_ends_info$px_width > 2),]
   segs_gt_2$px_width <- segs_gt_2$px_width - 2 # subtract 2 (for 2 ends) from pixel width
-  middles <- segs_gt_2[,c("single_cell_id", "start_px", "px_width", "integer_copy_number", "chr")]
+  middles <- segs_gt_2[,c("single_cell_id", "start_px", "px_width", "integer_copy_number", "chr", "chrom_index")]
   colnames(middles)[which(colnames(middles) == "start_px")] <- "px"
   colnames(middles)[which(colnames(middles) == "integer_copy_number")] <- "mode_cnv"
   middles$px <- middles$px + 1 # first pixel will be a start pixel, so we shift 1
@@ -281,29 +306,47 @@ getPixelsForEachSC <- function(cnv_data, ncols, chrom_bounds, genome_length) {
   singles <- pixel_info[which(pixel_info$start_px == pixel_info$end_px),]
   colnames(singles)[which(colnames(singles) == "end_px")] <- "px"
   singles <- singles[ , !(names(singles) %in% c("start_px"))] # drop start_px column
-  singles$px_width <- 1 # set pixel width to 1
 
   # bind starts, ends, and singles
   starts_ends_singles <- rbind(starts, ends, singles)
 
   # find the mode cnv of all starts, ends, and singles
-  starts_ends_singles_grouped <- dplyr::group_by(starts_ends_singles, single_cell_id, px, px_width, chr)
+  starts_ends_singles_grouped <- dplyr::group_by(starts_ends_singles, single_cell_id, px, px_width, chr, chrom_index)
   starts_ends_singles_w_mode <- dplyr::summarise(starts_ends_singles_grouped, mode_cnv=findMode(integer_copy_number)[["mode"]])
   starts_ends_singles_w_mode <- as.data.frame(starts_ends_singles_w_mode)
 
   # bind the starts, ends, singles and middles
-  final_pixels <- rbind(starts_ends_singles_w_mode, middles)
-  final_pixels <- final_pixels[with(final_pixels, order(single_cell_id, px)), ]
-  colnames(final_pixels)[which(colnames(final_pixels) == "single_cell_id")] <- "sc_id"
+  all_pixels <- rbind(starts_ends_singles_w_mode, middles)
+  all_pixels <- all_pixels[with(all_pixels, order(single_cell_id, px)), ]
+  colnames(all_pixels)[which(colnames(all_pixels) == "single_cell_id")] <- "sc_id"
 
-    write.table(final_pixels, file="/Users/maiasmith/Desktop/final_pixels.csv", sep=",", row.names=FALSE)
+  # merge consecutive pixels with the same mode_cnv
 
-  # TODO merge consecutive pixels with the same mode_cnv
+  # remove NAs & Infs from mode cnv for cumsum calculation
+  all_pixels$mode_cnv_no_NA <- all_pixels$mode_cnv
+  all_pixels$mode_cnv_no_NA[which(is.na(all_pixels$mode_cnv_no_NA))] <- 1 
+  all_pixels$mode_cnv_no_NA[which(all_pixels$mode_cnv_no_NA == Inf)] <- 1 
+  # compute the lengths and values of runs of equal values vector of cnvs
+  cnv_rle <- rle(all_pixels$mode_cnv_no_NA)
+  # add 1 so zero copy numbers have an additive effect in the cumulative sum calculation
+  all_pixels$cumsum_values <- rep.int(cumsum(cnv_rle$values + 1), cnv_rle$length)
+  # add chromosome index to cumsum values to ensure ends of chromosomes are not merged if same cnv
+  all_pixels$cumsum_values <- all_pixels$cumsum_values + all_pixels$chrom_index 
+  all_pixels_select <- dplyr::select(all_pixels, sc_id, px, px_width, chr, mode_cnv, cumsum_values)
+  all_pixels_grouped <- dplyr::group_by(all_pixels_select, sc_id, cumsum_values)
+  consecutive_px_merged <- dplyr::summarise(all_pixels_grouped, sum_px_width=sum(px_width),
+                                                                chr=chr[1],
+                                                                px_min=min(px),
+                                                                mode_cnv=mode_cnv[1])
+  consecutive_px_merged <- as.data.frame(consecutive_px_merged)
+  colnames(consecutive_px_merged) <- c("sc_id", "cumsum_values", "px_width", "chr", "px", "mode_cnv")
+  # rearrange columns
+  consecutive_px_merged <- consecutive_px_merged[,c("sc_id","px","px_width","chr","mode_cnv","cumsum_values")]
 
   # separate pixels by single cell id
-  sc_final_pixels <- split(final_pixels , f = final_pixels$sc_id)
+  consecutive_px_merged_split <- split(consecutive_px_merged , f = consecutive_px_merged$sc_id)
 
-  return (sc_final_pixels)
+  return (consecutive_px_merged_split)
 }
 
 # function to find the mode of a vector

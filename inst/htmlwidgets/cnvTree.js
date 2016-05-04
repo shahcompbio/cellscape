@@ -86,21 +86,6 @@ HTMLWidgets.widget({
         // height of each cnv row
         vizObj.view.cnv.rowHeight = (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
-        // get bounds of chromosome
-        vizObj.data.chrom_bounds = _getChromBounds(vizObj);
-
-        // get the length of the genome 
-        _getGenomeLength(vizObj.data.chrom_bounds);
-
-        // set up empty pixel grid
-        vizObj.view.cnv.pixels = _getEmptyGrid(vizObj);
-
-        // fill pixel grid with chromosome information
-        _fillPixelWithChromInfo(vizObj);
-
-        // get chromosome box info
-        _getChromBoxInfo(vizObj);
-
         // get group annotation info as object w/properties group : [array of single cells]
         if (vizObj.view.groupsSpecified) {
             _reformatGroupAnnots(vizObj);
@@ -374,7 +359,7 @@ HTMLWidgets.widget({
             .append("g")
             .classed("chromLegend", true)
             .selectAll(".chromBoxG")
-            .data(vizObj.data.chrom_boxes)
+            .data(vizObj.userConfig.chrom_boxes)
             .enter().append("g")
             .attr("class", "chromBoxG")
 
