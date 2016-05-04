@@ -287,9 +287,8 @@ getPixelsForEachSC <- function(cnv_data, ncols, chrom_bounds, genome_length) {
   starts_ends_singles <- rbind(starts, ends, singles)
 
   # find the mode cnv of all starts, ends, and singles
-  starts_ends_singles_w_mode <- starts_ends_singles %>%
-     group_by(single_cell_id, px, px_width, chr) %>%
-     summarise(mode_cnv=findMode(integer_copy_number)[["mode"]])
+  starts_ends_singles_grouped <- dplyr::group_by(starts_ends_singles, single_cell_id, px, px_width, chr)
+  starts_ends_singles_w_mode <- dplyr::summarise(starts_ends_singles_grouped, mode_cnv=findMode(integer_copy_number)[["mode"]])
   starts_ends_singles_w_mode <- as.data.frame(starts_ends_singles_w_mode)
 
   # bind the starts, ends, singles and middles
@@ -297,7 +296,7 @@ getPixelsForEachSC <- function(cnv_data, ncols, chrom_bounds, genome_length) {
   final_pixels <- final_pixels[with(final_pixels, order(single_cell_id, px)), ]
   colnames(final_pixels)[which(colnames(final_pixels) == "single_cell_id")] <- "sc_id"
 
-    write.table(final_pixels, file="/Users/msmith/Desktop/final_pixels.csv", sep=",", row.names=FALSE)
+    write.table(final_pixels, file="/Users/maiasmith/Desktop/final_pixels.csv", sep=",", row.names=FALSE)
 
   # TODO merge consecutive pixels with the same mode_cnv
 
