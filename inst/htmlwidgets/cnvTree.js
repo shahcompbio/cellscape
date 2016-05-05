@@ -298,6 +298,11 @@ HTMLWidgets.widget({
                 }
             })
             .on("click", function() {
+                // if scissors button is selected, turn off scissors
+                if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+                    _pushScissorsButton(vizObj);
+                }
+                // push selection button function
                 _pushBrushSelectionButton(brush, vizObj, cnvSVG);
             });
         topBarSVG.append("image")
@@ -319,6 +324,11 @@ HTMLWidgets.widget({
                 }
             })
             .on("click", function() {
+                // if scissors button is selected, turn off scissors
+                if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+                    _pushScissorsButton(vizObj);
+                }
+                // push selection button function
                 _pushBrushSelectionButton(brush, vizObj, cnvSVG);
             });
 
@@ -345,6 +355,11 @@ HTMLWidgets.widget({
                 }
             })
             .on("click", function() {
+                // if brush selection button is selected, turn it off
+                if (d3.selectAll(".brushButtonSelected")[0].length == 1) {
+                    _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+                }
+                // push scissors button function
                 _pushScissorsButton(vizObj);
             });
         topBarSVG.append("image")
@@ -366,6 +381,11 @@ HTMLWidgets.widget({
                 }
             })
             .on("click", function() {
+                // if brush selection button is selected, turn it off
+                if (d3.selectAll(".brushButtonSelected")[0].length == 1) {
+                    _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+                }
+                // push scissors button function
                 _pushScissorsButton(vizObj);
             });
 

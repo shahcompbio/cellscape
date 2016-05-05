@@ -173,6 +173,7 @@ function _resetLinks(vizObj) {
 * @param {Object} cnvSVG -- cnv SVG object
 */
 function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
+
     // deselect brush tool
     if (d3.select(".selectionButton").classed("brushButtonSelected")) {
         // remove brush tool
@@ -198,13 +199,19 @@ function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
     }
 }
 
+/* scissors button push function
+* @param {Object} vizObj
+*/
 function _pushScissorsButton(vizObj) {
+
     // deselect scissors tool
     if (d3.select(".scissorsButton").classed("scissorsButtonSelected")) {
         // remove "scissorsButtonSelected" class from button
         d3.select(".scissorsButton").classed("scissorsButtonSelected", false); 
 
         // reset colour of the brush scissors button
+        console.log("vizObj");
+        console.log(vizObj);
         d3.select(".scissorsButton").attr("fill", vizObj.generalConfig.topBarColour);
     }
     // select scissors tool
