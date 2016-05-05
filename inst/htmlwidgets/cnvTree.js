@@ -558,8 +558,12 @@ HTMLWidgets.widget({
                 .attr("height", vizObj.view.cnv.rowHeight)
                 .attr("width", function(d) { return d.px_width; })
                 .attr("fill", function(d) { 
+                    // no cnv data
+                    if (typeof(d.mode_cnv) == "undefined") {
+                        return "white";
+                    }
                     // cnv data, but above max cnv value
-                    if (d.mode_cnv > maxCNV) {
+                    else if (d.mode_cnv > maxCNV) {
                         return colorScale(maxCNV);
                     }
                     // regular cnv data
