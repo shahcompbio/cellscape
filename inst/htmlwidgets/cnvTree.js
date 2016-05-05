@@ -670,7 +670,8 @@ HTMLWidgets.widget({
                 .attr("x", 0)
                 .attr("y", function(d) { 
                     var index = vizObj.userConfig.sc_ids_ordered.indexOf(d.single_cell_id);
-                    return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
+                    d.y = (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight)
+                    return d.y; 
                 })
                 .attr("height", vizObj.view.cnv.rowHeight)
                 .attr("width", config.groupAnnotWidth-3)

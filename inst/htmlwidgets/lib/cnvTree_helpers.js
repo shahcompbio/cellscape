@@ -9,10 +9,13 @@ function _brushEnd(vizObj, brush) {
     if (!brush.empty()) {
 
         // highlight selected grid cell rows
-        d3.selectAll(".gridCell").classed("active", function(d) {
-            var brushed = extent[0] <= (d.y+vizObj.view.cnv.rowHeight) && d.y <= extent[1];
+        d3.selectAll(".groupAnnot").classed("active", function(d) {
+            // if any transformation has occurred
+            var t = d3.transform(d3.select(this).attr("transform")), 
+                t_y = t.translate[1];
+            var brushed = extent[0] <= (d.y+vizObj.view.cnv.rowHeight+t_y) && (d.y+t_y) <= extent[1];
             if (brushed) {
-                selectedSCs.push(d.sc_id);
+                selectedSCs.push(d.single_cell_id);
             }
             return brushed;
         });
