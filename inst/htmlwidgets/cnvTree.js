@@ -15,7 +15,7 @@ HTMLWidgets.widget({
             defaultNodeColour: "#3458A5",
             highlightColour: "#000000",
             linkHighlightColour: "#000000",
-            defaultLinkColour: "#838181",
+            defaultLinkColour: "#B7B7B7",
             chromLegendHeight: 15,
             cnvLegendWidth: 50,
             groupAnnotStart: 140, // starting y-pixel for group annotation legend
@@ -72,6 +72,9 @@ HTMLWidgets.widget({
 
         vizObj.userConfig = x;
         vizObj.view.groupsSpecified = (vizObj.userConfig.sc_groups != null); // (T/F) group annotation is specified
+
+        // keep track of original list of scs, for tree pruning purposes
+        vizObj.view.original_sc_list = $.extend([], vizObj.userConfig.sc_ids_ordered);
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
@@ -407,7 +410,8 @@ HTMLWidgets.widget({
             .attr("id", function(d) { 
                 return d.link_id; 
             })
-            .style("stroke","#838181")
+            .style("stroke",vizObj.generalConfig.defaultLinkColour)
+            .attr("stroke-width", "2px")
             .on("mouseover", function(d) {
                 // if there's no node or link selection taking place
                 if (_checkForSelections()) {
@@ -416,6 +420,11 @@ HTMLWidgets.widget({
                 }
                 // if scissors button is selected
                 else if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+
+                    // reset lists of selected links and scs
+                    vizObj.view.selectedSCs = [];
+                    vizObj.view.selectedLinks = [];
+
                     // highlight downstream links
                     _downstreamEffects(vizObj, d.link_id); 
 
@@ -433,14 +442,30 @@ HTMLWidgets.widget({
             .on("click", function(d) {
                 // if scissors button is selected
                 if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
-                    // remove links
-                    vizObj.view.selectedLinks.forEach(function(link) {
-                        d3.select("#" + link).remove();
+
+                    // for each link
+                    vizObj.view.selectedLinks.forEach(function(link_id) {
+                        // remove link
+                        d3.select("#" + link_id).remove();
+
+                        // remove link from list of links
+                        var index = vizObj.userConfig.link_ids.indexOf(link_id);
+                        vizObj.userConfig.link_ids.splice(index, 1);
                     })
-                    // remove nodes
+                    // for each single cell
                     vizObj.view.selectedSCs.forEach(function(sc_id) {
-                        d3.select("#node_" + sc_id).remove();
+                        d3.select("#node_" + sc_id).remove(); // remove node in tree
+                        d3.select(".gridCellG.sc_" + sc_id).remove(); // remove copy number profile
+                        d3.select(".groupAnnot.sc_" + sc_id).remove(); // remove group annotation
+                        d3.select(".indic.sc_" + sc_id).remove(); // remove indicator
+
+                        // remove single cell from list of single cells
+                        var index = vizObj.userConfig.sc_ids_ordered.indexOf(sc_id);
+                        vizObj.userConfig.sc_ids_ordered.splice(index, 1);
                     })
+
+                    // adjust copy number matrix to fill the entire space
+                    d3.timer(_updateTrimmedMatrix(vizObj), 300);
                 }
             });
 
@@ -521,7 +546,9 @@ HTMLWidgets.widget({
             var cur_data = vizObj.userConfig.pixel_info[[cur_sc]]; 
                
             gridCellsG
-                .selectAll(".gridCell.sc_"+cur_sc)
+                .append("g")
+                .attr("class", "gridCellG sc_" + cur_sc)
+                .selectAll(".gridCell.sc_" + cur_sc)
                 .data(cur_data)
                 .enter()
                 .append("rect")
@@ -533,8 +560,8 @@ HTMLWidgets.widget({
                 })
                 .attr("x", function(d) { return d.px; })
                 .attr("y", function(d) { 
-                    var sc_index = vizObj.userConfig.sc_ids_ordered.indexOf(cur_sc);
-                    d.y = (sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
+                    d.sc_index = vizObj.userConfig.sc_ids_ordered.indexOf(d.sc_id);
+                    d.y = (d.sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
                     return d.y; 
                 })
                 .attr("height", vizObj.view.cnv.rowHeight)
@@ -595,6 +622,7 @@ HTMLWidgets.widget({
             })
 
         chromBoxes.append("text")
+            .attr("class", function(d) { return "chromBoxText chr" + d.chr; })
             .attr("x", function(d) { return d.x + (d.width / 2); })
             .attr("y", config.cnvHeight - (config.chromLegendHeight / 2))
             .attr("dy", ".35em")
@@ -637,7 +665,7 @@ HTMLWidgets.widget({
                 .enter()
                 .append("rect")
                 .attr("class", function(d) {
-                    return "groupAnnot group_" + d.group;
+                    return "groupAnnot group_" + d.group + " sc_" + d.single_cell_id;
                 })
                 .attr("x", 0)
                 .attr("y", function(d) { 

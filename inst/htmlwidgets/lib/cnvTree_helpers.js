@@ -313,6 +313,68 @@ function _reformatGroupAnnots(vizObj) {
 
 // CNV FUNCTIONS
 
+/* function to update copy number matrix upon trimming
+*/
+function _updateTrimmedMatrix(vizObj) {
+    var config = vizObj.generalConfig;
+
+    // keep track of matrix height
+    var matrix_height = 0;
+
+    // for each single cell that's still in the matrix
+    vizObj.userConfig.sc_ids_ordered.forEach(function(sc_id) {
+        // original y-coordinate for this single cell
+        var original_sc_index = vizObj.view.original_sc_list.indexOf(sc_id);
+        var original_y = (original_sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
+
+        // new y-coordinate
+        var new_sc_index = vizObj.userConfig.sc_ids_ordered.indexOf(sc_id);
+        var new_y = (new_sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
+
+        // y-difference
+        var diff_y = original_y - new_y;
+
+        // translate copy number profile & indicator
+        d3.select(".gridCellG.sc_" + sc_id)
+            .transition()
+            .duration(1000)
+            .attr("transform", function() {
+                return "translate(0," + (-1*diff_y) + ")";
+            });
+        
+        // translate group annotation
+        if (vizObj.view.groupsSpecified) {
+            d3.select(".groupAnnot.sc_" + sc_id)
+                .transition()
+                .duration(1000)
+                .attr("transform", function() {
+                    return "translate(0," + (-1*diff_y) + ")";
+                });
+        }
+
+        // translate indicator
+        d3.select(".indic.sc_" + sc_id)
+            .transition()
+            .duration(1000)
+            .attr("transform", function() {
+                return "translate(0," + (-1*diff_y) + ")";
+            });
+
+        // update matrix height 
+        matrix_height = new_y + vizObj.view.cnv.rowHeight;
+    });
+
+    // move chromosome legend up
+    d3.selectAll(".chromBox")
+        .transition()
+        .duration(1000)
+        .attr("y", matrix_height);
+    d3.selectAll(".chromBoxText")
+        .transition()
+        .duration(1000)
+        .attr("y", matrix_height + (config.chromLegendHeight / 2));
+}
+
 /* function to get chromosome min and max values
 * @param {Object} vizObj
 */
