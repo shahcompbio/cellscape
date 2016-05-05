@@ -25,7 +25,8 @@ HTMLWidgets.widget({
             fontHeight: 12,
             topBarHeight: 30, // height of top panel
             topBarColour: "#ECECEC",
-            topBarHighlight: "#C6C6C6"
+            topBarHighlight: "#C6C6C6",
+            spaceBelowTopBar: 15 // amount of space (px) below the top bar
         };
 
         // global variable vizObj
@@ -39,18 +40,18 @@ HTMLWidgets.widget({
         config.height = height - 15; // - 15 because vertical scrollbar takes 15 px
 
         // cnv configurations
-        config.cnvHeight = config.height - config.topBarHeight;
+        config.cnvHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
         config.cnvTop = 0;
         config.cnvBottom = (config.cnvHeight-config.chromLegendHeight);
 
         // indicator configurations
-        config.indicatorHeight = config.height - config.topBarHeight;
+        config.indicatorHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
 
         // group annotation configurations
-        config.groupAnnotHeight = config.height - config.topBarHeight;
+        config.groupAnnotHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
 
         // cnv legend configurations
-        config.cnvLegendHeight = config.height - config.topBarHeight;
+        config.cnvLegendHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
 
         vizObj.generalConfig = config;
 
@@ -72,7 +73,7 @@ HTMLWidgets.widget({
 
         // tree configurations
         config.treeWidth = config.width - config.indicatorWidth - config.cnvLegendWidth - vizObj.userConfig.cnvWidth;
-        config.treeHeight = config.height - config.topBarHeight;
+        config.treeHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
 
         // if group annotation specified, reduce the width of the tree
         if (vizObj.view.groupsSpecified) {
@@ -127,13 +128,23 @@ HTMLWidgets.widget({
             .style("height", config.topBarHeight + "px")
             .style("float", "left");
 
+        // SPACE BETWEEN TOP BAR AND VIEW DIV
+
+        var spaceDIV = d3.select(el)
+            .append("div")
+            .attr("class", "spaceDIV")
+            .style("width", config.width + "px")
+            .style("height", config.spaceBelowTopBar + "px")
+            .style("float", "left");
+
         // CONTAINER DIV
 
         var containerDIV = d3.select(el)
             .append("div")
             .attr("class", "containerDIV")
             .style("width", config.width + "px")
-            .style("height", config.height + "px");
+            .style("height", config.cnvHeight + "px")
+            .style("float", "left");
 
         // TREE SVG
 
@@ -162,8 +173,7 @@ HTMLWidgets.widget({
             .append("svg:svg")
             .attr("class", "indicatorSVG")
             .attr("width", config.indicatorWidth + "px")
-            .attr("height", config.indicatorHeight + "px")
-            .attr("transform", "translate(0," + config.topBarHeight + ")");
+            .attr("height", config.indicatorHeight + "px");
 
         // GROUP ANNOTATION SVG
 
@@ -172,8 +182,7 @@ HTMLWidgets.widget({
                 .append("svg:svg")
                 .attr("class", "groupAnnotSVG")
                 .attr("width", config.groupAnnotWidth + "px")
-                .attr("height", config.groupAnnotHeight + "px")
-                .attr("transform", "translate(0," + config.topBarHeight + ")");
+                .attr("height", config.groupAnnotHeight + "px");
         }
 
         // CNV SVG
