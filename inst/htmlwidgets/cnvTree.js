@@ -548,35 +548,7 @@ HTMLWidgets.widget({
             .attr("width", config.indicatorWidth)
             .attr("fill", config.highlightColour)
             .attr("fill-opacity", 0)
-            .attr("stroke", "none")
-            .on("mouseover", function(d) {
-                // if there's no node or link selection taking place
-                if (_checkForSelections()) {
-
-                    // show tooltip
-                    indicatorTip.show(d, d3.select(this).node());
-
-                    // highlight node
-                    _highlightNode(d, vizObj);
-
-                    // highlight indicator
-                    _highlightIndicator(d, vizObj);
-                }
-            })
-            .on("mouseout", function(d) {
-                // if there's no node or link selection taking place
-                if (_checkForSelections()) {
-
-                    // hide tooltip
-                    indicatorTip.hide(d);
-
-                    // reset node
-                    _resetNode(d, vizObj);
-
-                    // reset indicator
-                    _resetIndicator(d);
-                }
-            });
+            .attr("stroke", "none");
         
         // PLOT GROUP ANNOTATION COLUMN
 
