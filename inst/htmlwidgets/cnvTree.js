@@ -24,7 +24,7 @@ HTMLWidgets.widget({
             spacing: 2, // spacing between legend rectangles
             fontHeight: 12,
             topBarHeight: 30, // height of top panel
-            topBarColour: "#ECECEC",
+            topBarColour: "#D9D9D9",
             topBarHighlight: "#C6C6C6",
             spaceBelowTopBar: 15 // amount of space (px) below the top bar
         };
