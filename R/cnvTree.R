@@ -26,11 +26,13 @@
 #'
 #' @param sc_id_order {Array} (Optional) Order of single cell ids for the heatmap. 
 #'                                       Default is the order of single cells in the phylogeny.
+#' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes.
 #' @param width {Number} (Optional) Width of the plot.
 #' @param height {Number} (Optional) Height of the plot.
 #'
 #' @export
-cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, width = 1200, height = 1000) {
+cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, display_node_ids=FALSE, 
+  width = 1200, height = 1000) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
   if (missing(cnv_data)) {
@@ -175,7 +177,8 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     pixel_info=jsonlite::toJSON(pixel_info),
     chrom_boxes=jsonlite::toJSON(chrom_boxes),
     cnvWidth=ncols,
-    root=root
+    root=root,
+    display_node_ids=display_node_ids
   )
 
   # create widget
