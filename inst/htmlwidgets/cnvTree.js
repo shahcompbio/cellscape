@@ -338,7 +338,7 @@ HTMLWidgets.widget({
                 }
             })
             .on("click", function() {
-                // _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+                _pushScissorsButton(vizObj);
             });
         topBarSVG.append("image")
             .attr("xlink:href", scissorsButton_base64)
@@ -359,7 +359,7 @@ HTMLWidgets.widget({
                 }
             })
             .on("click", function() {
-                // _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+                _pushScissorsButton(vizObj);
             });
 
         // FORCE FUNCTION
@@ -405,14 +405,24 @@ HTMLWidgets.widget({
             })
             .style("stroke","#838181")
             .on("mouseover", function(d) {
-                // if there's no node or link selection taking place, highlight downstream links
+                // if there's no node or link selection taking place
                 if (_checkForSelections()) {
-                    return _linkMouseover(vizObj, d.link_id);                     
+                    // highlight downstream links
+                    _downstreamEffects(vizObj, d.link_id);                     
+                }
+                // if scissors button is selected
+                else if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+                    // highlight downstream links
+                    _downstreamEffects(vizObj, d.link_id); 
+
+                    // highlight the potentially-cut link red
+                    d3.select("#"+d.link_id)
+                        .style("stroke", "red");
                 }
             })
             .on("mouseout", function(d) { 
-                // if there's no node or link selection taking place, reset the links
-                if (_checkForSelections()) {
+                // if there's no node or link selection taking place, or scissors button selected, reset the links
+                if (_checkForSelections() || (d3.selectAll(".scissorsButtonSelected")[0].length == 1)) {
                     return _linkMouseout(vizObj); 
                 }
             });

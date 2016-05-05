@@ -40,7 +40,8 @@ function _brushEnd(vizObj, brush) {
 function _checkForSelections() {
     return ((d3.selectAll(".nodeSelected")[0].length == 0) && // node selection
             (d3.selectAll(".linkSelected")[0].length == 0) && // link selection
-            (d3.selectAll(".brushButtonSelected")[0].length == 0)) // brush button not selected
+            (d3.selectAll(".brushButtonSelected")[0].length == 0) && // brush button not selected
+            (d3.selectAll(".scissorsButtonSelected")[0].length == 0)) // scissors button not selected
 }
 
 /* mouseover function for group annotations
@@ -171,7 +172,6 @@ function _resetLinks(vizObj) {
 function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
     // deselect brush tool
     if (d3.select(".selectionButton").classed("brushButtonSelected")) {
-        console.log("deselected");
         // remove brush tool
         d3.select(".brush").remove();
 
@@ -183,7 +183,6 @@ function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
     }
     // select brush tool
     else {
-        console.log("selected");
         // mark this button as brushButtonSelected
         d3.select(".selectionButton").classed("brushButtonSelected", true); 
 
@@ -196,6 +195,22 @@ function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
     }
 }
 
+function _pushScissorsButton(vizObj) {
+    // deselect scissors tool
+    if (d3.select(".scissorsButton").classed("scissorsButtonSelected")) {
+        // remove "scissorsButtonSelected" class from button
+        d3.select(".scissorsButton").classed("scissorsButtonSelected", false); 
+
+        // reset colour of the brush scissors button
+        d3.select(".scissorsButton").attr("fill", vizObj.generalConfig.topBarColour);
+    }
+    // select scissors tool
+    else {
+        // mark this button as scissorsButtonSelected
+        d3.select(".scissorsButton").classed("scissorsButtonSelected", true); 
+    }
+}
+
 // LINK FUNCTIONS
 
 /* function to get the link id for a link data object
@@ -204,17 +219,6 @@ function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
 function _getLinkId(d) {
    return "link_" + d.source.name + "_" + d.target.name;
 }
-
-/* function for mouseover of link
-* @param {Object} vizObj
-* @param link_id -- id for the link that's currently highlighted
-* @param link_ids -- ids for all links in tree
-*/
-function _linkMouseover(vizObj, link_id) {
-
-    // get downstream links, highlight heatmap
-    _downstreamEffects(vizObj, link_id); 
-};
 
 /* function for mouseout of link
 * @param {Object} vizObj
