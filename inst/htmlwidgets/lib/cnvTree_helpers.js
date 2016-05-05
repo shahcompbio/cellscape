@@ -222,8 +222,9 @@ function _getLinkId(d) {
 
 /* function for mouseout of link
 * @param {Object} vizObj
+* @param {Boolean} resetSelectedSCList -- whether or not to reset the seleted sc list
 */
-function _linkMouseout(vizObj) {
+function _linkMouseout(vizObj, resetSelectedSCList) {
     // reset nodes
     d3.selectAll(".node")
         .style("fill", function(d) {
@@ -244,7 +245,11 @@ function _linkMouseout(vizObj) {
     d3.selectAll(".link")
         .style("stroke", vizObj.generalConfig.defaultLinkColour);
 
-
+    // reset list of selected cells & links
+    if (resetSelectedSCList) {
+        vizObj.view.selectedSCs = [];
+        vizObj.view.selectedLinks = [];
+    }
 };
 
 /* recursive function to perform downstream effects upon tree link highlighting
@@ -256,6 +261,10 @@ function _downstreamEffects(vizObj, link_id) {
     // get target id & single cell id
     var targetRX = new RegExp("link_source_.+_target_(.+)");  
     var target_id = targetRX.exec(link_id)[1];
+
+    // add this target sc and link id to the lists of selected scs and links
+    vizObj.view.selectedSCs.push(target_id);
+    vizObj.view.selectedLinks.push(link_id);
 
     // highlight node
     d3.select("#node_" + target_id)

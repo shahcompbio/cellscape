@@ -34,6 +34,10 @@ HTMLWidgets.widget({
         vizObj.data = {};
         vizObj.view = {};
 
+        // selected single cells list & selected links list
+        vizObj.view.selectedSCs = [];
+        vizObj.view.selectedLinks = [];
+
         // general configurations
         var config = $.extend(true, {}, defaults);
         config.width = width - 15; // - 15 because vertical scrollbar takes 15 px
@@ -421,9 +425,22 @@ HTMLWidgets.widget({
                 }
             })
             .on("mouseout", function(d) { 
-                // if there's no node or link selection taking place, or scissors button selected, reset the links
-                if (_checkForSelections() || (d3.selectAll(".scissorsButtonSelected")[0].length == 1)) {
-                    return _linkMouseout(vizObj); 
+                // if there's no node or link selection taking place, or scissors tool on, reset the links
+                if (_checkForSelections() || d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+                    _linkMouseout(vizObj, true); 
+                }
+            })
+            .on("click", function(d) {
+                // if scissors button is selected
+                if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+                    // remove links
+                    vizObj.view.selectedLinks.forEach(function(link) {
+                        d3.select("#" + link).remove();
+                    })
+                    // remove nodes
+                    vizObj.view.selectedSCs.forEach(function(sc_id) {
+                        d3.select("#node_" + sc_id).remove();
+                    })
                 }
             });
 
