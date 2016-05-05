@@ -1,11 +1,46 @@
 // D3 EFFECTS FUNCTIONS
 
+/* brush selection ending function
+* @param {Object} vizObj
+*/
+function _brushEnd(vizObj, brush) {
+    var selectedSCs = [];
+    var extent = d3.event.target.extent();
+    if (!brush.empty()) {
+
+        // highlight selected grid cell rows
+        d3.selectAll(".gridCell").classed("active", function(d) {
+            var brushed = extent[0] <= (d.y+vizObj.view.cnv.rowHeight) && d.y <= extent[1];
+            if (brushed) {
+                selectedSCs.push(d.sc_id);
+            }
+            return brushed;
+        });
+
+        // highlight selected sc's indicators & nodes
+        selectedSCs.forEach(function(sc_id) {
+            _highlightIndicator(sc_id, vizObj);   
+            _highlightNode(sc_id, vizObj);    
+        });
+    } else {
+        d3.select(".cnvSVG").classed("brushed", false)
+        d3.selectAll(".gridCell").classed("active", false)
+
+        // reset nodes and indicators
+        _resetNodes(vizObj);
+        _resetIndicators();
+    }
+
+    // clear brush
+    d3.select(".brush").call(brush.clear());
+}
+
 /* function to check for selections
 */
 function _checkForSelections() {
     return ((d3.selectAll(".nodeSelected")[0].length == 0) && // node selection
             (d3.selectAll(".linkSelected")[0].length == 0) && // link selection
-            (d3.selectAll(".active")[0].length == 0)) // no brushed cells
+            (d3.selectAll(".brushButtonSelected")[0].length == 0)) // brush button not selected
 }
 
 /* mouseover function for group annotations
@@ -128,6 +163,38 @@ function _resetLinks(vizObj) {
         .style("stroke", vizObj.generalConfig.defaultLinkColour);
 }
 
+/* brush selection button push function
+* @param {Object} brush -- brush object
+* @param {Object} vizObj
+* @param {Object} cnvSVG -- cnv SVG object
+*/
+function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
+    // deselect brush tool
+    if (d3.select(".selectionButton").classed("brushButtonSelected")) {
+        console.log("deselected");
+        // remove brush tool
+        d3.select(".brush").remove();
+
+        // remove "brushButtonSelected" class from button
+        d3.select(".selectionButton").classed("brushButtonSelected", false); 
+
+        // reset colour of the brush selection button
+        d3.select(".selectionButton").attr("fill", vizObj.generalConfig.topBarColour);
+    }
+    // select brush tool
+    else {
+        console.log("selected");
+        // mark this button as brushButtonSelected
+        d3.select(".selectionButton").classed("brushButtonSelected", true); 
+
+        // create brush tool
+        cnvSVG.append("g") 
+            .attr("class", "brush")
+            .call(brush)
+            .selectAll('rect')
+            .attr('width', vizObj.userConfig.cnvWidth);
+    }
+}
 
 // LINK FUNCTIONS
 

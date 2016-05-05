@@ -22,7 +22,10 @@ HTMLWidgets.widget({
             titleHeight: 14, // height of legend titles
             rectHeight: 12, // rectangle in legend
             spacing: 2, // spacing between legend rectangles
-            fontHeight: 12
+            fontHeight: 12,
+            topBarHeight: 30, // height of top panel
+            topBarColour: "#ECECEC",
+            topBarHighlight: "#C6C6C6"
         };
 
         // global variable vizObj
@@ -36,18 +39,18 @@ HTMLWidgets.widget({
         config.height = height - 15; // - 15 because vertical scrollbar takes 15 px
 
         // cnv configurations
-        config.cnvHeight = config.height;
+        config.cnvHeight = config.height - config.topBarHeight;
         config.cnvTop = 0;
         config.cnvBottom = (config.cnvHeight-config.chromLegendHeight);
 
         // indicator configurations
-        config.indicatorHeight = config.height;
+        config.indicatorHeight = config.height - config.topBarHeight;
 
         // group annotation configurations
-        config.groupAnnotHeight = config.height;
+        config.groupAnnotHeight = config.height - config.topBarHeight;
 
         // cnv legend configurations
-        config.cnvLegendHeight = config.height;
+        config.cnvLegendHeight = config.height - config.topBarHeight;
 
         vizObj.generalConfig = config;
 
@@ -58,6 +61,7 @@ HTMLWidgets.widget({
     renderValue: function(el, x, instance) {
 
         var config = vizObj.generalConfig;
+        var view_id = el.id;
 
         // GET PARAMS FROM R
 
@@ -68,7 +72,7 @@ HTMLWidgets.widget({
 
         // tree configurations
         config.treeWidth = config.width - config.indicatorWidth - config.cnvLegendWidth - vizObj.userConfig.cnvWidth;
-        config.treeHeight = config.height;
+        config.treeHeight = config.height - config.topBarHeight;
 
         // if group annotation specified, reduce the width of the tree
         if (vizObj.view.groupsSpecified) {
@@ -105,12 +109,29 @@ HTMLWidgets.widget({
             vizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(vizObj.userConfig.sc_groups, "group")));
         }
 
+        // BRUSH SELECTION FUNCTION
+
+        var brush = d3.svg.brush()
+            .y(d3.scale.linear().domain([0, config.cnvHeight]).range([0, config.cnvHeight]))
+            .on("brushstart", function() { d3.select(".cnvSVG").classed("brushed", true); })
+            .on("brushend", function() {
+                return _brushEnd(vizObj, brush);
+            });
+
+        // TOP BAR DIV
+
+        var topBarDIV = d3.select(el).append("div")
+            .attr("class", "topBarDIV")
+            .style("position", "relative")
+            .style("width", config.width + "px")
+            .style("height", config.topBarHeight + "px")
+            .style("float", "left");
+
         // CONTAINER DIV
 
         var containerDIV = d3.select(el)
             .append("div")
             .attr("class", "containerDIV")
-            .style("position", "relative")
             .style("width", config.width + "px")
             .style("height", config.height + "px");
 
@@ -142,6 +163,7 @@ HTMLWidgets.widget({
             .attr("class", "indicatorSVG")
             .attr("width", config.indicatorWidth + "px")
             .attr("height", config.indicatorHeight + "px")
+            .attr("transform", "translate(0," + config.topBarHeight + ")");
 
         // GROUP ANNOTATION SVG
 
@@ -151,6 +173,7 @@ HTMLWidgets.widget({
                 .attr("class", "groupAnnotSVG")
                 .attr("width", config.groupAnnotWidth + "px")
                 .attr("height", config.groupAnnotHeight + "px")
+                .attr("transform", "translate(0," + config.topBarHeight + ")");
         }
 
         // CNV SVG
@@ -168,6 +191,118 @@ HTMLWidgets.widget({
             .attr("class", "cnvLegendSVG")
             .attr("width", config.cnvLegendWidth + "px")
             .attr("height", config.cnvLegendHeight + "px")
+
+        // PLOT TOP PANEL
+
+        // svg
+        var topBarSVG = topBarDIV.append("svg:svg")
+            .attr("class", "topBar")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", config.width + "px")
+            .attr("height", config.topBarHeight + "px");
+
+        // background bar
+        topBarSVG.append("rect")
+            .attr("x",0)
+            .attr("y",0)
+            .attr("width", config.width + "px")
+            .attr("height", config.topBarHeight)
+            .attr("rx", 10)
+            .attr("ry", 10)
+            .attr("fill", config.topBarColour);
+
+        var smallButtonWidth = 42; // width of the top panel reset button
+
+        var resetButton_base64 = "data:image/svg+xml;base64," + "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNC4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDQzMzYzKSAgLS0+DQo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPg0KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJDYXBhXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB3aWR0aD0iNTEycHgiIGhlaWdodD0iNTEycHgiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA1MTIgNTEyIiB4bWw6c3BhY2U9InByZXNlcnZlIj4NCjxnPg0KCTxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik00MzIuOTc1LDgwLjAzNGMtMjcuOTk4LTI3Ljk2My02MC45MjYtNDcuODYtOTYuMDM3LTU5Ljc2NHY3NS4xODkNCgkJYzE2LjkwNCw4LjQxNywzMi45MjgsMTkuMzY5LDQ2Ljk4LDMzLjQ1NmM3MC4xODgsNzAuMjI0LDcwLjE4OCwxODQuMzk3LDAsMjU0LjU4NGMtNzAuMTg5LDcwLjA4NC0xODQuMjkzLDcwLjA4NC0yNTQuNTg3LDANCgkJYy03MC4xMTctNzAuMjU4LTcwLjExNy0xODQuMzYxLDAtMjU0LjU4NGMwLjE3Ny0wLjIxMSwwLjc0LTAuNTYzLDAuOTg3LTAuODhoMC4wN2w3NC4yMTcsODEuNzMxTDIxNC41LDguNUw4LjkwNSwzLjM1Ng0KCQlsNzIuNDYxLDc1LjU4NmMtMC4yNDcsMC40MjItMC42MzQsMC44NDUtMC45NTEsMS4wOTJjLTk3LjMwNSw5Ny4yNy05Ny4zMDUsMjU1LjA3OSwwLDM1Mi4zNDkNCgkJYzk3LjQ0Niw5Ny4zNzUsMjU1LjE1LDk3LjM3NSwzNTIuNTYsMEM1MzAuMjA5LDMzNS4xMTMsNTMwLjMxNCwxNzcuMzA0LDQzMi45NzUsODAuMDM0eiIvPg0KPC9nPg0KPC9zdmc+DQo="
+        var selectionButton_base64 = "data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTkuMS4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDYxLjM4MiA2MS4zODIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDYxLjM4MiA2MS4zODI7IiB4bWw6c3BhY2U9InByZXNlcnZlIiB3aWR0aD0iMTZweCIgaGVpZ2h0PSIxNnB4Ij4KPGc+Cgk8ZyBpZD0iZ3JvdXAtNDFzdmciPgoJCTxwYXRoIGlkPSJwYXRoLTFfMzNfIiBkPSJNNTEuNDU1LDYxLjIxMmgtMi40MjhjLTAuODI5LDAtMS41LTAuNjczLTEuNS0xLjUwMWMwLTAuODMsMC42NzEtMS41MDEsMS41LTEuNTAxaDIuNDI4ICAgIGMwLjcwNCwwLDEuMzk1LTAuMTEyLDIuMDU0LTAuMzMxYzAuNzg1LTAuMjYyLDEuNjM1LDAuMTYzLDEuODk2LDAuOTVjMC4yNjIsMC43ODctMC4xNjMsMS42MzctMC45NDksMS44OTkgICAgQzUzLjQ5MSw2MS4wNDgsNTIuNDgyLDYxLjIxMiw1MS40NTUsNjEuMjEyeiBNNDQuMDI2LDYxLjIxMmgtNWMtMC44MjgsMC0xLjUtMC42NzMtMS41LTEuNTAxYzAtMC44MywwLjY3Mi0xLjUwMSwxLjUtMS41MDFoNSAgICBjMC44MjksMCwxLjUsMC42NzEsMS41LDEuNTAxQzQ1LjUyNiw2MC41MzksNDQuODU1LDYxLjIxMiw0NC4wMjYsNjEuMjEyeiBNMzQuMDI3LDYxLjIxMmgtNWMtMC44MjksMC0xLjUtMC42NzMtMS41LTEuNTAxICAgIGMwLTAuODMsMC42NzEtMS41MDEsMS41LTEuNTAxaDVjMC44MjgsMCwxLjQ5OSwwLjY3MSwxLjQ5OSwxLjUwMUMzNS41MjYsNjAuNTM5LDM0Ljg1NSw2MS4yMTIsMzQuMDI3LDYxLjIxMnogTTI0LjAyNiw2MS4yMTJoLTUgICAgYy0wLjgyOCwwLTEuNS0wLjY3My0xLjUtMS41MDFjMC0wLjgzLDAuNjcyLTEuNTAxLDEuNS0xLjUwMWg1YzAuODI5LDAsMS41LDAuNjcxLDEuNSwxLjUwMSAgICBDMjUuNTI2LDYwLjUzOSwyNC44NTUsNjEuMjEyLDI0LjAyNiw2MS4yMTJ6IE0xNC4wMjcsNjEuMjEySDkuNDU1Yy0wLjE3LDAtMC4zMzgtMC4wMDUtMC41MDctMC4wMTMgICAgYy0wLjgyNy0wLjA0NC0xLjQ2My0wLjc1LTEuNDItMS41NzhjMC4wNDMtMC44MjgsMC43MzktMS40NjcsMS41NzctMS40MjFjMC4xMTYsMC4wMDcsMC4yMzMsMC4wMSwwLjM1LDAuMDFoNC41NzIgICAgYzAuODI4LDAsMS40OTksMC42NzEsMS40OTksMS41MDFDMTUuNTI2LDYwLjUzOSwxNC44NTUsNjEuMjEyLDE0LjAyNyw2MS4yMTJ6IE00LjQzNSw1OS40MzljLTAuMzMxLDAtMC42NjQtMC4xMDgtMC45NDItMC4zMzIgICAgYy0xLjU2NC0xLjI2NC0yLjY3Mi0yLjk1NC0zLjIwMS00Ljg4OGMtMC4yMi0wLjc5OSwwLjI1MS0xLjYyNSwxLjA1LTEuODQ0YzAuNzk4LTAuMjE5LDEuNjI0LDAuMjUxLDEuODQzLDEuMDUxICAgIGMwLjM2MiwxLjMyMiwxLjEyMSwyLjQ3OCwyLjE5MywzLjM0NWMwLjY0NSwwLjUyLDAuNzQ1LDEuNDY1LDAuMjI1LDIuMTFDNS4zMDcsNTkuMjQ5LDQuODcyLDU5LjQzOSw0LjQzNSw1OS40Mzl6IE01Ny45NDQsNTcuODg5ICAgIGMtMC4zMDUsMC0wLjYxMi0wLjA5My0wLjg3Ny0wLjI4NGMtMC42NzItMC40ODYtMC44MjQtMS40MjQtMC4zMzgtMi4wOTZjMC44MDItMS4xMTIsMS4yMjYtMi40MjgsMS4yMjYtMy44MDQgICAgYzAtMC44MjksMC42NzItMS41MDEsMS41LTEuNTAxYzAuODI4LDAsMS41LDAuNjcyLDEuNSwxLjUwMWMwLDIuMDExLTAuNjIsMy45MzQtMS43OTUsNS41NjIgICAgQzU4Ljg2Nyw1Ny42NzMsNTguNDA4LDU3Ljg4OSw1Ny45NDQsNTcuODg5eiBNMS44ODIsNTAuMzQ2Yy0wLjgyOCwwLTEuNS0wLjY3Mi0xLjUtMS41MDF2LTUuMDAzYzAtMC44MywwLjY3Mi0xLjUwMiwxLjUtMS41MDIgICAgczEuNSwwLjY3MiwxLjUsMS41MDJ2NS4wMDNDMy4zODIsNDkuNjc0LDIuNzEsNTAuMzQ2LDEuODgyLDUwLjM0NnogTTU5Ljg4Miw0OS45MTljLTAuODI4LDAtMS41LTAuNjcyLTEuNS0xLjUwMXYtNS4wMDQgICAgYzAtMC44MjgsMC42NzItMS41MDEsMS41LTEuNTAxczEuNSwwLjY3MywxLjUsMS41MDF2NS4wMDRDNjEuMzgyLDQ5LjI0Nyw2MC43MSw0OS45MTksNTkuODgyLDQ5LjkxOXogTTEuODgyLDQwLjMzOSAgICBjLTAuODI4LDAtMS41LTAuNjcyLTEuNS0xLjUwMXYtNS4wMDRjMC0wLjgyOSwwLjY3Mi0xLjUwMSwxLjUtMS41MDFzMS41LDAuNjcyLDEuNSwxLjUwMXY1LjAwNCAgICBDMy4zODIsMzkuNjY3LDIuNzEsNDAuMzM5LDEuODgyLDQwLjMzOXogTTU5Ljg4MiwzOS45MTJjLTAuODI4LDAtMS41LTAuNjcyLTEuNS0xLjUwMXYtNS4wMDRjMC0wLjgyOCwwLjY3Mi0xLjUwMSwxLjUtMS41MDEgICAgczEuNSwwLjY3MywxLjUsMS41MDF2NS4wMDRDNjEuMzgyLDM5LjI0LDYwLjcxLDM5LjkxMiw1OS44ODIsMzkuOTEyeiBNMS44ODIsMzAuMzMyYy0wLjgyOCwwLTEuNS0wLjY3Mi0xLjUtMS41MDF2LTUuMDA0ICAgIGMwLTAuODI5LDAuNjcyLTEuNTAxLDEuNS0xLjUwMXMxLjUsMC42NzIsMS41LDEuNTAxdjUuMDA0QzMuMzgyLDI5LjY2LDIuNzEsMzAuMzMyLDEuODgyLDMwLjMzMnogTTU5Ljg4MiwyOS45MDUgICAgYy0wLjgyOCwwLTEuNS0wLjY3Mi0xLjUtMS41MDFWMjMuNGMwLTAuODI4LDAuNjcyLTEuNTAxLDEuNS0xLjUwMXMxLjUsMC42NzMsMS41LDEuNTAxdjUuMDA0ICAgIEM2MS4zODIsMjkuMjMzLDYwLjcxLDI5LjkwNSw1OS44ODIsMjkuOTA1eiBNMS44ODIsMjAuMzI1Yy0wLjgyOCwwLTEuNS0wLjY3Mi0xLjUtMS41MDFWMTMuODJjMC0wLjgyOSwwLjY3Mi0xLjUwMSwxLjUtMS41MDEgICAgczEuNSwwLjY3MiwxLjUsMS41MDF2NS4wMDRDMy4zODIsMTkuNjUzLDIuNzEsMjAuMzI1LDEuODgyLDIwLjMyNXogTTU5Ljg4MiwxOS44OThjLTAuODI4LDAtMS41LTAuNjcyLTEuNS0xLjUwMXYtNS4wMDQgICAgYzAtMC44MjksMC42NzItMS41MDEsMS41LTEuNTAxczEuNSwwLjY3MiwxLjUsMS41MDF2NS4wMDRDNjEuMzgyLDE5LjIyNiw2MC43MSwxOS44OTgsNTkuODgyLDE5Ljg5OHogTTEuNTAyLDEwLjMyICAgIGMtMC4wNTMsMC0wLjEwNi0wLjAwMy0wLjE2LTAuMDA5QzAuNTE4LDEwLjIyMy0wLjA3OSw5LjQ4NCwwLjAwOSw4LjY2YzAuMjEyLTEuOTk1LDEuMDM0LTMuODQxLDIuMzc4LTUuMzM4ICAgIGMwLjU1NC0wLjYxNywxLjUwMi0wLjY2OCwyLjExOC0wLjExNGMwLjYxNywwLjU1NCwwLjY2OCwxLjUwMywwLjExNCwyLjEyYy0wLjkyLDEuMDI1LTEuNDgyLDIuMjg3LTEuNjI4LDMuNjQ5ICAgIEMyLjkxLDkuNzQ4LDIuMjU5LDEwLjMyLDEuNTAyLDEwLjMyeiBNNTkuMzUxLDkuODk3Yy0wLjcyNCwwLTEuMzYxLTAuNTI1LTEuNDgtMS4yNjRjLTAuMjE3LTEuMzUyLTAuODQ1LTIuNTgyLTEuODE5LTMuNTU3ICAgIGMtMC41ODYtMC41ODYtMC41ODYtMS41MzYsMC0yLjEyMmMwLjU4Ni0wLjU4NiwxLjUzNS0wLjU4NywyLjEyMSwwYzEuNDIzLDEuNDI0LDIuMzQzLDMuMjIzLDIuNjYxLDUuMjA0ICAgIGMwLjEzMSwwLjgxOC0wLjQyNiwxLjU4OS0xLjI0MywxLjcyQzU5LjUxLDkuODkxLDU5LjQzLDkuODk3LDU5LjM1MSw5Ljg5N3ogTTcuNzU0LDMuMzUyYy0wLjY5MSwwLTEuMzEzLTAuNDgtMS40NjUtMS4xODQgICAgYy0wLjE3Ni0wLjgxLDAuMzM5LTEuNjA5LDEuMTQ5LTEuNzg0YzAuNjU5LTAuMTQzLDEuMzM4LTAuMjE1LDIuMDE3LTAuMjE1aDMuMjg3YzAuODI4LDAsMS41LDAuNjcxLDEuNSwxLjUwMSAgICBjMCwwLjgyOC0wLjY3MiwxLjUwMS0xLjUsMS41MDFIOS40NTVjLTAuNDY3LDAtMC45MzIsMC4wNS0xLjM4MywwLjE0N0M3Ljk2NSwzLjM0MSw3Ljg1OSwzLjM1Miw3Ljc1NCwzLjM1MnogTTUyLjczNywzLjI3MyAgICBjLTAuMDc5LDAtMC4xNTktMC4wMDctMC4yNC0wLjAxOWMtMC4zNDItMC4wNTYtMC42OTItMC4wODMtMS4wNDItMC4wODNoLTMuNzEzYy0wLjgyOCwwLTEuNS0wLjY3My0xLjUtMS41MDEgICAgYzAtMC44MywwLjY3Mi0xLjUwMSwxLjUtMS41MDFoMy43MTNjMC41MDgsMCwxLjAxOSwwLjA0LDEuNTE5LDAuMTIxYzAuODE3LDAuMTMxLDEuMzc0LDAuOTAxLDEuMjQzLDEuNzIgICAgQzU0LjA5OCwyLjc0Nyw1My40NjEsMy4yNzMsNTIuNzM3LDMuMjczeiBNNDIuNzQyLDMuMTcxaC01Yy0wLjgyOCwwLTEuNS0wLjY3My0xLjUtMS41MDFjMC0wLjgzLDAuNjcyLTEuNTAxLDEuNS0xLjUwMWg1ICAgIGMwLjgyOCwwLDEuNSwwLjY3MSwxLjUsMS41MDFDNDQuMjQyLDIuNDk4LDQzLjU3LDMuMTcxLDQyLjc0MiwzLjE3MXogTTMyLjc0MiwzLjE3MWgtNWMtMC44MjgsMC0xLjUtMC42NzMtMS41LTEuNTAxICAgIGMwLTAuODMsMC42NzItMS41MDEsMS41LTEuNTAxaDVjMC44MjgsMCwxLjUsMC42NzEsMS41LDEuNTAxQzM0LjI0MiwyLjQ5OCwzMy41NywzLjE3MSwzMi43NDIsMy4xNzF6IE0yMi43NDIsMy4xNzFoLTUgICAgYy0wLjgyOCwwLTEuNS0wLjY3My0xLjUtMS41MDFjMC0wLjgzLDAuNjcyLTEuNTAxLDEuNS0xLjUwMWg1YzAuODI4LDAsMS41LDAuNjcxLDEuNSwxLjUwMSAgICBDMjQuMjQyLDIuNDk4LDIzLjU3LDMuMTcxLDIyLjc0MiwzLjE3MXoiIGZpbGw9IiNGRkZGRkYiLz4KCTwvZz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K"
+
+        var resetButtonIconWidth = config.topBarHeight - 10; // icon size for reset button
+        var selectionButtonIconWidth = 16;
+
+        // reset button
+        topBarSVG.append("rect")
+            .attr("class", "resetButton")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", smallButtonWidth)
+            .attr("height", config.topBarHeight)
+            .attr("rx", 10)
+            .attr("ry", 10)
+            .attr("fill", config.topBarColour)
+            .on("mouseover", function() {
+                d3.select(this).attr("fill", config.topBarHighlight);
+            })
+            .on("mouseout", function() {
+                d3.select(this).attr("fill", config.topBarColour);
+            })
+            .on("click", function() {
+                // background click
+                // _backgroundClick(curVizObj);
+            });
+        topBarSVG.append("image")
+            .attr("xlink:href", resetButton_base64)
+            .attr("x", (smallButtonWidth/2) - (resetButtonIconWidth/2))
+            .attr("y", 5)
+            .attr("width", resetButtonIconWidth)
+            .attr("height", resetButtonIconWidth)
+            .on("mouseover", function() {
+                d3.select(".resetButton").attr("fill", config.topBarHighlight);
+            })
+            .on("mouseout", function() {
+                d3.select(".resetButton").attr("fill", config.topBarColour);
+            })
+            .on("click", function() {
+                // background click
+                // _backgroundClick(curVizObj);
+            });
+
+        // brush selection button
+        topBarSVG.append("rect")
+            .attr("class", "selectionButton")
+            .attr("x", smallButtonWidth)
+            .attr("y", 0)
+            .attr("width", smallButtonWidth)
+            .attr("height", config.topBarHeight)
+            .attr("rx", 10)
+            .attr("ry", 10)
+            .attr("fill", config.topBarColour)
+            .on("mouseover", function() {
+                // if this button is not selected
+                if (d3.selectAll(".brushButtonSelected")[0].length == 0) {
+                    d3.select(this).attr("fill", config.topBarHighlight);
+                }
+            })
+            .on("mouseout", function() {
+                // if this button is not selected
+                if (d3.selectAll(".brushButtonSelected")[0].length == 0) {
+                    d3.select(this).attr("fill", config.topBarColour);
+                }
+            })
+            .on("click", function() {
+                _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+            });
+        topBarSVG.append("image")
+            .attr("xlink:href", selectionButton_base64)
+            .attr("x", smallButtonWidth + (smallButtonWidth/2) - (selectionButtonIconWidth/2))
+            .attr("y", 5)
+            .attr("width", selectionButtonIconWidth)
+            .attr("height", selectionButtonIconWidth)
+            .on("mouseover", function() {
+                // if this button is not selected
+                if (d3.selectAll(".brushButtonSelected")[0].length == 0) {
+                    d3.select(".selectionButton").attr("fill", config.topBarHighlight);
+                }
+            })
+            .on("mouseout", function() {
+                // if this button is not selected
+                if (d3.selectAll(".brushButtonSelected")[0].length == 0) {
+                    d3.select(".selectionButton").attr("fill", config.topBarColour);
+                }
+            })
+            .on("click", function() {
+                _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+            });
 
         // FORCE FUNCTION
 
@@ -597,51 +732,6 @@ HTMLWidgets.widget({
                         _mouseoutGroupAnnot(vizObj);
                     }
                 });
-        }
-
-
-        // brush selection
-        var brush = d3.svg.brush()
-            .y(d3.scale.linear().domain([0, config.cnvHeight]).range([0, config.cnvHeight]))
-            .on("brushstart", function() { d3.select(".cnvSVG").classed("brushed", true); })
-            .on("brushend", brushEnd);
-
-        cnvSVG.append("g")
-            .attr("class", "brush")
-            .call(brush)
-            .selectAll('rect')
-            .attr('width', vizObj.userConfig.cnvWidth)
-
-        function brushEnd() {
-            var selectedSCs = [];
-            var extent = d3.event.target.extent();
-            if (!brush.empty()) {
-
-                // highlight selected grid cell rows
-                d3.selectAll(".gridCell").classed("active", function(d) {
-                    var brushed = extent[0] <= (d.y+vizObj.view.cnv.rowHeight) && d.y <= extent[1];
-                    if (brushed) {
-                        selectedSCs.push(d.sc_id);
-                    }
-                    return brushed;
-                });
-
-                // highlight selected sc's indicators & nodes
-                selectedSCs.forEach(function(sc_id) {
-                    _highlightIndicator(sc_id, vizObj);   
-                    _highlightNode(sc_id, vizObj);    
-                });
-            } else {
-                d3.select(".cnvSVG").classed("brushed", false)
-                d3.selectAll(".gridCell").classed("active", false)
-
-                // reset nodes and indicators
-                _resetNodes(vizObj);
-                _resetIndicators();
-            }
-
-            // clear brush
-            d3.select(".brush").call(brush.clear());
         }
 
     },
