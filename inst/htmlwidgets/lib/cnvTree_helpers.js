@@ -221,7 +221,7 @@ function _pushScissorsButton(vizObj) {
     }
 }
 
-// LINK FUNCTIONS
+// TREE FUNCTIONS
 
 /* function to get the link id for a link data object
 * @param {Object} d - link data object
@@ -302,6 +302,35 @@ function _downstreamEffects(vizObj, link_id) {
         _downstreamEffects(vizObj, target_link_id);
     });
 };
+
+
+/* function to get order of tree nodes
+* param link_ids -- ids for all links in tree
+* param node_name -- the name of the current node - start with root
+* param nodeOrder -- array of node order - starts empty, appended to as function executes
+*/
+function _getNodeOrder(link_ids, node_name, nodeOrder) {
+
+    // append this node to the node order array
+    nodeOrder.push(node_name);
+
+    // get the targets of this node
+    var targetRX = new RegExp("link_source_" + node_name + "_target_(.+)");
+    var targets = [];
+    link_ids.map(function(id) {
+       if (id.match(targetRX)) {
+         targets.push(targetRX.exec(id)[1]);
+       }
+    });
+
+    // for each of the targets, get their own targets
+    targets.map(function(target) {
+       _getNodeOrder(link_ids, target, nodeOrder);
+    });
+
+    return nodeOrder;
+ };
+
 
 // GROUP ANNOTATION FUNCTIONS
 

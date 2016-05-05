@@ -73,9 +73,6 @@ HTMLWidgets.widget({
         vizObj.userConfig = x;
         vizObj.view.groupsSpecified = (vizObj.userConfig.sc_groups != null); // (T/F) group annotation is specified
 
-        // keep track of original list of scs, for tree pruning purposes
-        vizObj.view.original_sc_list = $.extend([], vizObj.userConfig.sc_ids_ordered);
-
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
         // tree configurations
@@ -86,6 +83,19 @@ HTMLWidgets.widget({
         if (vizObj.view.groupsSpecified) {
             config.treeWidth -= config.groupAnnotWidth;
         }
+
+        // GET TREE CONTENT
+
+        // if the user hasn't specified a custom single cell id order for the cnv heatmap, order by tree
+        if (!vizObj.userConfig.sc_ids_ordered) {
+            // get order of nodes from tree
+            var nodeOrder = _getNodeOrder(vizObj.userConfig.link_ids, vizObj.userConfig.root, []);
+            vizObj.userConfig.sc_ids_ordered = nodeOrder
+        }
+
+        // keep track of original list of scs, for tree pruning purposes
+        vizObj.view.original_sc_list = $.extend([], vizObj.userConfig.sc_ids_ordered);
+
 
         // GET CNV CONTENT
 

@@ -24,7 +24,8 @@
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "group" - group assignment
 #'
-#' @param sc_id_order {Array} (Optional) Order of single cell ids.
+#' @param sc_id_order {Array} (Optional) Order of single cell ids for the heatmap. 
+#'                                       Default is the order of single cells in the phylogeny.
 #' @param width {Number} (Optional) Width of the plot.
 #' @param height {Number} (Optional) Height of the plot.
 #'
@@ -40,71 +41,101 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
   }
 
   # CNV DATA
-  if (is.data.frame(cnv_data)) {
 
-    # ensure column names are correct
-    if (!("single_cell_id" %in% colnames(cnv_data)) ||
-        !("chr" %in% colnames(cnv_data)) ||
-        !("start" %in% colnames(cnv_data)) ||
-        !("end" %in% colnames(cnv_data)) ||
-        !("integer_copy_number" %in% colnames(cnv_data))) {
-      stop(paste("CNV data frame must have the following column names: ", 
-          "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"", sep=""))
-    }
-
-    # ensure data is of the correct type
-    cnv_data$single_cell_id <- as.character(cnv_data$single_cell_id)
-    cnv_data$chr <- as.character(cnv_data$chr)
-    cnv_data$start <- as.numeric(as.character(cnv_data$start))
-    cnv_data$end <- as.numeric(as.character(cnv_data$end))
-    cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
-
-    # get chromosomes, chromosome bounds (min & max bp), genome length
-    chroms <- gtools::mixedsort(unique(cnv_data$chr))
-    chrom_bounds <- getChromBounds(chroms, cnv_data) 
-    genome_length <- getGenomeLength(chrom_bounds)
+  # check it's a data frame
+  if (!is.data.frame(cnv_data)) {
+    stop("CNV data (parameter cnv_data) must be a data frame.")
   }
+
+  # ensure column names are correct
+  if (!("single_cell_id" %in% colnames(cnv_data)) ||
+      !("chr" %in% colnames(cnv_data)) ||
+      !("start" %in% colnames(cnv_data)) ||
+      !("end" %in% colnames(cnv_data)) ||
+      !("integer_copy_number" %in% colnames(cnv_data))) {
+    stop(paste("CNV data frame must have the following column names: ", 
+        "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"", sep=""))
+  }
+
+  # ensure data is of the correct type
+  cnv_data$single_cell_id <- as.character(cnv_data$single_cell_id)
+  cnv_data$chr <- as.character(cnv_data$chr)
+  cnv_data$start <- as.numeric(as.character(cnv_data$start))
+  cnv_data$end <- as.numeric(as.character(cnv_data$end))
+  cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
+
+  # get chromosomes, chromosome bounds (min & max bp), genome length
+  chroms <- gtools::mixedsort(unique(cnv_data$chr))
+  chrom_bounds <- getChromBounds(chroms, cnv_data) 
+  genome_length <- getGenomeLength(chrom_bounds)
 
   # TREE EDGE DATA
-  if (is.data.frame(tree_edges)) {
 
-    # ensure column names are correct
-    if (!("source" %in% colnames(tree_edges)) ||
-        !("target" %in% colnames(tree_edges))) {
-      stop(paste("Tree edges data frame must have the following column names: ", 
-          "\"source\", \"target\"", sep=""))
-    }
-
-    # ensure data is of the correct type
-    tree_edges$source <- as.character(tree_edges$source)
-    tree_edges$target <- as.character(tree_edges$target)
-
-    # list of tree nodes for d3 phylogenetic layout function
-    unique_nodes <- unique(c(tree_edges$source, tree_edges$target))
-    tree_nodes_for_layout<- data.frame(matrix("", ncol = 2, nrow = length(unique_nodes)), stringsAsFactors=FALSE) 
-    colnames(tree_nodes_for_layout) <- c("name", "index")
-    tree_nodes_for_layout$name <- unique_nodes
-    tree_nodes_for_layout$index <- rep(NULL, nrow(tree_nodes_for_layout))
-    for (i in 1:nrow(tree_nodes_for_layout)) {
-      tree_nodes_for_layout$index[i] <- i-1
-    }
-    tree_nodes_for_layout$index <- as.numeric(as.character(tree_nodes_for_layout$index))
-
-    # list of tree edges for d3 phylogenetic layout function
-    tree_edges_for_layout<- data.frame(matrix("", ncol = 3, nrow = nrow(tree_edges)), stringsAsFactors=FALSE) 
-    colnames(tree_edges_for_layout) <- c("source", "target", "link_id")
-    for (i in 1:nrow(tree_edges)) {
-      tree_edges_for_layout$source[i] <- which(tree_nodes_for_layout$name == tree_edges$source[i]) - 1
-      tree_edges_for_layout$target[i] <- which(tree_nodes_for_layout$name == tree_edges$target[i]) - 1
-      tree_edges_for_layout$link_id[i] <- paste("link_source_", tree_edges$source[i], 
-        "_target_", tree_edges$target[i], sep="")
-    }
-    tree_edges_for_layout$source <- as.numeric(as.character(tree_edges_for_layout$source))
-    tree_edges_for_layout$target <- as.numeric(as.character(tree_edges_for_layout$target))
-
-    # get list of link ids
-    link_ids <- tree_edges_for_layout$link_id
+  # check it's a data frame
+  if (!is.data.frame(tree_edges)) {
+    stop("Tree edges data (parameter cnv_data) must be a data frame.")
   }
+
+  # ensure column names are correct
+  if (!("source" %in% colnames(tree_edges)) ||
+      !("target" %in% colnames(tree_edges))) {
+    stop(paste("Tree edges data frame must have the following column names: ", 
+        "\"source\", \"target\"", sep=""))
+  }
+
+  # ensure data is of the correct type
+  tree_edges$source <- as.character(tree_edges$source)
+  tree_edges$target <- as.character(tree_edges$target)
+
+  # list of tree nodes for d3 phylogenetic layout function
+  unique_nodes <- unique(c(tree_edges$source, tree_edges$target))
+  tree_nodes_for_layout<- data.frame(matrix("", ncol = 2, nrow = length(unique_nodes)), stringsAsFactors=FALSE) 
+  colnames(tree_nodes_for_layout) <- c("name", "index")
+  tree_nodes_for_layout$name <- unique_nodes
+  tree_nodes_for_layout$index <- rep(NULL, nrow(tree_nodes_for_layout))
+  for (i in 1:nrow(tree_nodes_for_layout)) {
+    tree_nodes_for_layout$index[i] <- i-1
+  }
+  tree_nodes_for_layout$index <- as.numeric(as.character(tree_nodes_for_layout$index))
+
+  # list of tree edges for d3 phylogenetic layout function
+  tree_edges_for_layout<- data.frame(matrix("", ncol = 3, nrow = nrow(tree_edges)), stringsAsFactors=FALSE) 
+  colnames(tree_edges_for_layout) <- c("source", "target", "link_id")
+  for (i in 1:nrow(tree_edges)) {
+    tree_edges_for_layout$source[i] <- which(tree_nodes_for_layout$name == tree_edges$source[i]) - 1
+    tree_edges_for_layout$target[i] <- which(tree_nodes_for_layout$name == tree_edges$target[i]) - 1
+    tree_edges_for_layout$link_id[i] <- paste("link_source_", tree_edges$source[i], 
+      "_target_", tree_edges$target[i], sep="")
+  }
+  tree_edges_for_layout$source <- as.numeric(as.character(tree_edges_for_layout$source))
+  tree_edges_for_layout$target <- as.numeric(as.character(tree_edges_for_layout$target))
+
+  # get list of link ids
+  link_ids <- tree_edges_for_layout$link_id
+
+  # check for tree rootedness
+  sources <- unique(tree_edges$source)
+  targets <- unique(tree_edges$target)
+  sources_for_iteration <- sources # because we will be changing the sources array over time
+  for (i in 1:length(sources_for_iteration)) {
+    cur_source <- sources_for_iteration[i]
+
+    # if the source is a target, remove it from the sources list
+    if (cur_source %in% targets) {
+      sources <- sources[sources != cur_source]
+    }
+  }
+
+  # if multiple roots are detected, throw error
+  if (length(sources) > 1) {
+    stop(paste("Multiple roots detected in tree (",paste(sources,collapse=", "),
+      ") - tree must have only one root.",sep=""))
+  }
+  # otherwise, set the root
+  else {
+    root <- sources
+  }
+
 
   # SINGLE CELL GROUPS
   if (!is.null(sc_groups)) {
@@ -121,13 +152,6 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
 
     # to json
     sc_groups <- jsonlite::toJSON(sc_groups)
-  }
-
-  # SINGLE CELL IDS
-
-  # if order is not specified, grab the order of the single cells in the cnv data
-  if (is.null(sc_id_order)) {
-    sc_id_order = unique(cnv_data$single_cell_id)
   }
 
   # GET PIXELS FOR EACH SINGLE CELL
@@ -150,7 +174,8 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     chroms=chroms,
     pixel_info=jsonlite::toJSON(pixel_info),
     chrom_boxes=jsonlite::toJSON(chrom_boxes),
-    cnvWidth=ncols
+    cnvWidth=ncols,
+    root=root
   )
 
   # create widget
