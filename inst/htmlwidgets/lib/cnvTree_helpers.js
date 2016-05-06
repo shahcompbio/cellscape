@@ -117,13 +117,7 @@ function _highlightIndicator(sc_id, vizObj) {
 function _resetNode(sc_id, vizObj) {
     d3.select("#node_" + sc_id)
         .style("fill", function(d) {
-            // group annotations specified -- colour by group
-            if (vizObj.view.groupsSpecified) {
-                var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.name}).group;
-                return vizObj.view.colour_assignment[group];
-            }
-            // no group annotations -- default colour
-            return vizObj.generalConfig.defaultNodeColour;
+            return _getNodeColour(vizObj, d.name);
         });
 }
 
@@ -141,14 +135,22 @@ function _resetIndicator(sc_id) {
 function _resetNodes(vizObj) {
     d3.selectAll(".node")
         .style("fill", function(d) {
-            // group annotations specified -- colour by group
-            if (vizObj.view.groupsSpecified) {
-                var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.name}).group;
-                return vizObj.view.colour_assignment[group];
-            }
-            // no group annotations -- default colour
-            return vizObj.generalConfig.defaultNodeColour;
+            return _getNodeColour(vizObj, d.name);
         });
+}
+
+/* function to get the colour of a node
+* @param {Object} vizObj
+* @param {String} sc_id -- single cell id
+*/
+function _getNodeColour(vizObj, sc_id) {
+    // group annotations specified -- colour by group
+    if (vizObj.view.groupsSpecified) {
+        var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: sc_id}).group;
+        return vizObj.view.colour_assignment[group];
+    }
+    // no group annotations -- default colour
+    return vizObj.generalConfig.defaultNodeColour;
 }
 
 /* function to reset all indicators for a single cell
@@ -210,8 +212,6 @@ function _pushScissorsButton(vizObj) {
         d3.select(".scissorsButton").classed("scissorsButtonSelected", false); 
 
         // reset colour of the brush scissors button
-        console.log("vizObj");
-        console.log(vizObj);
         d3.select(".scissorsButton").attr("fill", vizObj.generalConfig.topBarColour);
     }
     // select scissors tool
@@ -235,32 +235,129 @@ function _getLinkId(d) {
 * @param {Boolean} resetSelectedSCList -- whether or not to reset the seleted sc list
 */
 function _linkMouseout(vizObj, resetSelectedSCList) {
-    // reset nodes
-    d3.selectAll(".node")
-        .style("fill", function(d) {
-            // group annotations specified -- colour by group
-            if (vizObj.view.groupsSpecified) {
-                var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.name}).group;
-                return vizObj.view.colour_assignment[group];
-            }
-            // no group annotations -- default colour
-            return vizObj.generalConfig.defaultNodeColour;
-        });
+    // if there's no node or link selection taking place, or scissors tool on, reset the links
+    if (_checkForSelections() || d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+        // reset nodes
+        d3.selectAll(".node")
+            .style("fill", function(d) {
+                return _getNodeColour(vizObj, d.name);
+            });
 
-    // reset indicators
-    d3.selectAll(".indic")
-        .style("fill-opacity", 0);
+        // reset indicators
+        d3.selectAll(".indic")
+            .style("fill-opacity", 0);
 
-    // reset links
-    d3.selectAll(".link")
-        .style("stroke", vizObj.generalConfig.defaultLinkColour);
+        // reset links
+        d3.selectAll(".link")
+            .style("stroke", vizObj.generalConfig.defaultLinkColour);
 
-    // reset list of selected cells & links
-    if (resetSelectedSCList) {
-        vizObj.view.selectedSCs = [];
-        vizObj.view.selectedLinks = [];
+        // reset list of selected cells & links
+        if (resetSelectedSCList) {
+            vizObj.view.selectedSCs = [];
+            vizObj.view.selectedLinks = [];
+        }
     }
 };
+
+/* function for mouseover of link
+* @param {Object} vizObj
+* @param {String} link_id -- id for mousedover link
+*/
+function _linkMouseover(vizObj, link_id) {
+    // if there's no node or link selection taking place
+    if (_checkForSelections()) {
+        // highlight downstream links
+        _downstreamEffects(vizObj, link_id);                     
+    }
+    // if scissors button is selected
+    else if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+
+        // reset lists of selected links and scs
+        vizObj.view.selectedSCs = [];
+        vizObj.view.selectedLinks = [];
+
+        // highlight downstream links
+        _downstreamEffects(vizObj, link_id); 
+
+        // highlight the potentially-cut link red
+        d3.select("#"+link_id)
+            .style("stroke", "red");
+    }
+}
+
+/* function for clicked link (tree trimming)
+* @param {Object} vizObj
+* @param {String} link_id -- id for clicked link
+*/
+function _linkClick(vizObj, link_id) {
+    var userConfig = vizObj.userConfig;
+
+    // if scissors button is selected
+    if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+
+        // for each link
+        vizObj.view.selectedLinks.forEach(function(link_id) {
+            // remove link
+            d3.select("#" + link_id).remove();
+
+            // remove link from list of links
+            var index = userConfig.link_ids.indexOf(link_id);
+            userConfig.link_ids.splice(index, 1);
+        })
+        // for each single cell
+        vizObj.view.selectedSCs.forEach(function(sc_id) {
+            d3.select("#node_" + sc_id).remove(); // remove node in tree
+            d3.select(".gridCellG.sc_" + sc_id).remove(); // remove copy number profile
+            d3.select(".groupAnnot.sc_" + sc_id).remove(); // remove group annotation
+            d3.select(".indic.sc_" + sc_id).remove(); // remove indicator
+
+            // remove single cell from list of single cells
+            var index = userConfig.sc_ids_ordered.indexOf(sc_id);
+            userConfig.sc_ids_ordered.splice(index, 1);
+        })
+
+        // adjust copy number matrix to fill the entire space
+        d3.timer(_updateTrimmedMatrix(vizObj), 300);
+    }
+}
+
+/* function for tree node mouseover
+* @param {Object} vizObj
+* @param {String} sc_id -- single cell id of mousedover node
+* @param {Object} nodeTip -- tooltip for node
+*/
+function _nodeMouseover(vizObj, sc_id, nodeTip) {
+    // if there's no node or link selection taking place
+    if (_checkForSelections()) {
+        // show tooltip
+        nodeTip.show(sc_id);
+
+        // highlight node
+        _highlightNode(sc_id, vizObj);
+
+        // highlight indicator
+        _highlightIndicator(sc_id, vizObj);
+    }
+}
+
+/* function for tree node mouseout
+* @param {Object} vizObj
+* @param {String} sc_id -- single cell id of mousedover node
+* @param {Object} nodeTip -- tooltip for node
+*/
+function _nodeMouseout(vizObj, sc_id, nodeTip) {
+    // if there's no node or link selection taking place
+    if (_checkForSelections()) {
+        // hide tooltip
+        nodeTip.hide(sc_id);
+
+        // reset node
+        _resetNode(sc_id, vizObj);
+
+        // reset indicator
+        _resetIndicator(sc_id);
+    }
+}
 
 /* recursive function to perform downstream effects upon tree link highlighting
 * @param {Object} vizObj
@@ -357,6 +454,235 @@ function _getLabelFontSize(labels, width) {
     var font_size = (width - 2) / max_n_chars * aspect_ratio;
 
     return font_size;
+}
+
+/* function to retrieve a single cell's descendant tree structure object by its index, 
+* or create the single cell as a new root of a tree if it doesn't already exist
+* @param {String} sc_id -- id of the single cell
+* @param {Array} nodes -- nodes from which to search for node of interest
+*/
+function _retrieveSCTree(sc_id, nodes) {
+   var foundNode = _.findWhere(nodes, {sc_id: sc_id});
+   if (!foundNode) {
+      nodes.push({name: sc_id, sc_id: sc_id});
+      foundNode = _.findWhere(nodes, {sc_id: sc_id});
+   }
+   return foundNode;
+};
+
+
+/* function to get the tree structure given an array of edges and the root node 
+* param {Array} directed_edges -- array of directed edges objects (source, target)
+* @param {String} root_sc_id -- single cell id for the root cell
+*/
+function _getTreeStructure(directed_edges, root_sc_id) {
+   var treeStructures = []; // all (descendant) tree structures for all single cells 
+
+   directed_edges.forEach(function(edge) {
+      var parent = _retrieveSCTree(edge["source_sc_id"], treeStructures);
+      var child = _retrieveSCTree(edge["target_sc_id"], treeStructures);
+      if (parent.children) parent.children.push(child);
+      else parent.children = [child];
+   });
+
+   var treeStructure = _.findWhere(treeStructures, {sc_id: root_sc_id});
+
+   return treeStructure;
+};
+
+/* elbow function to draw phylogeny links 
+*/
+function _elbow(d) {
+    return "M" + d.source.x + "," + d.source.y
+        + "H" + (d.source.x + (d.target.x-d.source.x)/3)
+        + "V" + d.target.y + "H" + d.target.x;
+}
+
+/* function to plot the force-directed graph
+* @param {Object} vizObj
+* @param {Object} nodeTip -- tooltip for node
+*/
+function _plotForceDirectedGraph(vizObj, nodeTip) {
+    var config = vizObj.generalConfig,
+        userConfig = vizObj.userConfig;
+
+    // layout function
+    var force_layout = d3.layout.force()
+        .size([config.treeWidth, config.treeHeight])
+        .linkDistance(20)
+        .gravity(.09)
+        .charge(-20)
+        .nodes(userConfig.tree_nodes)
+        .links(userConfig.tree_edges)
+        .start();
+
+    // plot links
+    var link = vizObj.view.treeSVG
+        .append("g")
+        .classed("links", true)
+        .selectAll(".link")
+        .data(userConfig.tree_edges)
+        .enter().append("line")
+        .classed("link", true)
+        .attr("id", function(d) { 
+            return d.link_id; 
+        })
+        .attr("stroke",vizObj.generalConfig.defaultLinkColour)
+        .attr("stroke-width", "2px")
+        .on("mouseover", function(d) {
+            _linkMouseover(vizObj, d.link_id);
+        })
+        .on("mouseout", function(d) { 
+            _linkMouseout(vizObj, true); 
+        })
+        .on("click", function(d) {
+            _linkClick(vizObj, d.link_id);
+        });
+
+    // plot nodes
+    var nodeG = vizObj.view.treeSVG.append("g")
+        .classed("nodes", true)
+        .selectAll(".node")
+        .data(userConfig.tree_nodes)
+        .enter()
+        .append("g")
+        .attr("class", "nodesG");
+
+    // node circles
+    var nodeCircle = nodeG.append("circle")
+        .classed("node", true)
+        .attr("id", function(d) {
+            return "node_" + d.name;
+        })
+        .attr("r", function() {
+            // if user wants to display node ids 
+            if (userConfig.display_node_ids) {
+                return config.tree_w_labels_r;
+            }
+            // don't display labels
+            return config.tree_r
+        })
+        .style("fill", function(d) {
+             return _getNodeColour(vizObj, d.name);
+        })
+        .style("stroke", "#838181")
+        .on('mouseover', function(d) {
+            _nodeMouseover(vizObj, d.name, nodeTip);
+        })
+        .on('mouseout', function(d) {
+            _nodeMouseout(vizObj, d.name, nodeTip);
+        })
+        .call(force_layout.drag);
+
+    // node single cell labels (if user wants to display them)
+    if (userConfig.display_node_ids) {
+
+        var nodeLabel = nodeG.append("text")
+            .text(function(d) { return parseInt(d.name, 10); })
+            .attr("font-size", 
+                _getLabelFontSize(_.pluck(userConfig.tree_nodes, "name"), config.tree_w_labels_r * 2))
+            .attr("text-anchor", "middle")
+            .attr("dy", "+0.35em");
+    }
+
+    force_layout.on("tick", function() {
+
+        // radius of nodes
+        var r = (userConfig.display_node_ids) ? config.tree_r : config.tree_w_labels_r;
+
+        nodeCircle.attr("cx", function(d) { 
+                return d.x = Math.max(r, Math.min(config.treeWidth - r, d.x)); 
+            })
+            .attr("cy", function(d) { 
+                return d.y = Math.max(r, Math.min(config.treeHeight - r, d.y)); 
+            });
+
+        if (userConfig.display_node_ids) {
+            nodeLabel.attr("x", function(d) { 
+                    return d.x = Math.max(r, Math.min(config.treeWidth - r, d.x)); 
+                })
+                .attr("y", function(d) { 
+                    return d.y = Math.max(r, Math.min(config.treeHeight - r, d.y)); 
+                });
+        }
+
+        link.attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+    });
+}
+
+/* function to plot classical phylogenetic tree
+* @param {Object} vizObj
+* @param {Object} nodeTip -- tooltip for node
+*/
+function _plotClassicalPhylogeny(vizObj, nodeTip) {
+    var config = vizObj.generalConfig,
+        r = vizObj.generalConfig.tree_r;
+
+    // layout function
+    var phylo_layout = d3.layout.tree()           
+        .size([config.treeHeight - (r*2), config.treeWidth - (r*2)]);  
+
+    // get tree structure
+    var nodes = phylo_layout.nodes(vizObj.data.treeStructure);
+    var links = phylo_layout.links(nodes);   
+
+    // swap x and y direction
+    nodes.forEach(function(node) {
+        node.tmp = node.y + r; // add padding of 1 tree node radius
+        node.y = node.x + r; // add padding of 1 tree node radius
+        node.x = node.tmp;
+        delete node.tmp;
+    });
+
+    // create links
+    var link = vizObj.view.treeSVG.append("g")
+        .classed("treeLinks", true)
+        .selectAll(".treeLink")                  
+        .data(links)                   
+        .enter().append("path")  
+        .classed("link", true)                 
+        .attr("id", function(d) { 
+            d.link_id = "link_source_" + d.source.sc_id + "_target_" + d.target.sc_id;
+            return d.link_id; 
+        })               
+        .attr("d", _elbow)
+        .attr("stroke",vizObj.generalConfig.defaultLinkColour)
+        .attr("stroke-width", "2px")
+        .attr("fill", "none")
+        .on("mouseover", function(d) {
+            _linkMouseover(vizObj, d.link_id);
+        })
+        .on("mouseout", function(d) { 
+            _linkMouseout(vizObj, true); 
+        })
+        .on("click", function(d) {
+            _linkClick(vizObj, d.link_id);
+        });
+
+    // create nodes
+    var node = vizObj.view.treeSVG.selectAll(".treeNode")                  
+        .data(nodes)                   
+        .enter()
+        .append("circle")   
+        .classed("node", true)
+        .attr("id", function(d) {
+            return "node_" + d.sc_id;
+        })  
+        .attr("cx", function(d) { return d.x})
+        .attr("cy", function(d) { return d.y})              
+        .attr("fill", function(d) {
+            return _getNodeColour(vizObj, d.name);
+        })
+        .attr("r", r)
+        .on('mouseover', function(d) {
+            _nodeMouseover(vizObj, d.name, nodeTip);
+        })
+        .on('mouseout', function(d) {
+            _nodeMouseout(vizObj, d.name, nodeTip);
+        });
 }
 
 // GROUP ANNOTATION FUNCTIONS

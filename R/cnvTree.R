@@ -101,11 +101,13 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
   tree_nodes_for_layout$index <- as.numeric(as.character(tree_nodes_for_layout$index))
 
   # list of tree edges for d3 phylogenetic layout function
-  tree_edges_for_layout<- data.frame(matrix("", ncol = 3, nrow = nrow(tree_edges)), stringsAsFactors=FALSE) 
-  colnames(tree_edges_for_layout) <- c("source", "target", "link_id")
+  tree_edges_for_layout<- data.frame(matrix("", ncol = 5, nrow = nrow(tree_edges)), stringsAsFactors=FALSE) 
+  colnames(tree_edges_for_layout) <- c("source", "source_sc_id", "target", "target_sc_id", "link_id")
   for (i in 1:nrow(tree_edges)) {
     tree_edges_for_layout$source[i] <- which(tree_nodes_for_layout$name == tree_edges$source[i]) - 1
+    tree_edges_for_layout$source_sc_id[i] <- tree_edges$source[i]
     tree_edges_for_layout$target[i] <- which(tree_nodes_for_layout$name == tree_edges$target[i]) - 1
+    tree_edges_for_layout$target_sc_id[i] <- tree_edges$target[i]
     tree_edges_for_layout$link_id[i] <- paste("link_source_", tree_edges$source[i], 
       "_target_", tree_edges$target[i], sep="")
   }
@@ -136,6 +138,7 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
   # otherwise, set the root
   else {
     root <- sources
+    root_index <- which(tree_nodes_for_layout$name == root)
   }
 
 
@@ -177,7 +180,8 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     pixel_info=jsonlite::toJSON(pixel_info),
     chrom_boxes=jsonlite::toJSON(chrom_boxes),
     cnvWidth=ncols,
-    root=root,
+    root=root, # name of root
+    root_index=root_index, # index of root in list of tree nodes for layout function
     display_node_ids=display_node_ids
   )
 
