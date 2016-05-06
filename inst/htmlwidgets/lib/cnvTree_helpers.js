@@ -331,6 +331,33 @@ function _getNodeOrder(link_ids, node_name, nodeOrder) {
     return nodeOrder;
  };
 
+/* function to get font size for labels, given their content the size of the nodes that contain them
+* @param {Array} labels -- array of node labels
+* @param {Number} width -- width of svg element that will contain the label
+*/
+function _getLabelFontSize(labels, width) {
+
+    // find the longest node label (in terms of # characters)
+    var max_n_chars = 0;
+    labels.forEach(function(label) {
+        // parse integer (if the label is an integer) to remove leading zeros
+        var label_parsed_int = parseInt(label, 10); 
+
+        // number of characters in the label
+        var n_chars = (!isNaN(label_parsed_int)) ? label_parsed_int.toString().length : label.length;
+
+        // update max label length (# characters)
+        if (n_chars > max_n_chars) {
+            max_n_chars = n_chars; 
+        }
+    })
+
+    // get font size, given longest node label (4 pixels per character)
+    var aspect_ratio = 7/4; // font aspect ratio of (font height / font width)
+    var font_size = (width - 2) / max_n_chars * aspect_ratio;
+
+    return font_size;
+}
 
 // GROUP ANNOTATION FUNCTIONS
 

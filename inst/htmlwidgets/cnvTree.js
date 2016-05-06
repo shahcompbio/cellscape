@@ -9,7 +9,8 @@ HTMLWidgets.widget({
         // defaults
         var defaults = {
             widgetMargin: 10, // marging between widgets
-            tree_r: 3, // tree node radius
+            tree_r: 4, // tree node radius
+            tree_w_labels_r: 7, // tree node radius when labels displayed within
             indicatorWidth: 7, // width of the selected single cell indicator
             groupAnnotWidth: 10, // width of the selected single cell group annotation
             defaultNodeColour: "#3458A5",
@@ -364,7 +365,7 @@ HTMLWidgets.widget({
 
         var force = d3.layout.force()
             .size([config.treeWidth, config.treeHeight])
-            .linkDistance(10)
+            .linkDistance(20)
             .gravity(.09)
             .charge(-20)
             .nodes(vizObj.userConfig.tree_nodes)
@@ -460,17 +461,30 @@ HTMLWidgets.widget({
                 }
             });
 
-        var node = treeSVG
+        // plot nodes
+        var nodeG = treeSVG
             .append("g")
             .classed("nodes", true)
             .selectAll(".node")
             .data(vizObj.userConfig.tree_nodes)
-            .enter().append("circle")
+            .enter()
+            .append("g")
+            .attr("class", "nodesG");
+
+        // node circles
+        var nodeCircle = nodeG.append("circle")
             .classed("node", true)
             .attr("id", function(d) {
                 return "node_" + d.name;
             })
-            .attr("r", config.tree_r)
+            .attr("r", function() {
+                // if user wants to display node ids 
+                if (vizObj.userConfig.display_node_ids) {
+                    return config.tree_w_labels_r;
+                }
+                // don't display labels
+                return config.tree_r
+            })
             .style("fill", function(d) {
                 // group annotations specified -- colour by group
                 if (vizObj.view.groupsSpecified) {
@@ -509,19 +523,44 @@ HTMLWidgets.widget({
             })
             .call(force.drag);
 
+        // node single cell labels (if user wants to display them)
+        if (vizObj.userConfig.display_node_ids) {
+
+            var nodeLabel = nodeG.append("text")
+                .text(function(d) { return parseInt(d.name, 10); })
+                .attr("font-size", 
+                    _getLabelFontSize(_.pluck(vizObj.userConfig.tree_nodes, "name"), config.tree_w_labels_r * 2))
+                .attr("text-anchor", "middle")
+                .attr("dy", "+0.35em");
+        }
+
         force.on("tick", function() {
 
-            node.attr("cx", function(d) { 
-                    return d.x = Math.max(config.tree_r, Math.min(config.treeWidth - config.tree_r, d.x)); 
+            // radius of nodes
+            var r = (vizObj.userConfig.display_node_ids) ? config.tree_r : config.tree_w_labels_r;
+
+            nodeCircle.attr("cx", function(d) { 
+                    return d.x = Math.max(r, Math.min(config.treeWidth - r, d.x)); 
                 })
                 .attr("cy", function(d) { 
-                    return d.y = Math.max(config.tree_r, Math.min(config.treeHeight - config.tree_r, d.y)); 
+                    return d.y = Math.max(r, Math.min(config.treeHeight - r, d.y)); 
                 });
+
+            if (vizObj.userConfig.display_node_ids) {
+                nodeLabel.attr("x", function(d) { 
+                        return d.x = Math.max(r, Math.min(config.treeWidth - r, d.x)); 
+                    })
+                    .attr("y", function(d) { 
+                        return d.y = Math.max(r, Math.min(config.treeHeight - r, d.y)); 
+                    });
+            }
 
             link.attr("x1", function(d) { return d.source.x; })
                 .attr("y1", function(d) { return d.source.y; })
                 .attr("x2", function(d) { return d.target.x; })
                 .attr("y2", function(d) { return d.target.y; });
+
+
 
         });
 
