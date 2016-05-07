@@ -245,9 +245,11 @@ HTMLWidgets.widget({
 
         var selectionButton_base64 = "data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTguMS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDU3LjY3NCA1Ny42NzQiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDU3LjY3NCA1Ny42NzQ7IiB4bWw6c3BhY2U9InByZXNlcnZlIiB3aWR0aD0iMTZweCIgaGVpZ2h0PSIxNnB4Ij4KPGc+Cgk8Zz4KCQk8cGF0aCBkPSJNNTUuMzM4LDE4LjE4MmMxLjI5MSwwLDIuMzM2LTEuMDQ3LDIuMzM2LTIuMzM3VjcuMDEyYzAtMS4yOS0xLjA0NS0yLjMzNy0yLjMzNi0yLjMzN2gtOC44MzQgICAgYy0xLjI5MSwwLTIuMzM4LDEuMDQ3LTIuMzM4LDIuMzM3djIuMDhIMTMuNTA4VjcuMDEzYzAtMS4yOS0xLjA0Ni0yLjMzNy0yLjMzNy0yLjMzN0gyLjMzN0MxLjA0Niw0LjY3NiwwLDUuNzIzLDAsNy4wMTN2OC44MzMgICAgYzAsMS4yOSwxLjA0NiwyLjMzNywyLjMzNywyLjMzN2gyLjA4djIxLjMxSDIuMzM4Yy0xLjI5MSwwLTIuMzM3LDEuMDQ3LTIuMzM3LDIuMzM3djguODMzYzAsMS4yOTEsMS4wNDYsMi4zMzcsMi4zMzcsMi4zMzdoOC44MzQgICAgYzEuMjkxLDAsMi4zMzctMS4wNDcsMi4zMzctMi4zMzd2LTIuMDhoMzAuNjU3djIuMDhjMCwxLjI5MSwxLjA0NiwyLjMzNywyLjMzNywyLjMzN2g4LjgzM2MxLjI5MSwwLDIuMzM4LTEuMDQ3LDIuMzM4LTIuMzM3ICAgIHYtOC44MzNjMC0xLjI5MS0xLjA0Ny0yLjMzNy0yLjMzOC0yLjMzN2gtMi4wNzhWMTguMTgySDU1LjMzOHogTTQ4Ljg0MSw5LjM0OUg1M3Y0LjE1OGgtMi4wOGgtMi4wNzl2LTIuMDc4ICAgIEM0OC44NDEsMTEuNDI5LDQ4Ljg0MSw5LjM0OSw0OC44NDEsOS4zNDl6IE00LjY3NCw5LjM1MWg0LjE2djIuMDc4djIuMDhoLTIuMDhoLTIuMDhWOS4zNTF6IE04LjgzNCw0OC4zMjZINC42NzV2LTQuMTU5aDIuMDc5ICAgIGgyLjA4djIuMDc5VjQ4LjMyNnogTTUzLDQ4LjMyNmgtNC4xNnYtMi4wOHYtMi4wNzloMi4wOEg1M0M1Myw0NC4xNjcsNTMsNDguMzI2LDUzLDQ4LjMyNnogTTQ4LjU4MywzOS40OTNoLTIuMDggICAgYy0xLjI5MSwwLTIuMzM3LDEuMDQ3LTIuMzM3LDIuMzM3djIuMDc4SDEzLjUwOVY0MS44M2MwLTEuMjkxLTEuMDQ2LTIuMzM3LTIuMzM3LTIuMzM3aC0yLjA4di0yMS4zMWgyLjA3OSAgICBjMS4yOTEsMCwyLjMzNy0xLjA0NywyLjMzNy0yLjMzN3YtMi4wOGgzMC42NTh2Mi4wNzljMCwxLjI5LDEuMDQ3LDIuMzM3LDIuMzM4LDIuMzM3aDIuMDc5ICAgIEM0OC41ODMsMTguMTgyLDQ4LjU4MywzOS40OTMsNDguNTgzLDM5LjQ5M3oiIGZpbGw9IiNGRkZGRkYiLz4KCTwvZz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K"
         var scissorsButton_base64 = "data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTkuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeD0iMHB4IiB5PSIwcHgiIHZpZXdCb3g9IjAgMCA0NTEuNjc0IDQ1MS42NzQiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDQ1MS42NzQgNDUxLjY3NDsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHdpZHRoPSIxNnB4IiBoZWlnaHQ9IjE2cHgiPgo8Zz4KCTxwYXRoIGQ9Ik0xNjcuODU0LDI5My4yOTljLTcuMTA0LTYuODM0LTE1LjQzLTEyLjYzMi0yNC44NS0xNy4wMjVjLTEyLjI5Mi01LjczMS0yNS4zNTYtOC42MzgtMzguODMtOC42MzggICBjLTM1LjYzLDAtNjguMzc4LDIwLjg1Ny04My40MzEsNTMuMTM4Yy0xMC4zODUsMjIuMjcxLTExLjQ3Niw0Ny4yNTUtMy4wNzEsNzAuMzQ3czI1LjI5OSw0MS41MjksNDcuNTcxLDUxLjkxNCAgIGMxMi4yOSw1LjczLDI1LjM1NCw4LjYzNywzOC44Myw4LjYzOWMzNS42MzEsMCw2OC4zNzktMjAuODU5LDgzLjQzMS01My4xMzhjMC0wLjAwMSwyMS4wMDMtMzYuMjkzLDIxLjAwMy0zNi4yOTNsLTQwLjI3Ni02OS41OTYgICBMMTY3Ljg1NCwyOTMuMjk5eiBNMTYwLjMxMywzODUuODU4Yy0xMC4xNDYsMjEuNzU3LTMyLjIxOCwzNS44MTUtNTYuMjM0LDM1LjgxNWMtOS4wNjktMC4wMDEtMTcuODY4LTEuOTYyLTI2LjE1OS01LjgyOCAgIGMtMTUuMDA5LTYuOTk5LTI2LjM5NC0xOS40MjMtMzIuMDU4LTM0Ljk4NXMtNC45MjktMzIuMzk4LDIuMDctNDcuNDA4YzEwLjE0Ni0yMS43NTcsMzIuMjIyLTM1LjgxNSw1Ni4yNDItMzUuODE1ICAgYzkuMDYxLDAsMTcuODU5LDEuOTYxLDI2LjE1MSw1LjgyN0MxNjEuMzA4LDMxNy45MTIsMTc0Ljc2MSwzNTQuODc0LDE2MC4zMTMsMzg1Ljg1OHoiIGZpbGw9IiNGRkZGRkYiLz4KCTxwYXRoIGQ9Ik0zNjIuODA0LDk1LjYyMmMxOS4zMy0zMy40OCw3Ljg1OS03Ni4yOTItMjUuNjIyLTk1LjYyMmwtOTQuMDI1LDE2Mi44NjRsNDAuMzE4LDY5LjgzNkwzNjIuODA0LDk1LjYyMnoiIGZpbGw9IiNGRkZGRkYiLz4KCTxwYXRoIGQ9Ik00MzAuOTMyLDMyMC43NzNjLTE1LjA1My0zMi4yNzktNDcuODAxLTUzLjEzNy04My40MzEtNTMuMTM3Yy0xMy40NzQsMC0yNi41MzgsMi45MDYtMzguODMsOC42MzggICBjLTkuNDIsNC4zOTMtMTcuNzQ3LDEwLjE5LTI0Ljg1LDE3LjAyNUwxMTQuNDkyLDBDODEuMDExLDE5LjMzLDY5LjU0LDYyLjE0MSw4OC44Nyw5NS42MjJsMTc1LjI5OSwzMDIuOTEgICBjMTUuMDU1LDMyLjI4NCw0Ny44MDMsNTMuMTQyLDgzLjQzMiw1My4xNDJjMTMuNDc1LDAsMjYuNTM5LTIuOTA3LDM4LjgzMS04LjYzOWMyMi4yNzEtMTAuMzg1LDM5LjE2Ni0yOC44MjIsNDcuNTcxLTUxLjkxNCAgIFM0NDEuMzE3LDM0My4wNDYsNDMwLjkzMiwzMjAuNzczeiBNNDA1LjgxMiwzODAuODZjLTUuNjY0LDE1LjU2My0xNy4wNDksMjcuOTg2LTMyLjA1OSwzNC45ODUgICBjLTguMjkyLDMuODY3LTE3LjA5MSw1LjgyOC0yNi4xNTIsNS44MjhjLTI0LjAyLDAtNDYuMDk1LTE0LjA1OS01Ni4yNDEtMzUuODE1Yy0xNC40NDgtMzAuOTg0LTAuOTk1LTY3Ljk0NiwyOS45ODgtODIuMzk1ICAgYzguMjkyLTMuODY2LDE3LjA5MS01LjgyNywyNi4xNTItNS44MjdjMjQuMDIsMCw0Ni4wOTYsMTQuMDU5LDU2LjI0MiwzNS44MTVDNDEwLjc0MSwzNDguNDYyLDQxMS40NzYsMzY1LjI5OCw0MDUuODEyLDM4MC44NnoiIGZpbGw9IiNGRkZGRkYiLz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K"
-
+        var treeDisplayButton_base64 = "data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNC4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDQzMzYzKSAgLS0+DQo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPg0KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCINCgkgd2lkdGg9IjQ4NC41NzhweCIgaGVpZ2h0PSI0MzguMzE3cHgiIHZpZXdCb3g9IjAgMCA0ODQuNTc4IDQzOC4zMTciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDQ4NC41NzggNDM4LjMxNyINCgkgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8Y2lyY2xlIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0ZGRkZGRiIgY3g9IjQyNC40MTgiIGN5PSIzNjIuMjYiIHI9IjU4Ljg4NyIvPg0KPGNpcmNsZSBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiNGRkZGRkYiIGN4PSIyMjIuOTEyIiBjeT0iMjQwLjQ5NSIgcj0iNTguODg2Ii8+DQo8Y2lyY2xlIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0ZGRkZGRiIgY3g9IjY1LjgwMSIgY3k9IjM3Ni42NDYiIHI9IjU4Ljg4NiIvPg0KPGNpcmNsZSBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiNGRkZGRkYiIGN4PSIzNDEuNTk3IiBjeT0iNjkuMTk3IiByPSI1OC44ODciLz4NCjxsaW5lIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLXdpZHRoPSIzNSIgeDE9IjYzLjMzNiIgeTE9IjM3Ny42OTgiIHgyPSIyMjIuOTEyIiB5Mj0iMjQwLjQ5NCIvPg0KPGxpbmUgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjM1IiB4MT0iNDI0LjQxOCIgeTE9IjM2Mi4yNTkiIHgyPSIyMjIuOTEyIiB5Mj0iMjQwLjQ5NCIvPg0KPGxpbmUgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjM1IiB4MT0iMzQxLjU5NyIgeTE9IjY5LjE5NiIgeDI9IjIyMi45MTIiIHkyPSIyNDAuNDk0Ii8+DQo8L3N2Zz4NCg=="
+        
         var selectionButtonIconWidth = 16;
         var scissorsButtonIconWidth = 16;
+        var treeDisplayButtonIconWidth = 16;
 
         // brush selection button
         topBarSVG.append("rect")
@@ -361,6 +363,41 @@ HTMLWidgets.widget({
                 }
                 // push scissors button function
                 _pushScissorsButton(vizObj);
+            });
+
+        // graph/tree button
+        topBarSVG.append("rect")
+            .attr("class", "treeDisplayButton")
+            .attr("x", smallButtonWidth*2)
+            .attr("y", 0)
+            .attr("width", smallButtonWidth)
+            .attr("height", config.topBarHeight)
+            .attr("rx", 10)
+            .attr("ry", 10)
+            .attr("fill", config.topBarColour)
+            .on("mouseover", function() {
+                    d3.select(this).attr("fill", config.topBarHighlight);
+            })
+            .on("mouseout", function() {
+                    d3.select(this).attr("fill", config.topBarColour);
+            })
+            .on("click", function() {
+                
+            });
+        topBarSVG.append("image")
+            .attr("xlink:href", treeDisplayButton_base64)
+            .attr("x", smallButtonWidth*5/2 - (treeDisplayButtonIconWidth/2))
+            .attr("y", 7)
+            .attr("width", treeDisplayButtonIconWidth)
+            .attr("height", treeDisplayButtonIconWidth)
+            .on("mouseover", function() {
+                    d3.select(".treeDisplayButton").attr("fill", config.topBarHighlight);
+            })
+            .on("mouseout", function() {
+                    d3.select(".treeDisplayButton").attr("fill", config.topBarColour);
+            })
+            .on("click", function() {
+
             });
 
         // TOOLTIP FUNCTIONS
