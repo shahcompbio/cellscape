@@ -20,9 +20,11 @@ HTMLWidgets.widget({
             chromLegendHeight: 15,
             cnvLegendWidth: 50,
             groupAnnotStart: 140, // starting y-pixel for group annotation legend
+            hmColorLegendStart: 1, // starting y-pixel for heatmap legend
             titleHeight: 14, // height of legend titles
             rectHeight: 12, // rectangle in legend
             spacing: 2, // spacing between legend rectangles
+            legendLeftPadding: 5, // space between legend and heatmap
             fontHeight: 12,
             topBarHeight: 30, // height of top panel
             topBarColour: "#D9D9D9",
@@ -634,8 +636,8 @@ HTMLWidgets.widget({
 
         // CNV legend title
         cnvLegendSVG.append("text")
-            .attr("x", 0)
-            .attr("y", 0)
+            .attr("x", config.legendLeftPadding)
+            .attr("y", config.hmColorLegendStart) 
             .attr("dy", "+0.71em")
             .attr("font-family", "sans-serif")
             .attr("font-size", config.titleHeight)
@@ -652,9 +654,10 @@ HTMLWidgets.widget({
         // CNV legend rectangles
         cnvLegendG
             .append("rect")
-            .attr("x", 0)
+            .attr("x", config.legendLeftPadding)
             .attr("y", function(d,i) {
-                return config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing);
+                return config.hmColorLegendStart + config.titleHeight + config.spacing*2 + 
+                    i*(config.rectHeight + config.spacing);
             })
             .attr("height", config.rectHeight)
             .attr("width", config.rectHeight)
@@ -665,10 +668,10 @@ HTMLWidgets.widget({
         // CNV legend text
         cnvLegendG
             .append("text")
-            .attr("x", config.rectHeight + config.spacing)
+            .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
             .attr("y", function(d,i) {
-                return config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing) + 
-                    (config.fontHeight/2);
+                return config.hmColorLegendStart + config.titleHeight + config.spacing*2 + 
+                    i*(config.rectHeight + config.spacing) + (config.fontHeight/2);
             })
             .attr("dy", "+0.35em")
             .text(function(d) { 
@@ -686,7 +689,7 @@ HTMLWidgets.widget({
 
             // group annotation legend title
             cnvLegendSVG.append("text")
-                .attr("x", 0)
+                .attr("x", config.legendLeftPadding)
                 .attr("y", config.groupAnnotStart)
                 .attr("dy", "+0.71em")
                 .attr("font-family", "sans-serif")
@@ -705,7 +708,7 @@ HTMLWidgets.widget({
             groupAnnotLegendG
                 .append("rect")
                 .attr("class", function(d) { return "legendGroupRect group_" + d; })
-                .attr("x", 0)
+                .attr("x", config.legendLeftPadding)
                 .attr("y", function(d,i) {
                     return config.groupAnnotStart + config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing);
                 })
@@ -732,7 +735,7 @@ HTMLWidgets.widget({
             groupAnnotLegendG
                 .append("text")
                 .attr("class", function(d) { return "legendGroupText group_" + d; })
-                .attr("x", config.rectHeight + config.spacing)
+                .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
                 .attr("y", function(d,i) {
                     return config.groupAnnotStart + config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing) + (config.fontHeight/2);
                 })
