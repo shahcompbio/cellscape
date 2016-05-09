@@ -324,13 +324,12 @@ function _linkClick(vizObj, link_id) {
 /* function for tree node mouseover
 * @param {Object} vizObj
 * @param {String} sc_id -- single cell id of mousedover node
-* @param {Object} nodeTip -- tooltip for node
 */
-function _nodeMouseover(vizObj, sc_id, nodeTip) {
+function _nodeMouseover(vizObj, sc_id) {
     // if there's no node or link selection taking place
     if (_checkForSelections()) {
         // show tooltip
-        nodeTip.show(sc_id);
+        vizObj.nodeTip.show(sc_id);
 
         // highlight node
         _highlightNode(sc_id, vizObj);
@@ -343,13 +342,12 @@ function _nodeMouseover(vizObj, sc_id, nodeTip) {
 /* function for tree node mouseout
 * @param {Object} vizObj
 * @param {String} sc_id -- single cell id of mousedover node
-* @param {Object} nodeTip -- tooltip for node
 */
-function _nodeMouseout(vizObj, sc_id, nodeTip) {
+function _nodeMouseout(vizObj, sc_id) {
     // if there's no node or link selection taking place
     if (_checkForSelections()) {
         // hide tooltip
-        nodeTip.hide(sc_id);
+        vizObj.nodeTip.hide(sc_id);
 
         // reset node
         _resetNode(sc_id, vizObj);
@@ -500,9 +498,8 @@ function _elbow(d) {
 
 /* function to plot the force-directed graph
 * @param {Object} vizObj
-* @param {Object} nodeTip -- tooltip for node
 */
-function _plotForceDirectedGraph(vizObj, nodeTip) {
+function _plotForceDirectedGraph(vizObj) {
     var config = vizObj.generalConfig,
         userConfig = vizObj.userConfig;
 
@@ -519,7 +516,7 @@ function _plotForceDirectedGraph(vizObj, nodeTip) {
     // plot links
     var link = vizObj.view.treeSVG
         .append("g")
-        .classed("links", true)
+        .classed("treeLinks", true)
         .selectAll(".link")
         .data(userConfig.tree_edges)
         .enter().append("line")
@@ -541,7 +538,7 @@ function _plotForceDirectedGraph(vizObj, nodeTip) {
 
     // plot nodes
     var nodeG = vizObj.view.treeSVG.append("g")
-        .classed("nodes", true)
+        .classed("treeNodes", true)
         .selectAll(".node")
         .data(userConfig.tree_nodes)
         .enter()
@@ -567,10 +564,10 @@ function _plotForceDirectedGraph(vizObj, nodeTip) {
         })
         .style("stroke", "#838181")
         .on('mouseover', function(d) {
-            _nodeMouseover(vizObj, d.name, nodeTip);
+            _nodeMouseover(vizObj, d.name);
         })
         .on('mouseout', function(d) {
-            _nodeMouseout(vizObj, d.name, nodeTip);
+            _nodeMouseout(vizObj, d.name);
         })
         .call(force_layout.drag);
 
@@ -615,9 +612,8 @@ function _plotForceDirectedGraph(vizObj, nodeTip) {
 
 /* function to plot classical phylogenetic tree
 * @param {Object} vizObj
-* @param {Object} nodeTip -- tooltip for node
 */
-function _plotClassicalPhylogeny(vizObj, nodeTip) {
+function _plotClassicalPhylogeny(vizObj) {
     var config = vizObj.generalConfig,
         r = vizObj.generalConfig.tree_r;
 
@@ -663,7 +659,10 @@ function _plotClassicalPhylogeny(vizObj, nodeTip) {
         });
 
     // create nodes
-    var node = vizObj.view.treeSVG.selectAll(".treeNode")                  
+    var node = vizObj.view.treeSVG
+        .append("g")
+        .classed("treeNodes", true)
+        .selectAll(".treeNode")                  
         .data(nodes)                   
         .enter()
         .append("circle")   
@@ -678,11 +677,35 @@ function _plotClassicalPhylogeny(vizObj, nodeTip) {
         })
         .attr("r", r)
         .on('mouseover', function(d) {
-            _nodeMouseover(vizObj, d.name, nodeTip);
+            _nodeMouseover(vizObj, d.name);
         })
         .on('mouseout', function(d) {
-            _nodeMouseout(vizObj, d.name, nodeTip);
+            _nodeMouseout(vizObj, d.name);
         });
+}
+
+/* function to switch between tree and graph views
+*/
+function _switchView(vizObj) {
+    var config = vizObj.generalConfig;
+
+    // remove current nodes and links
+    d3.selectAll(".treeNodes").remove();
+    d3.selectAll(".treeLinks").remove();
+
+    // if tree is on, switch to graph view
+    if (config.switchView) {
+        _plotForceDirectedGraph(vizObj);
+        d3.select(".forceDirectedIcon").attr("opacity", 0);
+        d3.select(".phylogenyIcon").attr("opacity", 1);
+    }
+    // if graph is on, switch to tree view
+    else {
+        _plotClassicalPhylogeny(vizObj);
+        d3.select(".forceDirectedIcon").attr("opacity", 1);
+        d3.select(".phylogenyIcon").attr("opacity", 0);
+    }
+    config.switchView = !config.switchView
 }
 
 // GROUP ANNOTATION FUNCTIONS
