@@ -133,9 +133,10 @@ HTMLWidgets.widget({
         var cnvColorScale = d3.scale.ordinal() 
             .domain([0,1,2,3,4,5,6])
             .range(["#2e7aab", "#73a9d4", "#D6D5D5", "#fec28b", "#fd8b3a", "#ca632c", "#954c25"]);
+        var targeted_colours = ["#417EAA", "#F9F7BC", "#C63C4C"];
         var targetedColorScale = d3.scale.linear()  
             .domain([0, 0.5, 1])             
-            .range(["#417EAA", "#F9F7BC", "#C63C4C"])
+            .range(targeted_colours)
 
         // group annotation colours
         if (vizObj.view.groupsSpecified) {
@@ -632,57 +633,115 @@ HTMLWidgets.widget({
         _plotClassicalPhylogeny(vizObj, 1);
         _plotForceDirectedGraph(vizObj, 0);
 
-        // PLOT CNV LEGEND
+        // PLOT HEATMAP LEGEND
 
-        // CNV legend title
+        // heatmap legend title
         cnvLegendSVG.append("text")
             .attr("x", config.legendLeftPadding)
             .attr("y", config.hmColorLegendStart) 
             .attr("dy", "+0.71em")
             .attr("font-family", "sans-serif")
             .attr("font-size", config.titleHeight)
-            .text("CNV");
+            .text(function() {
+                return (vizObj.userConfig.heatmap_type == "cnv") ? "CNV" : "VAF";
+            });
 
-        // CNV legend rectangle / text group
-        var cnvLegendG = cnvLegendSVG
-            .selectAll(".cnvLegendG")
+        // starting y-coordinate for the heatmap rectangle(s) in legend
+        var legendRectStart = config.hmColorLegendStart + config.titleHeight + config.spacing*2;
+
+        // heatmap legend rectangle / text group
+        var heatmapLegendG = cnvLegendSVG
+            .selectAll(".heatmapLegendG")
             .data(cnvColorScale.domain())
             .enter()
             .append("g")
-            .classed("cnvLegendG", true);
+            .classed("heatmapLegendG", true);
 
-        // CNV legend rectangles
-        cnvLegendG
-            .append("rect")
-            .attr("x", config.legendLeftPadding)
-            .attr("y", function(d,i) {
-                return config.hmColorLegendStart + config.titleHeight + config.spacing*2 + 
-                    i*(config.rectHeight + config.spacing);
-            })
-            .attr("height", config.rectHeight)
-            .attr("width", config.rectHeight)
-            .attr("fill", function(d) {
-                return cnvColorScale(d);
-            });
+        // CNV LEGEND
+        if (vizObj.userConfig.heatmap_type == "cnv") {
 
-        // CNV legend text
-        cnvLegendG
-            .append("text")
-            .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
-            .attr("y", function(d,i) {
-                return config.hmColorLegendStart + config.titleHeight + config.spacing*2 + 
-                    i*(config.rectHeight + config.spacing) + (config.fontHeight/2);
-            })
-            .attr("dy", "+0.35em")
-            .text(function(d) { 
-                if (d==maxCNV) {
-                    return ">=" + d;
-                }
-                return d; 
-            })
-            .attr("font-family", "sans-serif")
-            .attr("font-size", config.fontHeight)
-            .style("fill", "black");
+            // CNV legend rectangles
+            heatmapLegendG
+                .append("rect")
+                .attr("x", config.legendLeftPadding)
+                .attr("y", function(d,i) {
+                    return legendRectStart + i*(config.rectHeight + config.spacing);
+                })
+                .attr("height", config.rectHeight)
+                .attr("width", config.rectHeight)
+                .attr("fill", function(d) {
+                    return cnvColorScale(d);
+                });
+
+            // CNV legend text
+            heatmapLegendG
+                .append("text")
+                .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
+                .attr("y", function(d,i) {
+                    return config.hmColorLegendStart + config.titleHeight + config.spacing*2 + 
+                        i*(config.rectHeight + config.spacing) + (config.fontHeight/2);
+                })
+                .attr("dy", "+0.35em")
+                .text(function(d) { 
+                    if (d==maxCNV) {
+                        return ">=" + d;
+                    }
+                    return d; 
+                })
+                .attr("font-family", "sans-serif")
+                .attr("font-size", config.fontHeight)
+                .style("fill", "black");
+
+        }
+        // TARGETED HEATMAP LEGEND
+        else {
+            // height for targeted heatmap legend rectangle
+            var legendRectHeight = cnvColorScale.domain().length*(config.rectHeight + config.spacing);
+
+            // linear gradient for fill of targeted mutation legend
+            heatmapLegendG.append("linearGradient")
+                .attr("id", "targetedGradient")
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", 0).attr("y1", legendRectStart)
+                .attr("x2", 0).attr("y2", legendRectStart + legendRectHeight)
+                .selectAll("stop")
+                .data([
+                    {offset: "0%", color: targeted_colours[2]},
+                    {offset: "50%", color: targeted_colours[1]},
+                    {offset: "100%", color: targeted_colours[0]}
+                ])
+                .enter().append("stop")
+                .attr("offset", function(d) { return d.offset; })
+                .attr("stop-color", function(d) { return d.color; });
+
+            // VAF legend rectangle with gradient
+            heatmapLegendG
+                .append("rect")
+                .attr("x", config.legendLeftPadding)
+                .attr("y", legendRectStart)
+                .attr("width", config.rectHeight)
+                .attr("height", legendRectHeight)
+                .attr("fill", "url(#targetedGradient)");
+
+            // VAF legend text
+            heatmapLegendG
+                .append("text")
+                .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
+                .attr("y", legendRectStart)
+                .attr("dy", "+0.71em")
+                .text("1")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", config.fontHeight)
+                .style("fill", "black");
+            heatmapLegendG
+                .append("text")
+                .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
+                .attr("y", legendRectStart + legendRectHeight)
+                .text("0")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", config.fontHeight)
+                .style("fill", "black");
+        }
 
         // GROUP ANNOTATION LEGEND
         if (vizObj.view.groupsSpecified) {
