@@ -199,7 +199,7 @@ function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
             .attr("class", "brush")
             .call(brush)
             .selectAll('rect')
-            .attr('width', vizObj.userConfig.cnvWidth);
+            .attr('width', vizObj.userConfig.heatmapWidth);
     }
 }
 
@@ -320,8 +320,8 @@ function _linkClick(vizObj, link_id) {
             d3.select(".indic.sc_" + sc_id).remove(); // remove indicator
 
             // remove single cell from list of single cells
-            var index = userConfig.sc_ids_ordered.indexOf(sc_id);
-            userConfig.sc_ids_ordered.splice(index, 1);
+            var index = userConfig.hm_sc_ids_ordered.indexOf(sc_id);
+            userConfig.hm_sc_ids_ordered.splice(index, 1);
         })
 
         // adjust copy number matrix to fill the entire space
@@ -788,13 +788,13 @@ function _updateTrimmedMatrix(vizObj) {
     var matrix_height = 0;
 
     // for each single cell that's still in the matrix
-    vizObj.userConfig.sc_ids_ordered.forEach(function(sc_id) {
+    vizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id) {
         // original y-coordinate for this single cell
         var original_sc_index = vizObj.view.original_sc_list.indexOf(sc_id);
         var original_y = (original_sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
         // new y-coordinate
-        var new_sc_index = vizObj.userConfig.sc_ids_ordered.indexOf(sc_id);
+        var new_sc_index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(sc_id);
         var new_y = (new_sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
         // y-difference

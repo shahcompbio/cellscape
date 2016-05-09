@@ -78,7 +78,7 @@ HTMLWidgets.widget({
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
         // tree configurations
-        config.treeWidth = config.width - config.indicatorWidth - config.cnvLegendWidth - vizObj.userConfig.cnvWidth;
+        config.treeWidth = config.width - config.indicatorWidth - config.cnvLegendWidth - vizObj.userConfig.heatmapWidth;
         config.treeHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
 
         // if group annotation specified, reduce the width of the tree
@@ -89,14 +89,20 @@ HTMLWidgets.widget({
         // GET TREE CONTENT
 
         // if the user hasn't specified a custom single cell id order for the cnv heatmap, order by tree
-        if (!vizObj.userConfig.sc_ids_ordered) {
+        if (!vizObj.userConfig.hm_sc_ids_ordered) {
             // get order of nodes from tree
             var nodeOrder = _getNodeOrder(vizObj.userConfig.link_ids, vizObj.userConfig.root, []);
-            vizObj.userConfig.sc_ids_ordered = nodeOrder
+            vizObj.userConfig.hm_sc_ids_ordered = nodeOrder
+        }
+        // remove single cell ids that are in the tree but not the heatmap
+        for (var i = 0; i < vizObj.userConfig.scs_missing_from_hm.length; i++) {
+            var cur_sc_missing = vizObj.userConfig.scs_missing_from_hm[i];
+            var index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(cur_sc_missing);
+            vizObj.userConfig.hm_sc_ids_ordered.splice(index, 1);
         }
 
         // keep track of original list of scs, for tree pruning purposes
-        vizObj.view.original_sc_list = $.extend([], vizObj.userConfig.sc_ids_ordered);
+        vizObj.view.original_sc_list = $.extend([], vizObj.userConfig.hm_sc_ids_ordered);
 
         // get tree structure
         vizObj.data.treeStructure = _getTreeStructure(vizObj.userConfig.tree_edges, vizObj.userConfig.root);
@@ -105,7 +111,7 @@ HTMLWidgets.widget({
 
         // cnv plot number of rows
         vizObj.view.cnv = {};
-        vizObj.view.cnv.nrows = vizObj.userConfig.sc_ids_ordered.length;
+        vizObj.view.cnv.nrows = vizObj.userConfig.hm_sc_ids_ordered.length;
 
         // height of each cnv row
         vizObj.view.cnv.rowHeight = (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
@@ -214,7 +220,7 @@ HTMLWidgets.widget({
         var cnvSVG = containerDIV
             .append("svg:svg")
             .attr("class", "cnvSVG")
-            .attr("width", vizObj.userConfig.cnvWidth + "px")
+            .attr("width", vizObj.userConfig.heatmapWidth + "px")
             .attr("height", config.cnvHeight + "px")
 
         // CNV LEGEND SVG
@@ -452,8 +458,8 @@ HTMLWidgets.widget({
             .classed("gridCells", true)
 
         // for each single cell
-        for (var i = 0; i < vizObj.userConfig.sc_ids_ordered.length; i++) {
-            var cur_sc = vizObj.userConfig.sc_ids_ordered[i];
+        for (var i = 0; i < vizObj.userConfig.hm_sc_ids_ordered.length; i++) {
+            var cur_sc = vizObj.userConfig.hm_sc_ids_ordered[i];
             var cur_data = vizObj.userConfig.heatmap_info[[cur_sc]]; 
 
             // if this single cell has heatmap data
@@ -473,10 +479,10 @@ HTMLWidgets.widget({
                         return "gridCell sc_" + d.sc_id + " group_" + group;
                     })
                     .attr("x", function(d) { 
-                        return (vizObj.userConfig.heatmap_type == "cnv") ? d.px : d.x; 
+                        return d.x; 
                     })
                     .attr("y", function(d) { 
-                        d.sc_index = vizObj.userConfig.sc_ids_ordered.indexOf(d.sc_id);
+                        d.sc_index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(d.sc_id);
                         d.y = (d.sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
                         return d.y; 
                     })
@@ -562,7 +568,7 @@ HTMLWidgets.widget({
             .append("g")
             .classed("indicators", true)
             .selectAll(".indic")
-            .data(vizObj.userConfig.sc_ids_ordered)
+            .data(vizObj.userConfig.hm_sc_ids_ordered)
             .enter()
             .append("rect")
             .attr("class", function(d) {
@@ -570,7 +576,7 @@ HTMLWidgets.widget({
             })
             .attr("x", 0)
             .attr("y", function(d) { 
-                var index = vizObj.userConfig.sc_ids_ordered.indexOf(d);
+                var index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(d);
                 return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
             })
             .attr("height", vizObj.view.cnv.rowHeight)
@@ -594,7 +600,7 @@ HTMLWidgets.widget({
                 })
                 .attr("x", 0)
                 .attr("y", function(d) { 
-                    var index = vizObj.userConfig.sc_ids_ordered.indexOf(d.single_cell_id);
+                    var index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(d.single_cell_id);
                     d.y = (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight)
                     return d.y; 
                 })

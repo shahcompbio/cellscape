@@ -49,7 +49,7 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
   }
 
   # number of pixels for heatmap
-  cnvWidth <- (width/2) - 40 
+  heatmapWidth <- (width/2) - 40 
 
   # CNV DATA
 
@@ -85,7 +85,7 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
     genome_length <- getGenomeLength(chrom_bounds)
 
     # GET PIXELS FOR EACH SINGLE CELL
-    n_bp_per_pixel <- getNBPPerPixel(cnvWidth, chrom_bounds, genome_length) # number bps per pixel
+    n_bp_per_pixel <- getNBPPerPixel(heatmapWidth, chrom_bounds, genome_length) # number bps per pixel
     heatmap_info <- getCNVHeatmapForEachSC(cnv_data, chrom_bounds, n_bp_per_pixel)
     
     # GET CHROMOSOME BOX INFO
@@ -104,7 +104,6 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
     }
 
     # ensure column names are correct
-    print(colnames(mut_data))
     if (!("single_cell_id" %in% colnames(mut_data)) ||
         !("chr" %in% colnames(mut_data)) ||
         !("coord" %in% colnames(mut_data)) ||
@@ -126,7 +125,7 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
     genome_length <- NULL
 
     # pixels
-    heatmap_info <- getTargetedHeatmapForEachSC(mut_data, cnvWidth)
+    heatmap_info <- getTargetedHeatmapForEachSC(mut_data, heatmapWidth)
 
     # no need for chromosome box info
     chrom_boxes <- NULL
@@ -203,7 +202,6 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
     root_index <- which(tree_nodes_for_layout$sc_id == root)
   }
 
-
   # SINGLE CELL GROUPS
   if (!is.null(sc_groups)) {
     # ensure column names are correct
@@ -221,23 +219,28 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
     sc_groups <- jsonlite::toJSON(sc_groups)
   }
 
+  # GET SINGLE CELLS THAT ARE IN THE TREE BUT DON'T HAVE ASSOCIATED DATA
+  scs_in_hm <- names(heatmap_info) # single cells in heatmap
+  scs_in_tree <- unique(c(tree_edges$source, tree_edges$target))
+  scs_missing_from_hm <- setdiff(scs_in_tree, scs_in_hm)
 
   # forward options using x
   x = list(
     cnv_data=jsonlite::toJSON(cnv_data),
     tree_edges=jsonlite::toJSON(tree_edges_for_layout),
-    sc_ids_ordered=sc_id_order,
+    hm_sc_ids_ordered=sc_id_order, # the single cells present in the heatmap
     sc_groups=sc_groups,
     link_ids=link_ids,
     tree_nodes=jsonlite::toJSON(tree_nodes_for_layout),
     chroms=chroms,
     heatmap_info=jsonlite::toJSON(heatmap_info),
     chrom_boxes=jsonlite::toJSON(chrom_boxes),
-    cnvWidth=cnvWidth,
+    heatmapWidth=heatmapWidth,
     root=root, # name of root
     root_index=root_index, # index of root in list of tree nodes for layout function
     display_node_ids=display_node_ids,
-    heatmap_type=heatmap_type # type of data in heatmap (cnv or targeted)
+    heatmap_type=heatmap_type, # type of data in heatmap (cnv or targeted)
+    scs_missing_from_hm=scs_missing_from_hm # single cells in tree but not heatmap
   )
 
   # create widget
@@ -269,9 +272,9 @@ renderCnvTree <- function(expr, env = parent.frame(), quoted = FALSE) {
 
 
 #' Function to get data frame of pixels
-getEmptyGrid <- function(sc_ids_ordered, ncols) {
-  sc_ids <- rep(sc_ids_ordered, each=ncols)
-  cols <- rep(seq(0:(ncols-1)), length(sc_ids_ordered))
+getEmptyGrid <- function(hm_sc_ids_ordered, ncols) {
+  sc_ids <- rep(hm_sc_ids_ordered, each=ncols)
+  cols <- rep(seq(0:(ncols-1)), length(hm_sc_ids_ordered))
 
   return(data.frame(col=cols, sc_id=sc_ids, stringsAsFactors=FALSE))
 }
@@ -425,9 +428,9 @@ getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
                                                                 px_min=min(px),
                                                                 mode_cnv=mode_cnv[1])
   consecutive_px_merged <- as.data.frame(consecutive_px_merged)
-  colnames(consecutive_px_merged) <- c("sc_id", "cumsum_values", "px_width", "chr", "px", "gridCell_value")
+  colnames(consecutive_px_merged) <- c("sc_id", "cumsum_values", "px_width", "chr", "x", "gridCell_value")
   # rearrange columns
-  consecutive_px_merged <- consecutive_px_merged[,c("sc_id","px","px_width","chr","gridCell_value","cumsum_values")]
+  consecutive_px_merged <- consecutive_px_merged[,c("sc_id","x","px_width","chr","gridCell_value","cumsum_values")]
 
   # separate pixels by single cell id
   consecutive_px_merged_split <- split(consecutive_px_merged , f = consecutive_px_merged$sc_id)
@@ -453,8 +456,6 @@ getTargetedHeatmapForEachSC <- function(mut_data, heatmapWidth) {
 
   # get all unique mutation sites
   sites <- unique(heatmap_info$site)
-  print("sites")
-  print(sites)
   n_sites <- length(sites)
 
   # heatmap cell width
