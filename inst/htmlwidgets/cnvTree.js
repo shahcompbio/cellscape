@@ -120,11 +120,14 @@ HTMLWidgets.widget({
 
         // COLOURS
 
-        // cnv colour scale
+        // colour scales
         var maxCNV = 6;
-        var colorScale = d3.scale.ordinal()
+        var cnvColorScale = d3.scale.ordinal() 
             .domain([0,1,2,3,4,5,6])
             .range(["#2e7aab", "#73a9d4", "#D6D5D5", "#fec28b", "#fd8b3a", "#ca632c", "#954c25"]);
+        var targetedColorScale = d3.scale.linear()  
+            .domain([0, 0.5, 1])             
+            .range(["#417EAA", "#F9F7BC", "#C63C4C"])
 
         // group annotation colours
         if (vizObj.view.groupsSpecified) {
@@ -451,62 +454,72 @@ HTMLWidgets.widget({
         // for each single cell
         for (var i = 0; i < vizObj.userConfig.sc_ids_ordered.length; i++) {
             var cur_sc = vizObj.userConfig.sc_ids_ordered[i];
-            var cur_data = vizObj.userConfig.pixel_info[[cur_sc]]; 
+            var cur_data = vizObj.userConfig.heatmap_info[[cur_sc]]; 
+
+            // if this single cell has heatmap data
+            if (cur_data) {
                
-            gridCellsG
-                .append("g")
-                .attr("class", "gridCellG sc_" + cur_sc)
-                .selectAll(".gridCell.sc_" + cur_sc)
-                .data(cur_data)
-                .enter()
-                .append("rect")
-                .attr("class", function(d) {
-                    // group annotation
-                    var group = (vizObj.view.groupsSpecified) ?
-                        _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.sc_id}).group : "none";
-                    return "gridCell sc_" + d.sc_id + " group_" + group;
-                })
-                .attr("x", function(d) { return d.px; })
-                .attr("y", function(d) { 
-                    d.sc_index = vizObj.userConfig.sc_ids_ordered.indexOf(d.sc_id);
-                    d.y = (d.sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
-                    return d.y; 
-                })
-                .attr("height", vizObj.view.cnv.rowHeight)
-                .attr("width", function(d) { return d.px_width; })
-                .attr("fill", function(d) { 
-                    // no cnv data
-                    if (typeof(d.mode_cnv) == "undefined") {
-                        return "white";
-                    }
-                    // cnv data, but above max cnv value
-                    else if (d.mode_cnv > maxCNV) {
-                        return colorScale(maxCNV);
-                    }
-                    // regular cnv data
-                    return colorScale(d.mode_cnv);
-                })
-                .on("mouseover", function(d) {
-                    if (_checkForSelections()) {
-                        // show indicator tooltip & highlight indicator
-                        indicatorTip.show(d.sc_id, d3.select(".indic.sc_" + d.sc_id).node());
-                        _highlightIndicator(d.sc_id, vizObj);
+                gridCellsG
+                    .append("g")
+                    .attr("class", "gridCellG sc_" + cur_sc)
+                    .selectAll(".gridCell.sc_" + cur_sc)
+                    .data(cur_data)
+                    .enter()
+                    .append("rect")
+                    .attr("class", function(d) {
+                        // group annotation
+                        var group = (vizObj.view.groupsSpecified) ?
+                            _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.sc_id}).group : "none";
+                        return "gridCell sc_" + d.sc_id + " group_" + group;
+                    })
+                    .attr("x", function(d) { 
+                        return (vizObj.userConfig.heatmap_type == "cnv") ? d.px : d.x; 
+                    })
+                    .attr("y", function(d) { 
+                        d.sc_index = vizObj.userConfig.sc_ids_ordered.indexOf(d.sc_id);
+                        d.y = (d.sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
+                        return d.y; 
+                    })
+                    .attr("height", vizObj.view.cnv.rowHeight)
+                    .attr("width", function(d) { 
+                        return d.px_width; 
+                    })
+                    .attr("fill", function(d) { 
+                        var cur_colorscale = (vizObj.userConfig.heatmap_type == "cnv") ?
+                            cnvColorScale : targetedColorScale;
+                        // no data
+                        if (typeof(d.gridCell_value) == "undefined") {
+                            return "white";
+                        }
+                        // cnv data, but above max cnv value
+                        else if (vizObj.userConfig.heatmap_type == "cnv" && 
+                                d.gridCell_value > maxCNV) {
+                            return cur_colorscale(maxCNV);
+                        }
+                        // regular data
+                        return cur_colorscale(d.gridCell_value);
+                    })
+                    .on("mouseover", function(d) {
+                        if (_checkForSelections()) {
+                            // show indicator tooltip & highlight indicator
+                            indicatorTip.show(d.sc_id, d3.select(".indic.sc_" + d.sc_id).node());
+                            _highlightIndicator(d.sc_id, vizObj);
 
-                        // highlight node
-                        _highlightNode(d.sc_id, vizObj);
-                    }
-                })
-                .on("mouseout", function(d) {
-                    if (_checkForSelections()) {
-                        // hide indicator tooltip & unhighlight indicator
-                        indicatorTip.hide(d.sc_id);
-                        _resetIndicator(d.sc_id);
+                            // highlight node
+                            _highlightNode(d.sc_id, vizObj);
+                        }
+                    })
+                    .on("mouseout", function(d) {
+                        if (_checkForSelections()) {
+                            // hide indicator tooltip & unhighlight indicator
+                            indicatorTip.hide(d.sc_id);
+                            _resetIndicator(d.sc_id);
 
-                        // reset node
-                        _resetNode(d.sc_id, vizObj);
-                    }
-                });
-
+                            // reset node
+                            _resetNode(d.sc_id, vizObj);
+                        }
+                    });
+            }
         }
 
         // PLOT CHROMOSOME LEGEND
@@ -625,7 +638,7 @@ HTMLWidgets.widget({
         // CNV legend rectangle / text group
         var cnvLegendG = cnvLegendSVG
             .selectAll(".cnvLegendG")
-            .data(colorScale.domain())
+            .data(cnvColorScale.domain())
             .enter()
             .append("g")
             .classed("cnvLegendG", true);
@@ -640,7 +653,7 @@ HTMLWidgets.widget({
             .attr("height", config.rectHeight)
             .attr("width", config.rectHeight)
             .attr("fill", function(d) {
-                return colorScale(d);
+                return cnvColorScale(d);
             });
 
         // CNV legend text

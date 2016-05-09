@@ -1,20 +1,21 @@
 #' cnvTree
 #'
 #' Explores single cell copy number profiles in the context of a single cell tree.
-#' To use: Hover over nodes to inspect them. Click on nodes to select them.
-#' Hover over branches to inspect the downstream nodes. Click on branches to select the downstream nodes.
-#' To inspect a copy number profile, hover just to the left of the profile. Click this same region to select 
-#' single cell(s). 
-#' To exit any selection, double click near the single cell tree.
 #'   
 #' @import htmlwidgets, gtools, jsonlite, reshape2, stringr, dplyr
 #'
-#' @param cnv_data {Data frame} Single cell copy number data frame.
+#' @param cnv_data {Data frame} (Required if mut_data not provided) Single cell copy number data frame.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "chr" - chromosome number
 #'                       (3) {Number} "start" - start position
 #'                       (4) {Number} "end" - end position
 #'                       (5) {Number} "integer_copy_number" - copy number state.
+#'
+#' @param mut_data {Data frame} (Required if cnv_data not provided) Single cell targeted mutation data frame.
+#'   Format: columns are (1) {String} "single_cell_id" - single cell id
+#'                       (2) {String} "chr" - chromosome number
+#'                       (3) {Number} "coord" - genomic coordinate of the mutation
+#'                       (5) {Number} "VAF" - variant allele frequency.
 #'
 #' @param tree_edges {Data frame} Edges for the single cell phylogenetic tree.
 #'   Format: columns are (1) {String} "source" - edge source (single cell id)
@@ -31,51 +32,112 @@
 #' @param height {Number} (Optional) Height of the plot.
 #'
 #' @export
-cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, display_node_ids=FALSE, 
+cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = NULL, sc_groups = NULL, display_node_ids=FALSE, 
   width = 1200, height = 1000) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
-  if (missing(cnv_data)) {
-    stop("User must provide CNV data (parameter cnv_data).")
+  if (is.null(cnv_data) && is.null(mut_data)) {
+    stop(paste("User must provide either copy number data (parameter cnv_data)",
+      " or mutation data (parameter mut_data).",sep=""))
+  }
+  if (!is.null(cnv_data) && !is.null(mut_data)) {
+    stop(paste("User can only provide copy number (parameter cnv_data) OR targeted mutations",
+      " data (parameter mut_data), not both.", sep=""))
   }
   if (missing(tree_edges)) {
     stop("User must provide tree edge data (parameter tree_edges).")
   }
 
+  # number of pixels for heatmap
+  cnvWidth <- (width/2) - 40 
+
   # CNV DATA
 
-  # check it's a data frame
-  if (!is.data.frame(cnv_data)) {
-    stop("CNV data (parameter cnv_data) must be a data frame.")
+  # CNV data is provided
+  if (missing(mut_data)) {
+    heatmap_type <- "cnv"
+
+    # check it's a data frame
+    if (!is.data.frame(cnv_data)) {
+      stop("CNV data (parameter cnv_data) must be a data frame.")
+    }
+
+    # ensure column names are correct
+    if (!("single_cell_id" %in% colnames(cnv_data)) ||
+        !("chr" %in% colnames(cnv_data)) ||
+        !("start" %in% colnames(cnv_data)) ||
+        !("end" %in% colnames(cnv_data)) ||
+        !("integer_copy_number" %in% colnames(cnv_data))) {
+      stop(paste("CNV data frame must have the following column names: ", 
+          "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"", sep=""))
+    }
+
+    # ensure data is of the correct type
+    cnv_data$single_cell_id <- as.character(cnv_data$single_cell_id)
+    cnv_data$chr <- as.character(cnv_data$chr)
+    cnv_data$start <- as.numeric(as.character(cnv_data$start))
+    cnv_data$end <- as.numeric(as.character(cnv_data$end))
+    cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
+
+    # get chromosomes, chromosome bounds (min & max bp), genome length
+    chroms <- gtools::mixedsort(unique(cnv_data$chr))
+    chrom_bounds <- getChromBounds(chroms, cnv_data) 
+    genome_length <- getGenomeLength(chrom_bounds)
+
+    # GET PIXELS FOR EACH SINGLE CELL
+    n_bp_per_pixel <- getNBPPerPixel(cnvWidth, chrom_bounds, genome_length) # number bps per pixel
+    heatmap_info <- getCNVHeatmapForEachSC(cnv_data, chrom_bounds, n_bp_per_pixel)
+    
+    # GET CHROMOSOME BOX INFO
+    chrom_boxes <- getChromBoxInfo(chrom_bounds, n_bp_per_pixel)
   }
 
-  # ensure column names are correct
-  if (!("single_cell_id" %in% colnames(cnv_data)) ||
-      !("chr" %in% colnames(cnv_data)) ||
-      !("start" %in% colnames(cnv_data)) ||
-      !("end" %in% colnames(cnv_data)) ||
-      !("integer_copy_number" %in% colnames(cnv_data))) {
-    stop(paste("CNV data frame must have the following column names: ", 
-        "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"", sep=""))
+  # TARGETED MUTATIONS DATA
+
+  # targeted mutations data is provided
+  if (missing(cnv_data)) {
+    heatmap_type <- "targeted"
+
+    # check it's a data frame
+    if (!is.data.frame(mut_data)) {
+      stop("Targeted mutations data (parameter mut_data) must be a data frame.")
+    }
+
+    # ensure column names are correct
+    print(colnames(mut_data))
+    if (!("single_cell_id" %in% colnames(mut_data)) ||
+        !("chr" %in% colnames(mut_data)) ||
+        !("coord" %in% colnames(mut_data)) ||
+        !("VAF" %in% colnames(mut_data))) {
+      stop(paste("Targeted mutations data frame must have the following column names: ", 
+          "\"single_cell_id\", \"chr\", \"coord\", \"VAF\"", sep=""))
+    }
+
+    # ensure data is of the correct type
+    mut_data$single_cell_id <- as.character(mut_data$single_cell_id)
+    mut_data$chr <- as.character(mut_data$chr)
+    mut_data$coord <- as.numeric(as.character(mut_data$coord))
+    mut_data$VAF <- as.numeric(as.character(mut_data$VAF))
+
+    # get chromosomes, set chromosome bounds and genome length to NULL 
+    # (not needed for mutation data)
+    chroms <- gtools::mixedsort(unique(mut_data$chr))
+    chrom_bounds <- NULL
+    genome_length <- NULL
+
+    # pixels
+    heatmap_info <- getTargetedHeatmapForEachSC(mut_data, cnvWidth)
+
+    # no need for chromosome box info
+    chrom_boxes <- NULL
   }
 
-  # ensure data is of the correct type
-  cnv_data$single_cell_id <- as.character(cnv_data$single_cell_id)
-  cnv_data$chr <- as.character(cnv_data$chr)
-  cnv_data$start <- as.numeric(as.character(cnv_data$start))
-  cnv_data$end <- as.numeric(as.character(cnv_data$end))
-  cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
-
-  # get chromosomes, chromosome bounds (min & max bp), genome length
-  chroms <- gtools::mixedsort(unique(cnv_data$chr))
-  chrom_bounds <- getChromBounds(chroms, cnv_data) 
-  genome_length <- getGenomeLength(chrom_bounds)
 
   # TREE EDGE DATA
 
   # check it's a data frame
   if (!is.data.frame(tree_edges)) {
-    stop("Tree edges data (parameter cnv_data) must be a data frame.")
+    stop("Tree edges data (parameter tree_edges) must be a data frame.")
   }
 
   # ensure column names are correct
@@ -159,14 +221,6 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     sc_groups <- jsonlite::toJSON(sc_groups)
   }
 
-  # GET PIXELS FOR EACH SINGLE CELL
-
-  ncols <- (width/2) - 40 # number of columns (pixels)
-  n_bp_per_pixel <- getNBPPerPixel(ncols, chrom_bounds, genome_length) # number bps per pixel
-  pixel_info <- getPixelsForEachSC(cnv_data, chrom_bounds, n_bp_per_pixel)
-  
-  # GET CHROMOSOME BOX INFO
-  chrom_boxes <- getChromBoxInfo(chrom_bounds, n_bp_per_pixel)
 
   # forward options using x
   x = list(
@@ -177,12 +231,13 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
     link_ids=link_ids,
     tree_nodes=jsonlite::toJSON(tree_nodes_for_layout),
     chroms=chroms,
-    pixel_info=jsonlite::toJSON(pixel_info),
+    heatmap_info=jsonlite::toJSON(heatmap_info),
     chrom_boxes=jsonlite::toJSON(chrom_boxes),
-    cnvWidth=ncols,
+    cnvWidth=cnvWidth,
     root=root, # name of root
     root_index=root_index, # index of root in list of tree nodes for layout function
-    display_node_ids=display_node_ids
+    display_node_ids=display_node_ids,
+    heatmap_type=heatmap_type # type of data in heatmap (cnv or targeted)
   )
 
   # create widget
@@ -301,17 +356,17 @@ getNBPPerPixel <- function(ncols, chrom_bounds, genome_length) {
 #' @param {Data Frame} cnv_data -- copy number variant segments data
 #' @param {Data Frame} chrom_bounds -- chromosome boundaries
 #' @param {Integer} n_bp_per_pixel -- number of base pairs per pixel
-getPixelsForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
+getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
 
   # get the pixel start and end for each segment (account for chromosome separators in pixel info)
-  pixel_info <- cnv_data
-  pixel_info <- merge(cnv_data, chrom_bounds, by.x="chr", by.y="chrom")
-  pixel_info$start_px <- floor((pixel_info$chrom_start + pixel_info$start) / n_bp_per_pixel) + 2*(pixel_info$chrom_index-1)
-  pixel_info$end_px <- floor((pixel_info$chrom_start + pixel_info$end) / n_bp_per_pixel) + 2*(pixel_info$chrom_index-1)
-  pixel_info$px_width <- pixel_info$end_px - pixel_info$start_px + 1
+  heatmap_info <- cnv_data
+  heatmap_info <- merge(cnv_data, chrom_bounds, by.x="chr", by.y="chrom")
+  heatmap_info$start_px <- floor((heatmap_info$chrom_start + heatmap_info$start) / n_bp_per_pixel) + 2*(heatmap_info$chrom_index-1)
+  heatmap_info$end_px <- floor((heatmap_info$chrom_start + heatmap_info$end) / n_bp_per_pixel) + 2*(heatmap_info$chrom_index-1)
+  heatmap_info$px_width <- heatmap_info$end_px - heatmap_info$start_px + 1
 
   # note any segments whose start_px != end_px --> these will be the separated end pixels
-  segment_ends_info <- pixel_info[which(pixel_info$start_px != pixel_info$end_px),]
+  segment_ends_info <- heatmap_info[which(heatmap_info$start_px != heatmap_info$end_px),]
 
   # save their left ends (starts)
   starts <- segment_ends_info
@@ -334,7 +389,7 @@ getPixelsForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
   middles$px <- middles$px + 1 # first pixel will be a start pixel, so we shift 1
 
   # note any segments that occupy one pixel only
-  singles <- pixel_info[which(pixel_info$start_px == pixel_info$end_px),]
+  singles <- heatmap_info[which(heatmap_info$start_px == heatmap_info$end_px),]
   colnames(singles)[which(colnames(singles) == "end_px")] <- "px"
   singles <- singles[ , !(names(singles) %in% c("start_px"))] # drop start_px column
 
@@ -370,14 +425,57 @@ getPixelsForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
                                                                 px_min=min(px),
                                                                 mode_cnv=mode_cnv[1])
   consecutive_px_merged <- as.data.frame(consecutive_px_merged)
-  colnames(consecutive_px_merged) <- c("sc_id", "cumsum_values", "px_width", "chr", "px", "mode_cnv")
+  colnames(consecutive_px_merged) <- c("sc_id", "cumsum_values", "px_width", "chr", "px", "gridCell_value")
   # rearrange columns
-  consecutive_px_merged <- consecutive_px_merged[,c("sc_id","px","px_width","chr","mode_cnv","cumsum_values")]
+  consecutive_px_merged <- consecutive_px_merged[,c("sc_id","px","px_width","chr","gridCell_value","cumsum_values")]
 
   # separate pixels by single cell id
   consecutive_px_merged_split <- split(consecutive_px_merged , f = consecutive_px_merged$sc_id)
 
   return (consecutive_px_merged_split)
+}
+
+
+#' function to get targeted heatmap information 
+#' @param {Data Frame} mut_data -- mutations data
+getTargetedHeatmapForEachSC <- function(mut_data, heatmapWidth) {
+
+  # sort mutations by single cell, genomic position
+  heatmap_info <- mut_data
+  heatmap_info$chr <- as.character(heatmap_info$chr)
+  # prepend 0 to single-character chromosomes for natural sorting of chr
+  heatmap_info$chr[which(nchar(heatmap_info$chr) == 1)] <- 
+    paste("0", heatmap_info$chr[which(nchar(heatmap_info$chr) == 1)], sep="")
+  heatmap_info <- dplyr::arrange(heatmap_info, single_cell_id, chr, coord)
+
+  # get mutation site as one string
+  heatmap_info$site <- paste(trimws(heatmap_info$chr), trimws(heatmap_info$coord), sep=":")
+
+  # get all unique mutation sites
+  sites <- unique(heatmap_info$site)
+  print("sites")
+  print(sites)
+  n_sites <- length(sites)
+
+  # heatmap cell width
+  mut_width <- heatmapWidth/n_sites
+
+  # attach heatmap cell x information and width information to each mutation
+  heatmap_info$x <- sapply(heatmap_info$site, function(site) {
+      # index of this site in the list of mutation sites
+      index_of_site <- which(sites == site) - 1
+      return(index_of_site * mut_width);
+    })
+  heatmap_info$px_width <- mut_width
+
+  # colname sc_id not single_cell_id
+  colnames(heatmap_info)[which(colnames(heatmap_info) == "single_cell_id")] <- "sc_id"
+  colnames(heatmap_info)[which(colnames(heatmap_info) == "VAF")] <- "gridCell_value"
+
+  # separate pixels by single cell id
+  heatmap_info_split <- split(heatmap_info , f = heatmap_info$sc_id)
+
+  return (heatmap_info_split)
 }
 
 # function to find the mode of a vector

@@ -146,8 +146,10 @@ function _resetNodes(vizObj) {
 function _getNodeColour(vizObj, sc_id) {
     // group annotations specified -- colour by group
     if (vizObj.view.groupsSpecified) {
-        var group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: sc_id}).group;
-        return vizObj.view.colour_assignment[group];
+        var found_sc_with_group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: sc_id});
+        return (found_sc_with_group) ? // if this sc has a group
+            vizObj.view.colour_assignment[found_sc_with_group.group] : 
+            "white";
     }
     // no group annotations -- default colour
     return vizObj.generalConfig.defaultNodeColour;
