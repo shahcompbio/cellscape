@@ -705,7 +705,8 @@ function _plotClassicalPhylogeny(vizObj, opacity) {
             return "tree node node_" + d.sc_id;
         })  
         .attr("cx", function(d) { return d.x})
-        .attr("cy", function(d) { return d.y})              
+        .attr("cy", function(d) { return d.y})   
+        .attr("stroke",vizObj.generalConfig.defaultLinkColour)           
         .attr("fill", function(d) {
             return _getNodeColour(vizObj, d.sc_id);
         })
