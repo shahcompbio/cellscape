@@ -606,9 +606,10 @@ HTMLWidgets.widget({
                 });
         }
 
-        // PLOT CLASSICAL PHYLOGENY
+        // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
 
-        _plotClassicalPhylogeny(vizObj);
+        _plotClassicalPhylogeny(vizObj, 1);
+        _plotForceDirectedGraph(vizObj, 0);
 
         // PLOT CNV LEGEND
 

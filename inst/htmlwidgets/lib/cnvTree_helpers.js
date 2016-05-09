@@ -81,7 +81,7 @@ function _mouseoutGroupAnnot(vizObj) {
 * @param {Object} vizObj
 */
 function _highlightNode(sc_id, vizObj) {
-    d3.select("#node_" + sc_id)
+    d3.selectAll(".node_" + sc_id)
         .style("fill", vizObj.generalConfig.highlightColour);
 }
 
@@ -115,9 +115,9 @@ function _highlightIndicator(sc_id, vizObj) {
 * @param {Object} vizObj
 */
 function _resetNode(sc_id, vizObj) {
-    d3.select("#node_" + sc_id)
+    d3.selectAll(".node_" + sc_id)
         .style("fill", function(d) {
-            return _getNodeColour(vizObj, d.name);
+            return _getNodeColour(vizObj, d.sc_id);
         });
 }
 
@@ -135,7 +135,7 @@ function _resetIndicator(sc_id) {
 function _resetNodes(vizObj) {
     d3.selectAll(".node")
         .style("fill", function(d) {
-            return _getNodeColour(vizObj, d.name);
+            return _getNodeColour(vizObj, d.sc_id);
         });
 }
 
@@ -227,7 +227,7 @@ function _pushScissorsButton(vizObj) {
 * @param {Object} d - link data object
 */
 function _getLinkId(d) {
-   return "link_" + d.source.name + "_" + d.target.name;
+   return "link_" + d.source.sc_id + "_" + d.target.sc_id;
 }
 
 /* function for mouseout of link
@@ -240,7 +240,7 @@ function _linkMouseout(vizObj, resetSelectedSCList) {
         // reset nodes
         d3.selectAll(".node")
             .style("fill", function(d) {
-                return _getNodeColour(vizObj, d.name);
+                return _getNodeColour(vizObj, d.sc_id);
             });
 
         // reset indicators
@@ -280,8 +280,14 @@ function _linkMouseover(vizObj, link_id) {
         _downstreamEffects(vizObj, link_id); 
 
         // highlight the potentially-cut link red
-        d3.select("#"+link_id)
-            .style("stroke", "red");
+        if (vizObj.generalConfig.switchView) { // tree view is on
+            d3.select(".tree."+link_id)
+                .style("stroke", "red");
+        }
+        else { // graph view is on
+            d3.select(".graph."+link_id)
+                .style("stroke", "red");
+        }
     }
 }
 
@@ -298,7 +304,7 @@ function _linkClick(vizObj, link_id) {
         // for each link
         vizObj.view.selectedLinks.forEach(function(link_id) {
             // remove link
-            d3.select("#" + link_id).remove();
+            d3.selectAll("." + link_id).remove();
 
             // remove link from list of links
             var index = userConfig.link_ids.indexOf(link_id);
@@ -306,7 +312,7 @@ function _linkClick(vizObj, link_id) {
         })
         // for each single cell
         vizObj.view.selectedSCs.forEach(function(sc_id) {
-            d3.select("#node_" + sc_id).remove(); // remove node in tree
+            d3.selectAll(".node_" + sc_id).remove(); // remove node in tree
             d3.select(".gridCellG.sc_" + sc_id).remove(); // remove copy number profile
             d3.select(".groupAnnot.sc_" + sc_id).remove(); // remove group annotation
             d3.select(".indic.sc_" + sc_id).remove(); // remove indicator
@@ -372,16 +378,28 @@ function _downstreamEffects(vizObj, link_id) {
     vizObj.view.selectedLinks.push(link_id);
 
     // highlight node
-    d3.select("#node_" + target_id)
-        .style("fill", vizObj.generalConfig.highlightColour);
+    if (vizObj.generalConfig.switchView) { // tree view is on
+        d3.select(".tree.node_" + target_id)
+            .style("fill", vizObj.generalConfig.highlightColour);
+    }
+    else { // graph view is on
+        d3.select(".graph.node_" + target_id)
+            .style("fill", vizObj.generalConfig.highlightColour);
+    }
 
     // highlight indicator for target
     d3.select(".indic.sc_" + target_id)
         .style("fill-opacity", 1);
 
     // highlight link
-    d3.select("#"+link_id)
-        .style("stroke", vizObj.generalConfig.linkHighlightColour);
+    if (vizObj.generalConfig.switchView) { // tree view is on
+        d3.select(".tree."+link_id)
+            .style("stroke", vizObj.generalConfig.linkHighlightColour);
+    }
+    else { // graph view is on
+        d3.select(".graph."+link_id)
+            .style("stroke", vizObj.generalConfig.linkHighlightColour);
+    }
 
     // get the targets of this target
     var sourceRX = new RegExp("link_source_" + target_id + "_target_(.+)");
@@ -498,8 +516,9 @@ function _elbow(d) {
 
 /* function to plot the force-directed graph
 * @param {Object} vizObj
+* @param {Number} opacity -- opacity of graph elements
 */
-function _plotForceDirectedGraph(vizObj) {
+function _plotForceDirectedGraph(vizObj, opacity) {
     var config = vizObj.generalConfig,
         userConfig = vizObj.userConfig;
 
@@ -516,16 +535,21 @@ function _plotForceDirectedGraph(vizObj) {
     // plot links
     var link = vizObj.view.treeSVG
         .append("g")
-        .classed("treeLinks", true)
+        .classed("graphLinks", true)
         .selectAll(".link")
         .data(userConfig.tree_edges)
         .enter().append("line")
         .classed("link", true)
-        .attr("id", function(d) { 
-            return d.link_id; 
-        })
+        .attr("class", function(d) {
+            return "link graph " + d.link_id;
+        }) 
         .attr("stroke",vizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
+        .attr("fill-opacity", opacity)
+        .attr("stroke-opacity", opacity)
+        .attr("pointer-events", function() {
+            return (opacity == 1) ? "auto" : "none";
+        })
         .on("mouseover", function(d) {
             _linkMouseover(vizObj, d.link_id);
         })
@@ -538,8 +562,8 @@ function _plotForceDirectedGraph(vizObj) {
 
     // plot nodes
     var nodeG = vizObj.view.treeSVG.append("g")
-        .classed("treeNodes", true)
-        .selectAll(".node")
+        .classed("graphNodes", true)
+        .selectAll(".nodesG")
         .data(userConfig.tree_nodes)
         .enter()
         .append("g")
@@ -547,9 +571,8 @@ function _plotForceDirectedGraph(vizObj) {
 
     // node circles
     var nodeCircle = nodeG.append("circle")
-        .classed("node", true)
-        .attr("id", function(d) {
-            return "node_" + d.name;
+        .attr("class", function(d) {
+            return "graph node node_" + d.sc_id;
         })
         .attr("r", function() {
             // if user wants to display node ids 
@@ -559,15 +582,20 @@ function _plotForceDirectedGraph(vizObj) {
             // don't display labels
             return config.tree_r
         })
-        .style("fill", function(d) {
-             return _getNodeColour(vizObj, d.name);
+        .attr("fill", function(d) {
+             return _getNodeColour(vizObj, d.sc_id);
         })
-        .style("stroke", "#838181")
+        .attr("stroke", "#838181")
+        .attr("fill-opacity", opacity)
+        .attr("stroke-opacity", opacity)
+        .attr("pointer-events", function() {
+            return (opacity == 1) ? "auto" : "none";
+        })
         .on('mouseover', function(d) {
-            _nodeMouseover(vizObj, d.name);
+            _nodeMouseover(vizObj, d.sc_id);
         })
         .on('mouseout', function(d) {
-            _nodeMouseout(vizObj, d.name);
+            _nodeMouseout(vizObj, d.sc_id);
         })
         .call(force_layout.drag);
 
@@ -575,9 +603,9 @@ function _plotForceDirectedGraph(vizObj) {
     if (userConfig.display_node_ids) {
 
         var nodeLabel = nodeG.append("text")
-            .text(function(d) { return parseInt(d.name, 10); })
+            .text(function(d) { return parseInt(d.sc_id, 10); })
             .attr("font-size", 
-                _getLabelFontSize(_.pluck(userConfig.tree_nodes, "name"), config.tree_w_labels_r * 2))
+                _getLabelFontSize(_.pluck(userConfig.tree_nodes, "sc_id"), config.tree_w_labels_r * 2))
             .attr("text-anchor", "middle")
             .attr("dy", "+0.35em");
     }
@@ -612,8 +640,9 @@ function _plotForceDirectedGraph(vizObj) {
 
 /* function to plot classical phylogenetic tree
 * @param {Object} vizObj
+* @param {Number} opacity -- opacity of tree elements
 */
-function _plotClassicalPhylogeny(vizObj) {
+function _plotClassicalPhylogeny(vizObj, opacity) {
     var config = vizObj.generalConfig,
         r = vizObj.generalConfig.tree_r;
 
@@ -636,18 +665,22 @@ function _plotClassicalPhylogeny(vizObj) {
     // create links
     var link = vizObj.view.treeSVG.append("g")
         .classed("treeLinks", true)
-        .selectAll(".treeLink")                  
+        .selectAll(".tree.link")                  
         .data(links)                   
         .enter().append("path")  
-        .classed("link", true)                 
-        .attr("id", function(d) { 
+        .attr("class", function(d) {
             d.link_id = "link_source_" + d.source.sc_id + "_target_" + d.target.sc_id;
-            return d.link_id; 
-        })               
+            return "link tree " + d.link_id;
+        })                
         .attr("d", _elbow)
         .attr("stroke",vizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
         .attr("fill", "none")
+        .attr("fill-opacity", opacity)
+        .attr("stroke-opacity", opacity)
+        .attr("pointer-events", function() {
+            return (opacity == 1) ? "auto" : "none";
+        })
         .on("mouseover", function(d) {
             _linkMouseover(vizObj, d.link_id);
         })
@@ -662,25 +695,29 @@ function _plotClassicalPhylogeny(vizObj) {
     var node = vizObj.view.treeSVG
         .append("g")
         .classed("treeNodes", true)
-        .selectAll(".treeNode")                  
+        .selectAll(".tree.node")                  
         .data(nodes)                   
         .enter()
         .append("circle")   
-        .classed("node", true)
-        .attr("id", function(d) {
-            return "node_" + d.sc_id;
+        .attr("class", function(d) {
+            return "tree node node_" + d.sc_id;
         })  
         .attr("cx", function(d) { return d.x})
         .attr("cy", function(d) { return d.y})              
         .attr("fill", function(d) {
-            return _getNodeColour(vizObj, d.name);
+            return _getNodeColour(vizObj, d.sc_id);
         })
         .attr("r", r)
+        .attr("fill-opacity", opacity)
+        .attr("stroke-opacity", opacity)
+        .attr("pointer-events", function() {
+            return (opacity == 1) ? "auto" : "none";
+        })
         .on('mouseover', function(d) {
-            _nodeMouseover(vizObj, d.name);
+            _nodeMouseover(vizObj, d.sc_id);
         })
         .on('mouseout', function(d) {
-            _nodeMouseout(vizObj, d.name);
+            _nodeMouseout(vizObj, d.sc_id);
         });
 }
 
@@ -689,19 +726,31 @@ function _plotClassicalPhylogeny(vizObj) {
 function _switchView(vizObj) {
     var config = vizObj.generalConfig;
 
-    // remove current nodes and links
-    d3.selectAll(".treeNodes").remove();
-    d3.selectAll(".treeLinks").remove();
-
     // if tree is on, switch to graph view
     if (config.switchView) {
-        _plotForceDirectedGraph(vizObj);
+        d3.selectAll(".tree.node").attr("fill-opacity", 0).attr("stroke-opacity", 0)
+            .attr("pointer-events", "none");
+        d3.selectAll(".tree.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
+            .attr("pointer-events", "none");
+        d3.selectAll(".graph.node").attr("fill-opacity", 1).attr("stroke-opacity", 1)
+            .attr("pointer-events", "auto");
+        d3.selectAll(".graph.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
+            .attr("pointer-events", "auto");
+
         d3.select(".forceDirectedIcon").attr("opacity", 0);
         d3.select(".phylogenyIcon").attr("opacity", 1);
     }
     // if graph is on, switch to tree view
     else {
-        _plotClassicalPhylogeny(vizObj);
+        d3.selectAll(".tree.node").attr("fill-opacity", 1).attr("stroke-opacity", 1)
+            .attr("pointer-events", "auto");
+        d3.selectAll(".tree.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
+            .attr("pointer-events", "auto");
+        d3.selectAll(".graph.node").attr("fill-opacity", 0).attr("stroke-opacity", 0)
+            .attr("pointer-events", "none");
+        d3.selectAll(".graph.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
+            .attr("pointer-events", "none");
+
         d3.select(".forceDirectedIcon").attr("opacity", 1);
         d3.select(".phylogenyIcon").attr("opacity", 0);
     }

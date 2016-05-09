@@ -92,8 +92,8 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
   # list of tree nodes for d3 phylogenetic layout function
   unique_nodes <- unique(c(tree_edges$source, tree_edges$target))
   tree_nodes_for_layout<- data.frame(matrix("", ncol = 2, nrow = length(unique_nodes)), stringsAsFactors=FALSE) 
-  colnames(tree_nodes_for_layout) <- c("name", "index")
-  tree_nodes_for_layout$name <- unique_nodes
+  colnames(tree_nodes_for_layout) <- c("sc_id", "index")
+  tree_nodes_for_layout$sc_id <- unique_nodes
   tree_nodes_for_layout$index <- rep(NULL, nrow(tree_nodes_for_layout))
   for (i in 1:nrow(tree_nodes_for_layout)) {
     tree_nodes_for_layout$index[i] <- i-1
@@ -104,9 +104,9 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
   tree_edges_for_layout<- data.frame(matrix("", ncol = 5, nrow = nrow(tree_edges)), stringsAsFactors=FALSE) 
   colnames(tree_edges_for_layout) <- c("source", "source_sc_id", "target", "target_sc_id", "link_id")
   for (i in 1:nrow(tree_edges)) {
-    tree_edges_for_layout$source[i] <- which(tree_nodes_for_layout$name == tree_edges$source[i]) - 1
+    tree_edges_for_layout$source[i] <- which(tree_nodes_for_layout$sc_id == tree_edges$source[i]) - 1
     tree_edges_for_layout$source_sc_id[i] <- tree_edges$source[i]
-    tree_edges_for_layout$target[i] <- which(tree_nodes_for_layout$name == tree_edges$target[i]) - 1
+    tree_edges_for_layout$target[i] <- which(tree_nodes_for_layout$sc_id == tree_edges$target[i]) - 1
     tree_edges_for_layout$target_sc_id[i] <- tree_edges$target[i]
     tree_edges_for_layout$link_id[i] <- paste("link_source_", tree_edges$source[i], 
       "_target_", tree_edges$target[i], sep="")
@@ -138,7 +138,7 @@ cnvTree <- function(cnv_data, tree_edges, sc_id_order = NULL, sc_groups = NULL, 
   # otherwise, set the root
   else {
     root <- sources
-    root_index <- which(tree_nodes_for_layout$name == root)
+    root_index <- which(tree_nodes_for_layout$sc_id == root)
   }
 
 
