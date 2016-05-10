@@ -68,10 +68,10 @@ HTMLWidgets.widget({
         curVizObj.generalConfig = $.extend(true, {}, defaults);
         var config = curVizObj.generalConfig;
 
-        // cnv configurations
-        config.cnvHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
+        // heatmap configurations
+        config.hmHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
         config.cnvTop = 0;
-        config.cnvBottom = (config.cnvHeight-config.chromLegendHeight);
+        config.cnvBottom = (config.hmHeight-config.chromLegendHeight);
 
         // indicator configurations
         config.indicatorHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
@@ -143,12 +143,16 @@ HTMLWidgets.widget({
         curVizObj.view.hm.nrows = curVizObj.userConfig.hm_sc_ids_ordered.length;
 
         // height of each cnv row
-        curVizObj.view.hm.rowHeight = (1/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
+        curVizObj.view.hm.rowHeight = (1/curVizObj.view.hm.nrows)*(config.hmHeight-config.chromLegendHeight);
 
         // get group annotation info as object w/property "group" : [array of single cells]
         if (curVizObj.view.groupsSpecified) {
             _reformatGroupAnnots(curVizObj);
         }
+
+        // GET Y-COORDINATE FOR EACH SINGLE CELL
+
+        _getYCoordinates(curVizObj);
 
         console.log("curVizObj");
         console.log(curVizObj);
@@ -175,7 +179,7 @@ HTMLWidgets.widget({
         // BRUSH SELECTION FUNCTION
 
         var brush = d3.svg.brush()
-            .y(d3.scale.linear().domain([0, config.cnvHeight]).range([0, config.cnvHeight]))
+            .y(d3.scale.linear().domain([0, config.hmHeight]).range([0, config.hmHeight]))
             .on("brushstart", function() { d3.select(".cnvSVG").classed("brushed", true); })
             .on("brushend", function() {
                 return _brushEnd(curVizObj, brush);
@@ -184,7 +188,7 @@ HTMLWidgets.widget({
         // CANVAS for PNG output
         
         var canvas = d3.select(el).append("canvas")
-            .attr("height", config.cnvHeight + "px")
+            .attr("height", config.hmHeight + "px")
             .attr("width", config.width + "px")
             .attr("style", "display:none");
 
@@ -212,7 +216,7 @@ HTMLWidgets.widget({
             .append("div")
             .attr("class", "containerDIV")
             .style("width", config.width + "px")
-            .style("height", config.cnvHeight + "px")
+            .style("height", config.hmHeight + "px")
             .style("float", "left")
             .attr("id", view_id);
 
@@ -222,7 +226,7 @@ HTMLWidgets.widget({
             .attr("x", 0)
             .attr("y", 0)
             .attr("width", config.width)
-            .attr("height", config.cnvHeight);
+            .attr("height", config.hmHeight);
 
         // TREE SVG
 
@@ -619,8 +623,7 @@ HTMLWidgets.widget({
                         return d.x; 
                     })
                     .attr("y", function(d) { 
-                        d.sc_index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(d.sc_id);
-                        d.y = (d.sc_index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
+                        d.y = curVizObj.data.yCoordinates[d.sc_id];
                         return d.y; 
                     })
                     .attr("height", curVizObj.view.hm.rowHeight)
@@ -682,7 +685,7 @@ HTMLWidgets.widget({
         chromBoxes.append("rect")
             .attr("class", function(d) { return "chromBox chr" + d.chr; })
             .attr("x", function(d) { return d.x; })
-            .attr("y", config.cnvHeight-config.chromLegendHeight)
+            .attr("y", config.hmHeight-config.chromLegendHeight)
             .attr("height", config.chromLegendHeight)
             .attr("width", function(d) { return d.width; })
             .style("fill", function(d) { 
@@ -696,7 +699,7 @@ HTMLWidgets.widget({
         chromBoxes.append("text")
             .attr("class", function(d) { return "chromBoxText chr" + d.chr; })
             .attr("x", function(d) { return d.x + (d.width / 2); })
-            .attr("y", config.cnvHeight - (config.chromLegendHeight / 2))
+            .attr("y", config.hmHeight - (config.chromLegendHeight / 2))
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .attr("font-family", "Arial")
@@ -717,8 +720,7 @@ HTMLWidgets.widget({
             })
             .attr("x", 0)
             .attr("y", function(d) { 
-                var index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(d);
-                return (index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight); 
+                return curVizObj.data.yCoordinates[d]; 
             })
             .attr("height", curVizObj.view.hm.rowHeight)
             .attr("width", config.indicatorWidth)
@@ -741,8 +743,7 @@ HTMLWidgets.widget({
                 })
                 .attr("x", 0)
                 .attr("y", function(d) { 
-                    var index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(d.single_cell_id);
-                    d.y = (index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight)
+                    d.y = curVizObj.data.yCoordinates[d.single_cell_id];
                     return d.y; 
                 })
                 .attr("height", curVizObj.view.hm.rowHeight)

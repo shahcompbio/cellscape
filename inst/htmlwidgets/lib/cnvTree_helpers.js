@@ -224,6 +224,24 @@ function _pushScissorsButton(curVizObj) {
 
 // TREE FUNCTIONS
 
+/* function to get the y-coordinate for each single cell
+* @param {Object} curVizObj
+*/
+function _getYCoordinates(curVizObj) {
+    var config = curVizObj.generalConfig;
+    
+    curVizObj.data.yCoordinates = {}; // y-coordinates for each single cell (each single cell id is a property)
+
+    curVizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id, sc_id_i) {
+        // height of heatmap 
+        var hmHeight = (curVizObj.userConfig.heatmap_type == "cnv") ? 
+            (config.hmHeight-config.chromLegendHeight) : config.hmHeight;
+
+        // starting y-coordinate for this id
+        curVizObj.data.yCoordinates[sc_id] = (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
+    })
+}
+
 /* function to get the link id for a link data object
 * @param {Object} d - link data object
 */
@@ -820,11 +838,11 @@ function _updateTrimmedMatrix(curVizObj) {
     curVizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id) {
         // original y-coordinate for this single cell
         var original_sc_index = curVizObj.view.original_sc_list.indexOf(sc_id);
-        var original_y = (original_sc_index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
+        var original_y = (original_sc_index/curVizObj.view.hm.nrows)*(config.hmHeight-config.chromLegendHeight);
 
         // new y-coordinate
         var new_sc_index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(sc_id);
-        var new_y = (new_sc_index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
+        var new_y = (new_sc_index/curVizObj.view.hm.nrows)*(config.hmHeight-config.chromLegendHeight);
 
         // y-difference
         var diff_y = original_y - new_y;
