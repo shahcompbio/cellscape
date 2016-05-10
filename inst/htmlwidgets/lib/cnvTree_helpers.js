@@ -649,7 +649,7 @@ function _plotClassicalPhylogeny(curVizObj, opacity) {
 
     // layout function
     var phylo_layout = d3.layout.tree()           
-        .size([config.treeHeight - (r*2), config.treeWidth - (r*2)]);  
+        .size([config.treeHeight - (r*4), config.treeWidth - (r*4)]);  
 
     // get tree structure
     var nodes = phylo_layout.nodes(curVizObj.data.treeStructure);
