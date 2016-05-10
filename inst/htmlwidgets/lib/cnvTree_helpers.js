@@ -604,10 +604,13 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
     if (userConfig.display_node_ids) {
 
         var nodeLabel = nodeG.append("text")
+            .attr("class", "nodeLabel graph")
             .text(function(d) { return parseInt(d.sc_id, 10); })
             .attr("font-size", 
                 _getLabelFontSize(_.pluck(userConfig.tree_nodes, "sc_id"), config.tree_w_labels_r * 2))
             .attr("text-anchor", "middle")
+            .attr("pointer-events", "none")
+            .attr("fill-opacity", opacity)
             .attr("dy", "+0.35em");
     }
 
@@ -644,8 +647,8 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
 * @param {Number} opacity -- opacity of tree elements
 */
 function _plotClassicalPhylogeny(curVizObj, opacity) {
-    var config = curVizObj.generalConfig,
-        r = curVizObj.generalConfig.tree_r;
+    var config = curVizObj.generalConfig;
+    var r = (curVizObj.userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
 
     // layout function
     var phylo_layout = d3.layout.tree()           
@@ -693,13 +696,14 @@ function _plotClassicalPhylogeny(curVizObj, opacity) {
         });
 
     // create nodes
-    var node = curVizObj.view.treeSVG
-        .append("g")
-        .classed("treeNodes", true)
-        .selectAll(".tree.node")                  
-        .data(nodes)                   
+    var nodeG = curVizObj.view.treeSVG
+        .selectAll(".treeNodesG")
+        .data(nodes)
         .enter()
-        .append("circle")   
+        .append("g")
+        .attr("class", "treeNodesG");;
+
+    nodeG.append("circle")   
         .attr("class", function(d) {
             return "tree node node_" + d.sc_id;
         })  
@@ -721,6 +725,22 @@ function _plotClassicalPhylogeny(curVizObj, opacity) {
         .on('mouseout', function(d) {
             _nodeMouseout(curVizObj, d.sc_id);
         });
+
+    // node single cell labels (if user wants to display them)
+    if (curVizObj.userConfig.display_node_ids) {
+
+        var nodeLabel = nodeG.append("text")
+            .attr("class", "nodeLabel tree")
+            .text(function(d) { return parseInt(d.sc_id, 10); })
+            .attr("x", function(d) { return d.x})
+            .attr("y", function(d) { return d.y})
+            .attr("font-size", 
+                _getLabelFontSize(_.pluck(curVizObj.userConfig.tree_nodes, "sc_id"), config.tree_w_labels_r * 2))
+            .attr("text-anchor", "middle")
+            .attr("pointer-events", "none")
+            .attr("fill-opacity", opacity)
+            .attr("dy", "+0.35em");
+    }
 }
 
 /* function to switch between tree and graph views
@@ -734,10 +754,12 @@ function _switchView(curVizObj) {
             .attr("pointer-events", "none");
         d3.select("#" + curVizObj.view_id).selectAll(".tree.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
             .attr("pointer-events", "none");
+        d3.select("#" + curVizObj.view_id).selectAll(".tree.nodeLabel").attr("fill-opacity", 0);
         d3.select("#" + curVizObj.view_id).selectAll(".graph.node").attr("fill-opacity", 1).attr("stroke-opacity", 1)
             .attr("pointer-events", "auto");
         d3.select("#" + curVizObj.view_id).selectAll(".graph.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
             .attr("pointer-events", "auto");
+        d3.select("#" + curVizObj.view_id).selectAll(".graph.nodeLabel").attr("fill-opacity", 1);
 
         d3.select("#" + curVizObj.view_id).select(".forceDirectedIcon").attr("opacity", 0);
         d3.select("#" + curVizObj.view_id).select(".phylogenyIcon").attr("opacity", 1);
@@ -748,10 +770,12 @@ function _switchView(curVizObj) {
             .attr("pointer-events", "auto");
         d3.select("#" + curVizObj.view_id).selectAll(".tree.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
             .attr("pointer-events", "auto");
+        d3.select("#" + curVizObj.view_id).selectAll(".tree.nodeLabel").attr("fill-opacity", 1);
         d3.select("#" + curVizObj.view_id).selectAll(".graph.node").attr("fill-opacity", 0).attr("stroke-opacity", 0)
             .attr("pointer-events", "none");
         d3.select("#" + curVizObj.view_id).selectAll(".graph.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
             .attr("pointer-events", "none");
+        d3.select("#" + curVizObj.view_id).selectAll(".graph.nodeLabel").attr("fill-opacity", 0);
 
         d3.select("#" + curVizObj.view_id).select(".forceDirectedIcon").attr("opacity", 1);
         d3.select("#" + curVizObj.view_id).select(".phylogenyIcon").attr("opacity", 0);
