@@ -314,6 +314,7 @@ function _linkClick(curVizObj, link_id) {
         // for each single cell
         curVizObj.view.selectedSCs.forEach(function(sc_id) {
             d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id).remove(); // remove node in tree
+            d3.select("#" + curVizObj.view_id).selectAll(".nodeLabel_" + sc_id).remove(); // remove node labels
             d3.select("#" + curVizObj.view_id).select(".gridCellG.sc_" + sc_id).remove(); // remove copy number profile
             d3.select("#" + curVizObj.view_id).select(".groupAnnot.sc_" + sc_id).remove(); // remove group annotation
             d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id).remove(); // remove indicator
@@ -604,7 +605,9 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
     if (userConfig.display_node_ids) {
 
         var nodeLabel = nodeG.append("text")
-            .attr("class", "nodeLabel graph")
+            .attr("class", function(d) {
+                return "nodeLabel graph nodeLabel_" + d.sc_id;
+            })
             .text(function(d) { return parseInt(d.sc_id, 10); })
             .attr("font-size", 
                 _getLabelFontSize(_.pluck(userConfig.tree_nodes, "sc_id"), config.tree_w_labels_r * 2))
@@ -730,7 +733,9 @@ function _plotClassicalPhylogeny(curVizObj, opacity) {
     if (curVizObj.userConfig.display_node_ids) {
 
         var nodeLabel = nodeG.append("text")
-            .attr("class", "nodeLabel tree")
+            .attr("class", function(d) {
+                return "nodeLabel tree nodeLabel_" + d.sc_id;
+            })
             .text(function(d) { return parseInt(d.sc_id, 10); })
             .attr("x", function(d) { return d.x})
             .attr("y", function(d) { return d.y})
