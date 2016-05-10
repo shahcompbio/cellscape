@@ -4,36 +4,26 @@
 \alias{cnvTree}
 \title{cnvTree}
 \usage{
-cnvTree(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = NULL,
-  sc_groups = NULL, display_node_ids = FALSE, width = 1200,
-  height = 1000)
+cnvTree(cnv_data, tree_edges, sc_id_order = "NA", sc_groups = NULL,
+  width = 1200, height = 1000)
 }
 \arguments{
-\item{cnv_data}{{Data frame} (Required if mut_data not provided) Single cell copy number segments data.
+\item{cnv_data}{{Data frame} Single cell copy number data frame.
 Format: columns are (1) {String} "single_cell_id" - single cell id
                     (2) {String} "chr" - chromosome number
                     (3) {Number} "start" - start position
                     (4) {Number} "end" - end position
                     (5) {Number} "integer_copy_number" - copy number state.}
 
-\item{mut_data}{{Data frame} (Required if cnv_data not provided) Single cell targeted mutation data frame.
-Format: columns are (1) {String} "single_cell_id" - single cell id
-                    (2) {String} "chr" - chromosome number
-                    (3) {Number} "coord" - genomic coordinate
-                    (5) {Number} "VAF" - variant allele frequency.}
-
 \item{tree_edges}{{Data frame} Edges for the single cell phylogenetic tree.
 Format: columns are (1) {String} "source" - edge source (single cell id)
                     (2) {String} "target" - edge target (single cell id)}
 
-\item{sc_id_order}{{Array} (Optional) Order of single cell ids for the heatmap. 
-By default, single cells will be ordered by the phylogeny.}
+\item{sc_id_order}{{Array} (Optional) Order of single cell ids.}
 
 \item{sc_groups}{{Data frame} (Optional) Group assignment (annotation) for each single cell.
 Format: columns are (1) {String} "single_cell_id" - single cell id
                     (2) {String} "group" - group assignment}
-
-\item{display_node_ids}{{Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.}
 
 \item{width}{{Number} (Optional) Width of the plot.}
 
@@ -41,5 +31,10 @@ Format: columns are (1) {String} "single_cell_id" - single cell id
 }
 \description{
 Explores single cell copy number profiles in the context of a single cell tree.
+To use: Hover over nodes to inspect them. Click on nodes to select them.
+Hover over branches to inspect the downstream nodes. Click on branches to select the downstream nodes.
+To inspect a copy number profile, hover just to the left of the profile. Click this same region to select 
+single cell(s). 
+To exit any selection, double click near the single cell tree.
 }
 
