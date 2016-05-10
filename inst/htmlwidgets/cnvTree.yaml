@@ -33,3 +33,7 @@ dependencies:
    version: 0.0.0
    src: "htmlwidgets/lib"
    script: bundle.js
+ - name: my_svg_crowbar
+   version: 0.0.0
+   src: "htmlwidgets/lib"
+   script: my_svg_crowbar.js
