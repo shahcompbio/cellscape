@@ -8,29 +8,47 @@ HTMLWidgets.widget({
 
         // defaults
         var defaults = {
-            widgetMargin: 10, // marging between widgets
+            // tree
             tree_r: 4, // tree node radius
             tree_w_labels_r: 7, // tree node radius when labels displayed within
+
+            // indicator
             indicatorWidth: 7, // width of the selected single cell indicator
+
+            // group annotations
             groupAnnotWidth: 10, // width of the selected single cell group annotation
+
+            // colours
             defaultNodeColour: "#3458A5",
             highlightColour: "#000000",
             linkHighlightColour: "#000000",
             defaultLinkColour: "#B7B7B7",
-            chromLegendHeight: 15,
-            cnvLegendWidth: 50,
-            groupAnnotStart: 140, // starting y-pixel for group annotation legend
-            hmColorLegendStart: 1, // starting y-pixel for heatmap legend
-            titleHeight: 14, // height of legend titles
+
+            // chromosome legend
+            chromLegendHeight: 15, // height of chromosome legend
+
+            // heatmap and group legends
+            heatmapLegendWidth: 50,
+            groupAnnotStartY: 140, // starting y-pixel for group annotation legend
+            heatmapLegendStartY: 1, // starting y-pixel for heatmap legend
+            legendTitleHeight: 14, // height of legend titles
             rectHeight: 12, // rectangle in legend
-            spacing: 2, // spacing between legend rectangles
+            rectSpacing: 2, // spacing between legend rectangles
             legendLeftPadding: 5, // space between legend and heatmap
-            fontHeight: 12,
+            legendFontHeight: 12,
+
+            // top bar
             topBarHeight: 30, // height of top panel
             topBarColour: "#D9D9D9",
             topBarHighlight: "#C6C6C6",
             spaceBelowTopBar: 15, // amount of space (px) below the top bar
-            switchView: true // switch between graph/tree
+
+            // switch between graph/tree
+            switchView: true,
+
+            // general 
+            width: width-15,
+            height: height-15
         };
 
         // global variable vizObj
@@ -42,10 +60,9 @@ HTMLWidgets.widget({
         vizObj.view.selectedSCs = [];
         vizObj.view.selectedLinks = [];
 
-        // general configurations
-        var config = $.extend(true, {}, defaults);
-        config.width = width - 15; // - 15 because vertical scrollbar takes 15 px
-        config.height = height - 15; // - 15 because vertical scrollbar takes 15 px
+        // more configurations
+        vizObj.generalConfig = $.extend(true, {}, defaults);
+        var config = vizObj.generalConfig;
 
         // cnv configurations
         config.cnvHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
@@ -58,10 +75,11 @@ HTMLWidgets.widget({
         // group annotation configurations
         config.groupAnnotHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
 
-        // cnv legend configurations
-        config.cnvLegendHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
+        // heatmap legend configurations
+        config.heatmapLegendHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
 
-        vizObj.generalConfig = config;
+        // tree configurations
+        config.treeHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
 
         return {}
 
@@ -80,8 +98,7 @@ HTMLWidgets.widget({
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
         // tree configurations
-        config.treeWidth = config.width - config.indicatorWidth - config.cnvLegendWidth - vizObj.userConfig.heatmapWidth;
-        config.treeHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
+        config.treeWidth = config.width - config.indicatorWidth - config.heatmapLegendWidth - vizObj.userConfig.heatmapWidth;
 
         // if group annotation specified, reduce the width of the tree
         if (vizObj.view.groupsSpecified) {
@@ -92,11 +109,11 @@ HTMLWidgets.widget({
 
         // if the user hasn't specified a custom single cell id order for the cnv heatmap, order by tree
         if (!vizObj.userConfig.hm_sc_ids_ordered) {
-            // get order of nodes from tree
             var nodeOrder = _getNodeOrder(vizObj.userConfig.link_ids, vizObj.userConfig.root, []);
-            vizObj.userConfig.hm_sc_ids_ordered = nodeOrder
+            vizObj.userConfig.hm_sc_ids_ordered = nodeOrder;
         }
-        // remove single cell ids that are in the tree but not the heatmap
+
+        // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
         for (var i = 0; i < vizObj.userConfig.scs_missing_from_hm.length; i++) {
             var cur_sc_missing = vizObj.userConfig.scs_missing_from_hm[i];
             var index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(cur_sc_missing);
@@ -112,13 +129,13 @@ HTMLWidgets.widget({
         // GET CNV CONTENT
 
         // cnv plot number of rows
-        vizObj.view.cnv = {};
-        vizObj.view.cnv.nrows = vizObj.userConfig.hm_sc_ids_ordered.length;
+        vizObj.view.hm = {};
+        vizObj.view.hm.nrows = vizObj.userConfig.hm_sc_ids_ordered.length;
 
         // height of each cnv row
-        vizObj.view.cnv.rowHeight = (1/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
+        vizObj.view.hm.rowHeight = (1/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
-        // get group annotation info as object w/properties group : [array of single cells]
+        // get group annotation info as object w/property "group" : [array of single cells]
         if (vizObj.view.groupsSpecified) {
             _reformatGroupAnnots(vizObj);
         }
@@ -128,11 +145,13 @@ HTMLWidgets.widget({
 
         // COLOURS
 
-        // colour scales
+        // CNV colour scale
         var maxCNV = 6;
         var cnvColorScale = d3.scale.ordinal() 
             .domain([0,1,2,3,4,5,6])
             .range(["#2e7aab", "#73a9d4", "#D6D5D5", "#fec28b", "#fd8b3a", "#ca632c", "#954c25"]);
+
+        // targeted mutation colour scale
         var targeted_colours = ["#417EAA", "#F9F7BC", "#C63C4C"];
         var targetedColorScale = d3.scale.linear()  
             .domain([0, 0.5, 1])             
@@ -186,7 +205,7 @@ HTMLWidgets.widget({
             .attr("class", "treeSVG")
             .attr("width", config.treeWidth + "px")
             .attr("height", config.treeHeight + "px")
-            .on('dblclick', function() {
+            .on('dblclick', function() { // TODO move this function to reset button ??
 
                 // turn off node & link selection
                 d3.selectAll(".nodeSelected")
@@ -231,8 +250,8 @@ HTMLWidgets.widget({
         var cnvLegendSVG = containerDIV
             .append("svg:svg")
             .attr("class", "cnvLegendSVG")
-            .attr("width", config.cnvLegendWidth + "px")
-            .attr("height", config.cnvLegendHeight + "px")
+            .attr("width", config.heatmapLegendWidth + "px")
+            .attr("height", config.heatmapLegendHeight + "px")
 
         // PLOT TOP PANEL
 
@@ -465,7 +484,7 @@ HTMLWidgets.widget({
             var cur_sc = vizObj.userConfig.hm_sc_ids_ordered[i];
             var cur_data = vizObj.userConfig.heatmap_info[[cur_sc]]; 
 
-            // if this single cell has heatmap data
+            // if this single cell has heatmap data, plot the data
             if (cur_data) {
                
                 gridCellsG
@@ -486,25 +505,29 @@ HTMLWidgets.widget({
                     })
                     .attr("y", function(d) { 
                         d.sc_index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(d.sc_id);
-                        d.y = (d.sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
+                        d.y = (d.sc_index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
                         return d.y; 
                     })
-                    .attr("height", vizObj.view.cnv.rowHeight)
+                    .attr("height", vizObj.view.hm.rowHeight)
                     .attr("width", function(d) { 
                         return d.px_width; 
                     })
                     .attr("fill", function(d) { 
+                        // color scale
                         var cur_colorscale = (vizObj.userConfig.heatmap_type == "cnv") ?
                             cnvColorScale : targetedColorScale;
+
                         // no data
                         if (typeof(d.gridCell_value) == "undefined") {
                             return "white";
                         }
+
                         // cnv data, but above max cnv value
                         else if (vizObj.userConfig.heatmap_type == "cnv" && 
                                 d.gridCell_value > maxCNV) {
                             return cur_colorscale(maxCNV);
                         }
+
                         // regular data
                         return cur_colorscale(d.gridCell_value);
                     })
@@ -580,9 +603,9 @@ HTMLWidgets.widget({
             .attr("x", 0)
             .attr("y", function(d) { 
                 var index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(d);
-                return (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight); 
+                return (index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight); 
             })
-            .attr("height", vizObj.view.cnv.rowHeight)
+            .attr("height", vizObj.view.hm.rowHeight)
             .attr("width", config.indicatorWidth)
             .attr("fill", config.highlightColour)
             .attr("fill-opacity", 0)
@@ -604,10 +627,10 @@ HTMLWidgets.widget({
                 .attr("x", 0)
                 .attr("y", function(d) { 
                     var index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(d.single_cell_id);
-                    d.y = (index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight)
+                    d.y = (index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight)
                     return d.y; 
                 })
-                .attr("height", vizObj.view.cnv.rowHeight)
+                .attr("height", vizObj.view.hm.rowHeight)
                 .attr("width", config.groupAnnotWidth-3)
                 .attr("fill", function(d) {
                     return vizObj.view.colour_assignment[d.group];
@@ -631,23 +654,23 @@ HTMLWidgets.widget({
         // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
 
         _plotClassicalPhylogeny(vizObj, 1);
-        _plotForceDirectedGraph(vizObj, 0);
+        _plotForceDirectedGraph(vizObj, 0); // originally force-directed graph has opacity of 0
 
         // PLOT HEATMAP LEGEND
 
         // heatmap legend title
         cnvLegendSVG.append("text")
             .attr("x", config.legendLeftPadding)
-            .attr("y", config.hmColorLegendStart) 
+            .attr("y", config.heatmapLegendStartY) 
             .attr("dy", "+0.71em")
             .attr("font-family", "sans-serif")
-            .attr("font-size", config.titleHeight)
+            .attr("font-size", config.legendTitleHeight)
             .text(function() {
                 return (vizObj.userConfig.heatmap_type == "cnv") ? "CNV" : "VAF";
             });
 
         // starting y-coordinate for the heatmap rectangle(s) in legend
-        var legendRectStart = config.hmColorLegendStart + config.titleHeight + config.spacing*2;
+        var legendRectStart = config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2;
 
         // heatmap legend rectangle / text group
         var heatmapLegendG = cnvLegendSVG
@@ -665,7 +688,7 @@ HTMLWidgets.widget({
                 .append("rect")
                 .attr("x", config.legendLeftPadding)
                 .attr("y", function(d,i) {
-                    return legendRectStart + i*(config.rectHeight + config.spacing);
+                    return legendRectStart + i*(config.rectHeight + config.rectSpacing);
                 })
                 .attr("height", config.rectHeight)
                 .attr("width", config.rectHeight)
@@ -676,10 +699,10 @@ HTMLWidgets.widget({
             // CNV legend text
             heatmapLegendG
                 .append("text")
-                .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
+                .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
                 .attr("y", function(d,i) {
-                    return config.hmColorLegendStart + config.titleHeight + config.spacing*2 + 
-                        i*(config.rectHeight + config.spacing) + (config.fontHeight/2);
+                    return config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2 + 
+                        i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
                 })
                 .attr("dy", "+0.35em")
                 .text(function(d) { 
@@ -689,14 +712,14 @@ HTMLWidgets.widget({
                     return d; 
                 })
                 .attr("font-family", "sans-serif")
-                .attr("font-size", config.fontHeight)
+                .attr("font-size", config.legendFontHeight)
                 .style("fill", "black");
 
         }
         // TARGETED HEATMAP LEGEND
         else {
-            // height for targeted heatmap legend rectangle
-            var legendRectHeight = cnvColorScale.domain().length*(config.rectHeight + config.spacing);
+            // height for targeted heatmap legend rectangle (make it the same as the CNV legend height)
+            var legendRectHeight = cnvColorScale.domain().length*(config.rectHeight + config.rectSpacing);
 
             // linear gradient for fill of targeted mutation legend
             heatmapLegendG.append("linearGradient")
@@ -726,20 +749,20 @@ HTMLWidgets.widget({
             // VAF legend text
             heatmapLegendG
                 .append("text")
-                .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
+                .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
                 .attr("y", legendRectStart)
                 .attr("dy", "+0.71em")
                 .text("1")
                 .attr("font-family", "sans-serif")
-                .attr("font-size", config.fontHeight)
+                .attr("font-size", config.legendFontHeight)
                 .style("fill", "black");
             heatmapLegendG
                 .append("text")
-                .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
+                .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
                 .attr("y", legendRectStart + legendRectHeight)
                 .text("0")
                 .attr("font-family", "sans-serif")
-                .attr("font-size", config.fontHeight)
+                .attr("font-size", config.legendFontHeight)
                 .style("fill", "black");
         }
 
@@ -749,10 +772,10 @@ HTMLWidgets.widget({
             // group annotation legend title
             cnvLegendSVG.append("text")
                 .attr("x", config.legendLeftPadding)
-                .attr("y", config.groupAnnotStart)
+                .attr("y", config.groupAnnotStartY)
                 .attr("dy", "+0.71em")
                 .attr("font-family", "sans-serif")
-                .attr("font-size", config.titleHeight)
+                .attr("font-size", config.legendTitleHeight)
                 .text("Group");
 
             // group annotation legend rectangle / text group
@@ -769,7 +792,7 @@ HTMLWidgets.widget({
                 .attr("class", function(d) { return "legendGroupRect group_" + d; })
                 .attr("x", config.legendLeftPadding)
                 .attr("y", function(d,i) {
-                    return config.groupAnnotStart + config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing);
+                    return config.groupAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
                 })
                 .attr("height", config.rectHeight)
                 .attr("width", config.rectHeight)
@@ -794,14 +817,14 @@ HTMLWidgets.widget({
             groupAnnotLegendG
                 .append("text")
                 .attr("class", function(d) { return "legendGroupText group_" + d; })
-                .attr("x", config.legendLeftPadding + config.rectHeight + config.spacing)
+                .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
                 .attr("y", function(d,i) {
-                    return config.groupAnnotStart + config.titleHeight + config.spacing*2 + i*(config.rectHeight + config.spacing) + (config.fontHeight/2);
+                    return config.groupAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
                 })
                 .attr("dy", "+0.35em")
                 .text(function(d) { return d; })
                 .attr("font-family", "sans-serif")
-                .attr("font-size", config.fontHeight)
+                .attr("font-size", config.legendFontHeight)
                 .attr("fill", "black")
                 .on("mouseover", function(d) {
                     if (_checkForSelections()) {

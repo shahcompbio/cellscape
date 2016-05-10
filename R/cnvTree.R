@@ -4,7 +4,7 @@
 #'   
 #' @import htmlwidgets, gtools, jsonlite, reshape2, stringr, dplyr
 #'
-#' @param cnv_data {Data frame} (Required if mut_data not provided) Single cell copy number data frame.
+#' @param cnv_data {Data frame} (Required if mut_data not provided) Single cell copy number segments data.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "chr" - chromosome number
 #'                       (3) {Number} "start" - start position
@@ -14,7 +14,7 @@
 #' @param mut_data {Data frame} (Required if cnv_data not provided) Single cell targeted mutation data frame.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "chr" - chromosome number
-#'                       (3) {Number} "coord" - genomic coordinate of the mutation
+#'                       (3) {Number} "coord" - genomic coordinate
 #'                       (5) {Number} "VAF" - variant allele frequency.
 #'
 #' @param tree_edges {Data frame} Edges for the single cell phylogenetic tree.
@@ -26,8 +26,8 @@
 #'                       (2) {String} "group" - group assignment
 #'
 #' @param sc_id_order {Array} (Optional) Order of single cell ids for the heatmap. 
-#'                                       Default is the order of single cells in the phylogeny.
-#' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes.
+#'                                       By default, single cells will be ordered by the phylogeny.
+#' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
 #' @param width {Number} (Optional) Width of the plot.
 #' @param height {Number} (Optional) Height of the plot.
 #'
@@ -48,13 +48,15 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
     stop("User must provide tree edge data (parameter tree_edges).")
   }
 
-  # number of pixels for heatmap
+  # heatmap width (pixels)
   heatmapWidth <- (width/2) - 40 
 
   # CNV DATA
 
   # CNV data is provided
   if (missing(mut_data)) {
+
+    # set heatmap type
     heatmap_type <- "cnv"
 
     # check it's a data frame
@@ -68,7 +70,7 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
         !("start" %in% colnames(cnv_data)) ||
         !("end" %in% colnames(cnv_data)) ||
         !("integer_copy_number" %in% colnames(cnv_data))) {
-      stop(paste("CNV data frame must have the following column names: ", 
+      stop(paste("CNV data frame (parameter cnv_data) must have the following column names: ", 
           "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"", sep=""))
     }
 
@@ -84,11 +86,11 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
     chrom_bounds <- getChromBounds(chroms, cnv_data) 
     genome_length <- getGenomeLength(chrom_bounds)
 
-    # GET PIXELS FOR EACH SINGLE CELL
+    # get cnv heatmap information for each cell
     n_bp_per_pixel <- getNBPPerPixel(heatmapWidth, chrom_bounds, genome_length) # number bps per pixel
     heatmap_info <- getCNVHeatmapForEachSC(cnv_data, chrom_bounds, n_bp_per_pixel)
     
-    # GET CHROMOSOME BOX INFO
+    # get chromosome box information (chromosome legend)
     chrom_boxes <- getChromBoxInfo(chrom_bounds, n_bp_per_pixel)
   }
 
@@ -96,6 +98,8 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
 
   # targeted mutations data is provided
   if (missing(cnv_data)) {
+
+    # set heatmap type
     heatmap_type <- "targeted"
 
     # check it's a data frame
@@ -118,19 +122,17 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
     mut_data$coord <- as.numeric(as.character(mut_data$coord))
     mut_data$VAF <- as.numeric(as.character(mut_data$VAF))
 
-    # get chromosomes, set chromosome bounds and genome length to NULL 
-    # (not needed for mutation data)
+    # get chromosomes
     chroms <- gtools::mixedsort(unique(mut_data$chr))
+
+    # set chromosome bounds, genome length and chromosome box info to NULL (not needed for mutation data)
     chrom_bounds <- NULL
     genome_length <- NULL
-
-    # pixels
-    heatmap_info <- getTargetedHeatmapForEachSC(mut_data, heatmapWidth)
-
-    # no need for chromosome box info
     chrom_boxes <- NULL
-  }
 
+    # heatmap information for each cell
+    heatmap_info <- getTargetedHeatmapForEachSC(mut_data, heatmapWidth)
+  }
 
   # TREE EDGE DATA
 
@@ -152,26 +154,21 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
 
   # list of tree nodes for d3 phylogenetic layout function
   unique_nodes <- unique(c(tree_edges$source, tree_edges$target))
-  tree_nodes_for_layout<- data.frame(matrix("", ncol = 2, nrow = length(unique_nodes)), stringsAsFactors=FALSE) 
-  colnames(tree_nodes_for_layout) <- c("sc_id", "index")
-  tree_nodes_for_layout$sc_id <- unique_nodes
-  tree_nodes_for_layout$index <- rep(NULL, nrow(tree_nodes_for_layout))
-  for (i in 1:nrow(tree_nodes_for_layout)) {
-    tree_nodes_for_layout$index[i] <- i-1
-  }
-  tree_nodes_for_layout$index <- as.numeric(as.character(tree_nodes_for_layout$index))
+  tree_nodes_for_layout <- data.frame(sc_id=unique_nodes, 
+                                      index=(seq(1:length(unique_nodes)) - 1), 
+                                      stringsAsFactors=FALSE)
 
   # list of tree edges for d3 phylogenetic layout function
-  tree_edges_for_layout<- data.frame(matrix("", ncol = 5, nrow = nrow(tree_edges)), stringsAsFactors=FALSE) 
-  colnames(tree_edges_for_layout) <- c("source", "source_sc_id", "target", "target_sc_id", "link_id")
-  for (i in 1:nrow(tree_edges)) {
-    tree_edges_for_layout$source[i] <- which(tree_nodes_for_layout$sc_id == tree_edges$source[i]) - 1
-    tree_edges_for_layout$source_sc_id[i] <- tree_edges$source[i]
-    tree_edges_for_layout$target[i] <- which(tree_nodes_for_layout$sc_id == tree_edges$target[i]) - 1
-    tree_edges_for_layout$target_sc_id[i] <- tree_edges$target[i]
-    tree_edges_for_layout$link_id[i] <- paste("link_source_", tree_edges$source[i], 
-      "_target_", tree_edges$target[i], sep="")
-  }
+  # note: for force-directed graph, we need the source/target to be the *index* of the tree node in the list of tree nodes
+  tree_edges_for_layout <- data.frame(
+    source=sapply(tree_edges$source, function(src) {return(which(tree_nodes_for_layout$sc_id == src) - 1) }),
+    source_sc_id=tree_edges$source,
+    target=sapply(tree_edges$target, function(trg) {return(which(tree_nodes_for_layout$sc_id == trg) - 1) }),
+    target_sc_id=tree_edges$target,
+    link_id=apply(tree_edges, 1, function(edge) { 
+        return(paste("link_source_", edge["source"], "_target_", edge["target"], sep="")) 
+      }),
+    stringsAsFactors=FALSE)
   tree_edges_for_layout$source <- as.numeric(as.character(tree_edges_for_layout$source))
   tree_edges_for_layout$target <- as.numeric(as.character(tree_edges_for_layout$target))
 
@@ -199,7 +196,6 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
   # otherwise, set the root
   else {
     root <- sources
-    root_index <- which(tree_nodes_for_layout$sc_id == root)
   }
 
   # SINGLE CELL GROUPS
@@ -219,27 +215,25 @@ cnvTree <- function(cnv_data = NULL, mut_data = NULL, tree_edges, sc_id_order = 
     sc_groups <- jsonlite::toJSON(sc_groups)
   }
 
-  # GET SINGLE CELLS THAT ARE IN THE TREE BUT DON'T HAVE ASSOCIATED DATA
+  # GET SINGLE CELLS THAT ARE IN THE TREE BUT DON'T HAVE ASSOCIATED HEATMAP DATA
   scs_in_hm <- names(heatmap_info) # single cells in heatmap
   scs_in_tree <- unique(c(tree_edges$source, tree_edges$target))
   scs_missing_from_hm <- setdiff(scs_in_tree, scs_in_hm)
 
   # forward options using x
   x = list(
-    cnv_data=jsonlite::toJSON(cnv_data),
-    tree_edges=jsonlite::toJSON(tree_edges_for_layout),
     hm_sc_ids_ordered=sc_id_order, # the single cells present in the heatmap
-    sc_groups=sc_groups,
-    link_ids=link_ids,
-    tree_nodes=jsonlite::toJSON(tree_nodes_for_layout),
-    chroms=chroms,
-    heatmap_info=jsonlite::toJSON(heatmap_info),
-    chrom_boxes=jsonlite::toJSON(chrom_boxes),
-    heatmapWidth=heatmapWidth,
-    root=root, # name of root
-    root_index=root_index, # index of root in list of tree nodes for layout function
-    display_node_ids=display_node_ids,
+    sc_groups=sc_groups, # single cells and their associated group ids
+    tree_edges=jsonlite::toJSON(tree_edges_for_layout), # tree edges for phylogeny
+    tree_nodes=jsonlite::toJSON(tree_nodes_for_layout), # tree nodes for phylogeny
+    link_ids=link_ids, # ids for all links in the phylogeny
+    chroms=chroms, # chromosomes
+    chrom_boxes=jsonlite::toJSON(chrom_boxes), # chromosome legend boxes
+    heatmap_info=jsonlite::toJSON(heatmap_info), # heatmap information 
     heatmap_type=heatmap_type, # type of data in heatmap (cnv or targeted)
+    heatmapWidth=heatmapWidth, # width of the heatmap
+    root=root, # name of root
+    display_node_ids=display_node_ids, # whether or not to display the node id labels on each node
     scs_missing_from_hm=scs_missing_from_hm # single cells in tree but not heatmap
   )
 
@@ -317,8 +311,8 @@ getChromBounds <- function(chroms, cnv_data) {
 }
 
 #' function to get chromosome box pixel info
-#' @param {Object} vizObj
-#'
+#' @param {Data Frame} chrom_bounds -- chromosome boundaries
+#' @param {Integer} n_bp_per_pixel -- number of base pairs per pixel
 getChromBoxInfo <- function(chrom_bounds, n_bp_per_pixel) {
   chrom_boxes <- data.frame(chr=chrom_bounds$chrom, 
                             # x coordinate (start of chromosome)
@@ -441,6 +435,7 @@ getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
 
 #' function to get targeted heatmap information 
 #' @param {Data Frame} mut_data -- mutations data
+#' @param {Number} heatmapWidth -- width of the heatmap (in pixels)
 getTargetedHeatmapForEachSC <- function(mut_data, heatmapWidth) {
 
   # sort mutations by single cell, genomic position
@@ -480,6 +475,7 @@ getTargetedHeatmapForEachSC <- function(mut_data, heatmapWidth) {
 }
 
 # function to find the mode of a vector
+#' @param {Vector} x -- vector of numbers
 findMode <- function(x) {
   ux <- unique(x) # each unique value
   n_appearances <- tabulate(match(x, ux)) # number of appearances for each unique value

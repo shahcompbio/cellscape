@@ -13,7 +13,7 @@ function _brushEnd(vizObj, brush) {
             // if any transformation has occurred
             var t = d3.transform(d3.select(this).attr("transform")), 
                 t_y = t.translate[1];
-            var brushed = extent[0] <= (d.y+vizObj.view.cnv.rowHeight+t_y) && (d.y+t_y) <= extent[1];
+            var brushed = extent[0] <= (d.y+vizObj.view.hm.rowHeight+t_y) && (d.y+t_y) <= extent[1];
             if (brushed) {
                 selectedSCs.push(d.single_cell_id);
             }
@@ -792,11 +792,11 @@ function _updateTrimmedMatrix(vizObj) {
     vizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id) {
         // original y-coordinate for this single cell
         var original_sc_index = vizObj.view.original_sc_list.indexOf(sc_id);
-        var original_y = (original_sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
+        var original_y = (original_sc_index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
         // new y-coordinate
         var new_sc_index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(sc_id);
-        var new_y = (new_sc_index/vizObj.view.cnv.nrows)*(config.cnvHeight-config.chromLegendHeight);
+        var new_y = (new_sc_index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
         // y-difference
         var diff_y = original_y - new_y;
@@ -828,7 +828,7 @@ function _updateTrimmedMatrix(vizObj) {
             });
 
         // update matrix height 
-        matrix_height = new_y + vizObj.view.cnv.rowHeight;
+        matrix_height = new_y + vizObj.view.hm.rowHeight;
     });
 
     // move chromosome legend up
