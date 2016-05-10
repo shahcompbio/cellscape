@@ -1,19 +1,19 @@
 // D3 EFFECTS FUNCTIONS
 
 /* brush selection ending function
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _brushEnd(vizObj, brush) {
+function _brushEnd(curVizObj, brush) {
     var selectedSCs = [];
     var extent = d3.event.target.extent();
     if (!brush.empty()) {
 
         // highlight selected grid cell rows
-        d3.selectAll(".groupAnnot").classed("active", function(d) {
+        d3.select("#" + curVizObj.view_id).selectAll(".groupAnnot").classed("active", function(d) {
             // if any transformation has occurred
             var t = d3.transform(d3.select(this).attr("transform")), 
                 t_y = t.translate[1];
-            var brushed = extent[0] <= (d.y+vizObj.view.hm.rowHeight+t_y) && (d.y+t_y) <= extent[1];
+            var brushed = extent[0] <= (d.y+curVizObj.view.hm.rowHeight+t_y) && (d.y+t_y) <= extent[1];
             if (brushed) {
                 selectedSCs.push(d.single_cell_id);
             }
@@ -22,203 +22,203 @@ function _brushEnd(vizObj, brush) {
 
         // highlight selected sc's indicators & nodes
         selectedSCs.forEach(function(sc_id) {
-            _highlightIndicator(sc_id, vizObj);   
-            _highlightNode(sc_id, vizObj);    
+            _highlightIndicator(sc_id, curVizObj);   
+            _highlightNode(sc_id, curVizObj);    
         });
     } else {
-        d3.select(".cnvSVG").classed("brushed", false)
-        d3.selectAll(".gridCell").classed("active", false)
+        d3.select("#" + curVizObj.view_id).select(".cnvSVG").classed("brushed", false)
+        d3.select("#" + curVizObj.view_id).selectAll(".gridCell").classed("active", false)
 
         // reset nodes and indicators
-        _resetNodes(vizObj);
-        _resetIndicators();
+        _resetNodes(curVizObj);
+        _resetIndicators(curVizObj);
     }
 
     // clear brush
-    d3.select(".brush").call(brush.clear());
+    d3.select("#" + curVizObj.view_id).select(".brush").call(brush.clear());
 }
 
 /* function to check for selections
 */
-function _checkForSelections() {
-    return ((d3.selectAll(".nodeSelected")[0].length == 0) && // node selection
-            (d3.selectAll(".linkSelected")[0].length == 0) && // link selection
-            (d3.selectAll(".brushButtonSelected")[0].length == 0) && // brush button not selected
-            (d3.selectAll(".scissorsButtonSelected")[0].length == 0)) // scissors button not selected
+function _checkForSelections(curVizObj) {
+    return ((d3.select("#" + curVizObj.view_id).selectAll(".nodeSelected")[0].length == 0) && // node selection
+            (d3.select("#" + curVizObj.view_id).selectAll(".linkSelected")[0].length == 0) && // link selection
+            (d3.select("#" + curVizObj.view_id).selectAll(".brushButtonSelected")[0].length == 0) && // brush button not selected
+            (d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 0)) // scissors button not selected
 }
 
 /* mouseover function for group annotations
 * highlights indicator & node for all sc's with this group annotation id, highlights group annotation rectangle in legend
 * @param {String} group -- group to highlight
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _mouseoverGroupAnnot(group, vizObj) {
+function _mouseoverGroupAnnot(group, curVizObj) {
     // highlight indicator & node for all sc's with this group annotation id
-    vizObj.data.groups[group].forEach(function(sc) {
-        _highlightIndicator(sc, vizObj);
-        _highlightNode(sc, vizObj);
+    curVizObj.data.groups[group].forEach(function(sc) {
+        _highlightIndicator(sc, curVizObj);
+        _highlightNode(sc, curVizObj);
     })
 
     // highlight group annotation rectangle in legend
-    _highlightGroupAnnotLegendRect(group, vizObj);
+    _highlightGroupAnnotLegendRect(group, curVizObj);
 }
 
 /* mouseover function for group annotations
 * reset indicators, nodes, group annotation rectangles in legend
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _mouseoutGroupAnnot(vizObj) {
+function _mouseoutGroupAnnot(curVizObj) {
     // reset indicators & nodes
-    _resetIndicators();
-    _resetNodes(vizObj);
+    _resetIndicators(curVizObj);
+    _resetNodes(curVizObj);
 
     // reset group annotation rectangles in legend
-    _resetGroupAnnotLegendRects();
+    _resetGroupAnnotLegendRects(curVizObj);
 }
 
 /* function to highlight a node in the tree
 * @param {String} sc_id -- single cell id
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _highlightNode(sc_id, vizObj) {
-    d3.selectAll(".node_" + sc_id)
-        .style("fill", vizObj.generalConfig.highlightColour);
+function _highlightNode(sc_id, curVizObj) {
+    d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id)
+        .style("fill", curVizObj.generalConfig.highlightColour);
 }
 
 /* function to highlight a group annotation rectangle in the legend
 * @param {String} group_id -- group id
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _highlightGroupAnnotLegendRect(group_id, vizObj) {
-    d3.select(".legendGroupRect.group_" + group_id)
-        .attr("stroke", vizObj.generalConfig.highlightColour);
+function _highlightGroupAnnotLegendRect(group_id, curVizObj) {
+    d3.select("#" + curVizObj.view_id).select(".legendGroupRect.group_" + group_id)
+        .attr("stroke", curVizObj.generalConfig.highlightColour);
 }
 
 /* function to unhighlight group annotation rectangles in the legend
 */
-function _resetGroupAnnotLegendRects() {
-    d3.selectAll(".legendGroupRect")
+function _resetGroupAnnotLegendRects(curVizObj) {
+    d3.select("#" + curVizObj.view_id).selectAll(".legendGroupRect")
         .attr("stroke", "none");
 }
 
 /* function to highlight indicator for a single cell
 * @param {String} sc_id -- single cell id
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _highlightIndicator(sc_id, vizObj) {
-    d3.select(".indic.sc_" + sc_id)
+function _highlightIndicator(sc_id, curVizObj) {
+    d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id)
         .style("fill-opacity", 1);
 }
 
 /* function to reset a node in the tree
 * @param {String} sc_id -- single cell id
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _resetNode(sc_id, vizObj) {
-    d3.selectAll(".node_" + sc_id)
+function _resetNode(sc_id, curVizObj) {
+    d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id)
         .style("fill", function(d) {
-            return _getNodeColour(vizObj, d.sc_id);
+            return _getNodeColour(curVizObj, d.sc_id);
         });
 }
 
 /* function to reset indicator for a single cell
 * @param {String} sc_id -- single cell id
 */
-function _resetIndicator(sc_id) {
-    d3.select(".indic.sc_" + sc_id)
+function _resetIndicator(curVizObj, sc_id) {
+    d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id)
         .style("fill-opacity", 0);
 }
 
 /* function to reset all nodes in the tree
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _resetNodes(vizObj) {
-    d3.selectAll(".node")
+function _resetNodes(curVizObj) {
+    d3.select("#" + curVizObj.view_id).selectAll(".node")
         .style("fill", function(d) {
-            return _getNodeColour(vizObj, d.sc_id);
+            return _getNodeColour(curVizObj, d.sc_id);
         });
 }
 
 /* function to get the colour of a node
-* @param {Object} vizObj
+* @param {Object} curVizObj
 * @param {String} sc_id -- single cell id
 */
-function _getNodeColour(vizObj, sc_id) {
+function _getNodeColour(curVizObj, sc_id) {
     // group annotations specified -- colour by group
-    if (vizObj.view.groupsSpecified) {
-        var found_sc_with_group = _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: sc_id});
+    if (curVizObj.view.groupsSpecified) {
+        var found_sc_with_group = _.findWhere(curVizObj.userConfig.sc_groups, {single_cell_id: sc_id});
         return (found_sc_with_group) ? // if this sc has a group
-            vizObj.view.colour_assignment[found_sc_with_group.group] : 
+            curVizObj.view.colour_assignment[found_sc_with_group.group] : 
             "white";
     }
     // no group annotations -- default colour
-    return vizObj.generalConfig.defaultNodeColour;
+    return curVizObj.generalConfig.defaultNodeColour;
 }
 
 /* function to reset all indicators for a single cell
 * @param {String} sc_id -- single cell id
 */
-function _resetIndicators() {
-    d3.selectAll(".indic")
+function _resetIndicators(curVizObj) {
+    d3.select("#" + curVizObj.view_id).selectAll(".indic")
         .style("fill-opacity", 0);
 }
 
 /* function to reset all links in the tree
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _resetLinks(vizObj) {
-    d3.selectAll(".link")
-        .style("stroke", vizObj.generalConfig.defaultLinkColour);
+function _resetLinks(curVizObj) {
+    d3.select("#" + curVizObj.view_id).selectAll(".link")
+        .style("stroke", curVizObj.generalConfig.defaultLinkColour);
 }
 
 /* brush selection button push function
 * @param {Object} brush -- brush object
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _pushBrushSelectionButton(brush, vizObj) {
+function _pushBrushSelectionButton(brush, curVizObj) {
 
     // deselect brush tool
-    if (d3.select(".selectionButton").classed("brushButtonSelected")) {
+    if (d3.select("#" + curVizObj.view_id).select(".selectionButton").classed("brushButtonSelected")) {
         // remove brush tool
-        d3.select(".brush").remove();
+        d3.select("#" + curVizObj.view_id).select(".brush").remove();
 
         // remove "brushButtonSelected" class from button
-        d3.select(".selectionButton").classed("brushButtonSelected", false); 
+        d3.select("#" + curVizObj.view_id).select(".selectionButton").classed("brushButtonSelected", false); 
 
         // reset colour of the brush selection button
-        d3.select(".selectionButton").attr("fill", vizObj.generalConfig.topBarColour);
+        d3.select("#" + curVizObj.view_id).select(".selectionButton").attr("fill", curVizObj.generalConfig.topBarColour);
     }
     // select brush tool
     else {
         // mark this button as brushButtonSelected
-        d3.select(".selectionButton").classed("brushButtonSelected", true); 
+        d3.select("#" + curVizObj.view_id).select(".selectionButton").classed("brushButtonSelected", true); 
 
         // create brush tool
-        vizObj.view.cnvSVG.append("g") 
+        curVizObj.view.cnvSVG.append("g") 
             .attr("class", "brush")
             .call(brush)
             .selectAll('rect')
-            .attr('width', vizObj.userConfig.heatmapWidth);
+            .attr('width', curVizObj.userConfig.heatmapWidth);
     }
 }
 
 /* scissors button push function
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _pushScissorsButton(vizObj) {
+function _pushScissorsButton(curVizObj) {
 
     // deselect scissors tool
-    if (d3.select(".scissorsButton").classed("scissorsButtonSelected")) {
+    if (d3.select("#" + curVizObj.view_id).select(".scissorsButton").classed("scissorsButtonSelected")) {
         // remove "scissorsButtonSelected" class from button
-        d3.select(".scissorsButton").classed("scissorsButtonSelected", false); 
+        d3.select("#" + curVizObj.view_id).select(".scissorsButton").classed("scissorsButtonSelected", false); 
 
         // reset colour of the brush scissors button
-        d3.select(".scissorsButton").attr("fill", vizObj.generalConfig.topBarColour);
+        d3.select("#" + curVizObj.view_id).select(".scissorsButton").attr("fill", curVizObj.generalConfig.topBarColour);
     }
     // select scissors tool
     else {
         // mark this button as scissorsButtonSelected
-        d3.select(".scissorsButton").classed("scissorsButtonSelected", true); 
+        d3.select("#" + curVizObj.view_id).select(".scissorsButton").classed("scissorsButtonSelected", true); 
     }
 }
 
@@ -232,91 +232,91 @@ function _getLinkId(d) {
 }
 
 /* function for mouseout of link
-* @param {Object} vizObj
+* @param {Object} curVizObj
 * @param {Boolean} resetSelectedSCList -- whether or not to reset the seleted sc list
 */
-function _linkMouseout(vizObj, resetSelectedSCList) {
+function _linkMouseout(curVizObj, resetSelectedSCList) {
     // if there's no node or link selection taking place, or scissors tool on, reset the links
-    if (_checkForSelections() || d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+    if (_checkForSelections(curVizObj) || d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
         // reset nodes
-        d3.selectAll(".node")
+        d3.select("#" + curVizObj.view_id).selectAll(".node")
             .style("fill", function(d) {
-                return _getNodeColour(vizObj, d.sc_id);
+                return _getNodeColour(curVizObj, d.sc_id);
             });
 
         // reset indicators
-        d3.selectAll(".indic")
+        d3.select("#" + curVizObj.view_id).selectAll(".indic")
             .style("fill-opacity", 0);
 
         // reset links
-        d3.selectAll(".link")
-            .style("stroke", vizObj.generalConfig.defaultLinkColour);
+        d3.select("#" + curVizObj.view_id).selectAll(".link")
+            .style("stroke", curVizObj.generalConfig.defaultLinkColour);
 
         // reset list of selected cells & links
         if (resetSelectedSCList) {
-            vizObj.view.selectedSCs = [];
-            vizObj.view.selectedLinks = [];
+            curVizObj.view.selectedSCs = [];
+            curVizObj.view.selectedLinks = [];
         }
     }
 };
 
 /* function for mouseover of link
-* @param {Object} vizObj
+* @param {Object} curVizObj
 * @param {String} link_id -- id for mousedover link
 */
-function _linkMouseover(vizObj, link_id) {
+function _linkMouseover(curVizObj, link_id) {
     // if there's no node or link selection taking place
-    if (_checkForSelections()) {
+    if (_checkForSelections(curVizObj)) {
         // highlight downstream links
-        _downstreamEffects(vizObj, link_id);                     
+        _downstreamEffects(curVizObj, link_id);                     
     }
     // if scissors button is selected
-    else if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+    else if (d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
 
         // reset lists of selected links and scs
-        vizObj.view.selectedSCs = [];
-        vizObj.view.selectedLinks = [];
+        curVizObj.view.selectedSCs = [];
+        curVizObj.view.selectedLinks = [];
 
         // highlight downstream links
-        _downstreamEffects(vizObj, link_id); 
+        _downstreamEffects(curVizObj, link_id); 
 
         // highlight the potentially-cut link red
-        if (vizObj.generalConfig.switchView) { // tree view is on
-            d3.select(".tree."+link_id)
+        if (curVizObj.generalConfig.switchView) { // tree view is on
+            d3.select("#" + curVizObj.view_id).select(".tree."+link_id)
                 .style("stroke", "red");
         }
         else { // graph view is on
-            d3.select(".graph."+link_id)
+            d3.select("#" + curVizObj.view_id).select(".graph."+link_id)
                 .style("stroke", "red");
         }
     }
 }
 
 /* function for clicked link (tree trimming)
-* @param {Object} vizObj
+* @param {Object} curVizObj
 * @param {String} link_id -- id for clicked link
 */
-function _linkClick(vizObj, link_id) {
-    var userConfig = vizObj.userConfig;
+function _linkClick(curVizObj, link_id) {
+    var userConfig = curVizObj.userConfig;
 
     // if scissors button is selected
-    if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
+    if (d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
 
         // for each link
-        vizObj.view.selectedLinks.forEach(function(link_id) {
+        curVizObj.view.selectedLinks.forEach(function(link_id) {
             // remove link
-            d3.selectAll("." + link_id).remove();
+            d3.select("#" + curVizObj.view_id).selectAll("." + link_id).remove();
 
             // remove link from list of links
             var index = userConfig.link_ids.indexOf(link_id);
             userConfig.link_ids.splice(index, 1);
         })
         // for each single cell
-        vizObj.view.selectedSCs.forEach(function(sc_id) {
-            d3.selectAll(".node_" + sc_id).remove(); // remove node in tree
-            d3.select(".gridCellG.sc_" + sc_id).remove(); // remove copy number profile
-            d3.select(".groupAnnot.sc_" + sc_id).remove(); // remove group annotation
-            d3.select(".indic.sc_" + sc_id).remove(); // remove indicator
+        curVizObj.view.selectedSCs.forEach(function(sc_id) {
+            d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id).remove(); // remove node in tree
+            d3.select("#" + curVizObj.view_id).select(".gridCellG.sc_" + sc_id).remove(); // remove copy number profile
+            d3.select("#" + curVizObj.view_id).select(".groupAnnot.sc_" + sc_id).remove(); // remove group annotation
+            d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id).remove(); // remove indicator
 
             // remove single cell from list of single cells
             var index = userConfig.hm_sc_ids_ordered.indexOf(sc_id);
@@ -324,88 +324,88 @@ function _linkClick(vizObj, link_id) {
         })
 
         // adjust copy number matrix to fill the entire space
-        d3.timer(_updateTrimmedMatrix(vizObj), 300);
+        d3.timer(_updateTrimmedMatrix(curVizObj), 300);
     }
 }
 
 /* function for tree node mouseover
-* @param {Object} vizObj
+* @param {Object} curVizObj
 * @param {String} sc_id -- single cell id of mousedover node
 */
-function _nodeMouseover(vizObj, sc_id) {
+function _nodeMouseover(curVizObj, sc_id) {
     // if there's no node or link selection taking place
-    if (_checkForSelections()) {
+    if (_checkForSelections(curVizObj)) {
         // show tooltip
-        vizObj.nodeTip.show(sc_id);
+        curVizObj.nodeTip.show(sc_id);
 
         // highlight node
-        _highlightNode(sc_id, vizObj);
+        _highlightNode(sc_id, curVizObj);
 
         // highlight indicator
-        _highlightIndicator(sc_id, vizObj);
+        _highlightIndicator(sc_id, curVizObj);
     }
 }
 
 /* function for tree node mouseout
-* @param {Object} vizObj
+* @param {Object} curVizObj
 * @param {String} sc_id -- single cell id of mousedover node
 */
-function _nodeMouseout(vizObj, sc_id) {
+function _nodeMouseout(curVizObj, sc_id) {
     // if there's no node or link selection taking place
-    if (_checkForSelections()) {
+    if (_checkForSelections(curVizObj)) {
         // hide tooltip
-        vizObj.nodeTip.hide(sc_id);
+        curVizObj.nodeTip.hide(sc_id);
 
         // reset node
-        _resetNode(sc_id, vizObj);
+        _resetNode(sc_id, curVizObj);
 
         // reset indicator
-        _resetIndicator(sc_id);
+        _resetIndicator(curVizObj, sc_id);
     }
 }
 
 /* recursive function to perform downstream effects upon tree link highlighting
-* @param {Object} vizObj
+* @param {Object} curVizObj
 * @param link_id -- id for the link that's currently highlighted
 */
-function _downstreamEffects(vizObj, link_id) {
+function _downstreamEffects(curVizObj, link_id) {
 
     // get target id & single cell id
     var targetRX = new RegExp("link_source_.+_target_(.+)");  
     var target_id = targetRX.exec(link_id)[1];
 
     // add this target sc and link id to the lists of selected scs and links
-    vizObj.view.selectedSCs.push(target_id);
-    vizObj.view.selectedLinks.push(link_id);
+    curVizObj.view.selectedSCs.push(target_id);
+    curVizObj.view.selectedLinks.push(link_id);
 
     // highlight node
-    if (vizObj.generalConfig.switchView) { // tree view is on
-        d3.select(".tree.node_" + target_id)
-            .style("fill", vizObj.generalConfig.highlightColour);
+    if (curVizObj.generalConfig.switchView) { // tree view is on
+        d3.select("#" + curVizObj.view_id).select(".tree.node_" + target_id)
+            .style("fill", curVizObj.generalConfig.highlightColour);
     }
     else { // graph view is on
-        d3.select(".graph.node_" + target_id)
-            .style("fill", vizObj.generalConfig.highlightColour);
+        d3.select("#" + curVizObj.view_id).select(".graph.node_" + target_id)
+            .style("fill", curVizObj.generalConfig.highlightColour);
     }
 
     // highlight indicator for target
-    d3.select(".indic.sc_" + target_id)
+    d3.select("#" + curVizObj.view_id).select(".indic.sc_" + target_id)
         .style("fill-opacity", 1);
 
     // highlight link
-    if (vizObj.generalConfig.switchView) { // tree view is on
-        d3.select(".tree."+link_id)
-            .style("stroke", vizObj.generalConfig.linkHighlightColour);
+    if (curVizObj.generalConfig.switchView) { // tree view is on
+        d3.select("#" + curVizObj.view_id).select(".tree."+link_id)
+            .style("stroke", curVizObj.generalConfig.linkHighlightColour);
     }
     else { // graph view is on
-        d3.select(".graph."+link_id)
-            .style("stroke", vizObj.generalConfig.linkHighlightColour);
+        d3.select("#" + curVizObj.view_id).select(".graph."+link_id)
+            .style("stroke", curVizObj.generalConfig.linkHighlightColour);
     }
 
     // get the targets of this target
     var sourceRX = new RegExp("link_source_" + target_id + "_target_(.+)");
     var targetLinks_of_targetNode = [];
-    vizObj.userConfig.link_ids.map(function(id) {
+    curVizObj.userConfig.link_ids.map(function(id) {
         if (id.match(sourceRX)) {
             targetLinks_of_targetNode.push(id);
         }
@@ -413,7 +413,7 @@ function _downstreamEffects(vizObj, link_id) {
 
     // for each of the target's targets, highlight their downstream links
     targetLinks_of_targetNode.map(function(target_link_id) {
-        _downstreamEffects(vizObj, target_link_id);
+        _downstreamEffects(curVizObj, target_link_id);
     });
 };
 
@@ -516,12 +516,12 @@ function _elbow(d) {
 }
 
 /* function to plot the force-directed graph
-* @param {Object} vizObj
+* @param {Object} curVizObj
 * @param {Number} opacity -- opacity of graph elements
 */
-function _plotForceDirectedGraph(vizObj, opacity) {
-    var config = vizObj.generalConfig,
-        userConfig = vizObj.userConfig;
+function _plotForceDirectedGraph(curVizObj, opacity) {
+    var config = curVizObj.generalConfig,
+        userConfig = curVizObj.userConfig;
 
     // layout function
     var force_layout = d3.layout.force()
@@ -534,7 +534,7 @@ function _plotForceDirectedGraph(vizObj, opacity) {
         .start();
 
     // plot links
-    var link = vizObj.view.treeSVG
+    var link = curVizObj.view.treeSVG
         .append("g")
         .classed("graphLinks", true)
         .selectAll(".link")
@@ -544,7 +544,7 @@ function _plotForceDirectedGraph(vizObj, opacity) {
         .attr("class", function(d) {
             return "link graph " + d.link_id;
         }) 
-        .attr("stroke",vizObj.generalConfig.defaultLinkColour)
+        .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
         .attr("fill-opacity", opacity)
         .attr("stroke-opacity", opacity)
@@ -552,17 +552,17 @@ function _plotForceDirectedGraph(vizObj, opacity) {
             return (opacity == 1) ? "auto" : "none";
         })
         .on("mouseover", function(d) {
-            _linkMouseover(vizObj, d.link_id);
+            _linkMouseover(curVizObj, d.link_id);
         })
         .on("mouseout", function(d) { 
-            _linkMouseout(vizObj, true); 
+            _linkMouseout(curVizObj, true); 
         })
         .on("click", function(d) {
-            _linkClick(vizObj, d.link_id);
+            _linkClick(curVizObj, d.link_id);
         });
 
     // plot nodes
-    var nodeG = vizObj.view.treeSVG.append("g")
+    var nodeG = curVizObj.view.treeSVG.append("g")
         .classed("graphNodes", true)
         .selectAll(".nodesG")
         .data(userConfig.tree_nodes)
@@ -584,7 +584,7 @@ function _plotForceDirectedGraph(vizObj, opacity) {
             return config.tree_r
         })
         .attr("fill", function(d) {
-             return _getNodeColour(vizObj, d.sc_id);
+             return _getNodeColour(curVizObj, d.sc_id);
         })
         .attr("stroke", "#838181")
         .attr("fill-opacity", opacity)
@@ -593,10 +593,10 @@ function _plotForceDirectedGraph(vizObj, opacity) {
             return (opacity == 1) ? "auto" : "none";
         })
         .on('mouseover', function(d) {
-            _nodeMouseover(vizObj, d.sc_id);
+            _nodeMouseover(curVizObj, d.sc_id);
         })
         .on('mouseout', function(d) {
-            _nodeMouseout(vizObj, d.sc_id);
+            _nodeMouseout(curVizObj, d.sc_id);
         })
         .call(force_layout.drag);
 
@@ -640,19 +640,19 @@ function _plotForceDirectedGraph(vizObj, opacity) {
 }
 
 /* function to plot classical phylogenetic tree
-* @param {Object} vizObj
+* @param {Object} curVizObj
 * @param {Number} opacity -- opacity of tree elements
 */
-function _plotClassicalPhylogeny(vizObj, opacity) {
-    var config = vizObj.generalConfig,
-        r = vizObj.generalConfig.tree_r;
+function _plotClassicalPhylogeny(curVizObj, opacity) {
+    var config = curVizObj.generalConfig,
+        r = curVizObj.generalConfig.tree_r;
 
     // layout function
     var phylo_layout = d3.layout.tree()           
         .size([config.treeHeight - (r*2), config.treeWidth - (r*2)]);  
 
     // get tree structure
-    var nodes = phylo_layout.nodes(vizObj.data.treeStructure);
+    var nodes = phylo_layout.nodes(curVizObj.data.treeStructure);
     var links = phylo_layout.links(nodes);   
 
     // swap x and y direction
@@ -664,7 +664,7 @@ function _plotClassicalPhylogeny(vizObj, opacity) {
     });
 
     // create links
-    var link = vizObj.view.treeSVG.append("g")
+    var link = curVizObj.view.treeSVG.append("g")
         .classed("treeLinks", true)
         .selectAll(".tree.link")                  
         .data(links)                   
@@ -674,7 +674,7 @@ function _plotClassicalPhylogeny(vizObj, opacity) {
             return "link tree " + d.link_id;
         })                
         .attr("d", _elbow)
-        .attr("stroke",vizObj.generalConfig.defaultLinkColour)
+        .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
         .attr("fill", "none")
         .attr("fill-opacity", opacity)
@@ -683,17 +683,17 @@ function _plotClassicalPhylogeny(vizObj, opacity) {
             return (opacity == 1) ? "auto" : "none";
         })
         .on("mouseover", function(d) {
-            _linkMouseover(vizObj, d.link_id);
+            _linkMouseover(curVizObj, d.link_id);
         })
         .on("mouseout", function(d) { 
-            _linkMouseout(vizObj, true); 
+            _linkMouseout(curVizObj, true); 
         })
         .on("click", function(d) {
-            _linkClick(vizObj, d.link_id);
+            _linkClick(curVizObj, d.link_id);
         });
 
     // create nodes
-    var node = vizObj.view.treeSVG
+    var node = curVizObj.view.treeSVG
         .append("g")
         .classed("treeNodes", true)
         .selectAll(".tree.node")                  
@@ -705,9 +705,9 @@ function _plotClassicalPhylogeny(vizObj, opacity) {
         })  
         .attr("cx", function(d) { return d.x})
         .attr("cy", function(d) { return d.y})   
-        .attr("stroke",vizObj.generalConfig.defaultLinkColour)           
+        .attr("stroke",curVizObj.generalConfig.defaultLinkColour)           
         .attr("fill", function(d) {
-            return _getNodeColour(vizObj, d.sc_id);
+            return _getNodeColour(curVizObj, d.sc_id);
         })
         .attr("r", r)
         .attr("fill-opacity", opacity)
@@ -716,45 +716,45 @@ function _plotClassicalPhylogeny(vizObj, opacity) {
             return (opacity == 1) ? "auto" : "none";
         })
         .on('mouseover', function(d) {
-            _nodeMouseover(vizObj, d.sc_id);
+            _nodeMouseover(curVizObj, d.sc_id);
         })
         .on('mouseout', function(d) {
-            _nodeMouseout(vizObj, d.sc_id);
+            _nodeMouseout(curVizObj, d.sc_id);
         });
 }
 
 /* function to switch between tree and graph views
 */
-function _switchView(vizObj) {
-    var config = vizObj.generalConfig;
+function _switchView(curVizObj) {
+    var config = curVizObj.generalConfig;
 
     // if tree is on, switch to graph view
     if (config.switchView) {
-        d3.selectAll(".tree.node").attr("fill-opacity", 0).attr("stroke-opacity", 0)
+        d3.select("#" + curVizObj.view_id).selectAll(".tree.node").attr("fill-opacity", 0).attr("stroke-opacity", 0)
             .attr("pointer-events", "none");
-        d3.selectAll(".tree.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
+        d3.select("#" + curVizObj.view_id).selectAll(".tree.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
             .attr("pointer-events", "none");
-        d3.selectAll(".graph.node").attr("fill-opacity", 1).attr("stroke-opacity", 1)
+        d3.select("#" + curVizObj.view_id).selectAll(".graph.node").attr("fill-opacity", 1).attr("stroke-opacity", 1)
             .attr("pointer-events", "auto");
-        d3.selectAll(".graph.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
+        d3.select("#" + curVizObj.view_id).selectAll(".graph.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
             .attr("pointer-events", "auto");
 
-        d3.select(".forceDirectedIcon").attr("opacity", 0);
-        d3.select(".phylogenyIcon").attr("opacity", 1);
+        d3.select("#" + curVizObj.view_id).select(".forceDirectedIcon").attr("opacity", 0);
+        d3.select("#" + curVizObj.view_id).select(".phylogenyIcon").attr("opacity", 1);
     }
     // if graph is on, switch to tree view
     else {
-        d3.selectAll(".tree.node").attr("fill-opacity", 1).attr("stroke-opacity", 1)
+        d3.select("#" + curVizObj.view_id).selectAll(".tree.node").attr("fill-opacity", 1).attr("stroke-opacity", 1)
             .attr("pointer-events", "auto");
-        d3.selectAll(".tree.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
+        d3.select("#" + curVizObj.view_id).selectAll(".tree.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
             .attr("pointer-events", "auto");
-        d3.selectAll(".graph.node").attr("fill-opacity", 0).attr("stroke-opacity", 0)
+        d3.select("#" + curVizObj.view_id).selectAll(".graph.node").attr("fill-opacity", 0).attr("stroke-opacity", 0)
             .attr("pointer-events", "none");
-        d3.selectAll(".graph.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
+        d3.select("#" + curVizObj.view_id).selectAll(".graph.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
             .attr("pointer-events", "none");
 
-        d3.select(".forceDirectedIcon").attr("opacity", 1);
-        d3.select(".phylogenyIcon").attr("opacity", 0);
+        d3.select("#" + curVizObj.view_id).select(".forceDirectedIcon").attr("opacity", 1);
+        d3.select("#" + curVizObj.view_id).select(".phylogenyIcon").attr("opacity", 0);
     }
     config.switchView = !config.switchView
 }
@@ -762,46 +762,46 @@ function _switchView(vizObj) {
 // GROUP ANNOTATION FUNCTIONS
 
 /* function to get group annotations as object w/properties group : [array of single cells]
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _reformatGroupAnnots(vizObj) {
+function _reformatGroupAnnots(curVizObj) {
     var groups = {};
 
-    vizObj.userConfig.sc_groups.forEach(function(sc) {
+    curVizObj.userConfig.sc_groups.forEach(function(sc) {
         if (!groups[sc.group]) {
             groups[sc.group] = [];
         }
         groups[sc.group].push(sc.single_cell_id);
     });
 
-    vizObj.data.groups = groups;
+    curVizObj.data.groups = groups;
 }
 
 // CNV FUNCTIONS
 
 /* function to update copy number matrix upon trimming
 */
-function _updateTrimmedMatrix(vizObj) {
-    var config = vizObj.generalConfig;
+function _updateTrimmedMatrix(curVizObj) {
+    var config = curVizObj.generalConfig;
 
     // keep track of matrix height
     var matrix_height = 0;
 
     // for each single cell that's still in the matrix
-    vizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id) {
+    curVizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id) {
         // original y-coordinate for this single cell
-        var original_sc_index = vizObj.view.original_sc_list.indexOf(sc_id);
-        var original_y = (original_sc_index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
+        var original_sc_index = curVizObj.view.original_sc_list.indexOf(sc_id);
+        var original_y = (original_sc_index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
         // new y-coordinate
-        var new_sc_index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(sc_id);
-        var new_y = (new_sc_index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
+        var new_sc_index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(sc_id);
+        var new_y = (new_sc_index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
         // y-difference
         var diff_y = original_y - new_y;
 
         // translate copy number profile & indicator
-        d3.select(".gridCellG.sc_" + sc_id)
+        d3.select("#" + curVizObj.view_id).select(".gridCellG.sc_" + sc_id)
             .transition()
             .duration(1000)
             .attr("transform", function() {
@@ -809,8 +809,8 @@ function _updateTrimmedMatrix(vizObj) {
             });
         
         // translate group annotation
-        if (vizObj.view.groupsSpecified) {
-            d3.select(".groupAnnot.sc_" + sc_id)
+        if (curVizObj.view.groupsSpecified) {
+            d3.select("#" + curVizObj.view_id).select(".groupAnnot.sc_" + sc_id)
                 .transition()
                 .duration(1000)
                 .attr("transform", function() {
@@ -819,7 +819,7 @@ function _updateTrimmedMatrix(vizObj) {
         }
 
         // translate indicator
-        d3.select(".indic.sc_" + sc_id)
+        d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id)
             .transition()
             .duration(1000)
             .attr("transform", function() {
@@ -827,32 +827,32 @@ function _updateTrimmedMatrix(vizObj) {
             });
 
         // update matrix height 
-        matrix_height = new_y + vizObj.view.hm.rowHeight;
+        matrix_height = new_y + curVizObj.view.hm.rowHeight;
     });
 
     // move chromosome legend up
-    d3.selectAll(".chromBox")
+    d3.select("#" + curVizObj.view_id).selectAll(".chromBox")
         .transition()
         .duration(1000)
         .attr("y", matrix_height);
-    d3.selectAll(".chromBoxText")
+    d3.select("#" + curVizObj.view_id).selectAll(".chromBoxText")
         .transition()
         .duration(1000)
         .attr("y", matrix_height + (config.chromLegendHeight / 2));
 }
 
 /* function to get chromosome min and max values
-* @param {Object} vizObj
+* @param {Object} curVizObj
 */
-function _getChromBounds(vizObj) {
-    var chroms = vizObj.userConfig.chroms;
+function _getChromBounds(curVizObj) {
+    var chroms = curVizObj.userConfig.chroms;
     var chrom_bounds = {};
 
     // for each chromosome
     for (var i = 0; i < chroms.length; i++) {
 
         // get all the starts and ends of segments for this chromosome
-        var cur_chrom_data = _.filter(vizObj.userConfig.cnv_data, function(cnv){ return cnv.chr == chroms[i]; });
+        var cur_chrom_data = _.filter(curVizObj.userConfig.cnv_data, function(cnv){ return cnv.chr == chroms[i]; });
         var cur_starts = _.pluck(cur_chrom_data, "start");
         var cur_ends = _.pluck(cur_chrom_data, "end");
 

@@ -51,18 +51,22 @@ HTMLWidgets.widget({
             height: height-15
         };
 
-        // global variable vizObj
+        // global variable curVizObj
         vizObj = {};
-        vizObj.data = {};
-        vizObj.view = {};
+        var view_id = el.id;
+        vizObj[view_id] = {};
+        curVizObj = vizObj[view_id];
+        curVizObj.data = {};
+        curVizObj.view = {};
+        curVizObj.view_id = view_id;
 
         // selected single cells list & selected links list
-        vizObj.view.selectedSCs = [];
-        vizObj.view.selectedLinks = [];
+        curVizObj.view.selectedSCs = [];
+        curVizObj.view.selectedLinks = [];
 
         // more configurations
-        vizObj.generalConfig = $.extend(true, {}, defaults);
-        var config = vizObj.generalConfig;
+        curVizObj.generalConfig = $.extend(true, {}, defaults);
+        var config = curVizObj.generalConfig;
 
         // cnv configurations
         config.cnvHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
@@ -87,66 +91,67 @@ HTMLWidgets.widget({
 
     renderValue: function(el, x, instance) {
 
-        var config = vizObj.generalConfig;
         var view_id = el.id;
+        var curVizObj = vizObj[view_id]; 
+        var config = curVizObj.generalConfig;
 
         // GET PARAMS FROM R
 
-        vizObj.userConfig = x;
-        vizObj.view.groupsSpecified = (vizObj.userConfig.sc_groups != null); // (T/F) group annotation is specified
+        curVizObj.userConfig = x;
+        curVizObj.view.groupsSpecified = (curVizObj.userConfig.sc_groups != null); // (T/F) group annotation is specified
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
         // tree configurations
-        config.treeWidth = config.width - config.indicatorWidth - config.heatmapLegendWidth - vizObj.userConfig.heatmapWidth;
+        config.treeWidth = config.width - config.indicatorWidth - config.heatmapLegendWidth - curVizObj.userConfig.heatmapWidth;
 
         // if group annotation specified, reduce the width of the tree
-        if (vizObj.view.groupsSpecified) {
+        if (curVizObj.view.groupsSpecified) {
             config.treeWidth -= config.groupAnnotWidth;
         }
 
         // if the type of data is cnv, reduce tree height to account for chromosome legend
-        if (vizObj.userConfig.heatmap_type == "cnv") {
+        if (curVizObj.userConfig.heatmap_type == "cnv") {
             config.treeHeight -= config.chromLegendHeight;
         }
 
         // GET TREE CONTENT
 
         // if the user hasn't specified a custom single cell id order for the cnv heatmap, order by tree
-        if (!vizObj.userConfig.hm_sc_ids_ordered) {
-            var nodeOrder = _getNodeOrder(vizObj.userConfig.link_ids, vizObj.userConfig.root, []);
-            vizObj.userConfig.hm_sc_ids_ordered = nodeOrder;
+        if (!curVizObj.userConfig.hm_sc_ids_ordered) {
+            var nodeOrder = _getNodeOrder(curVizObj.userConfig.link_ids, curVizObj.userConfig.root, []);
+            curVizObj.userConfig.hm_sc_ids_ordered = nodeOrder;
         }
 
         // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
-        for (var i = 0; i < vizObj.userConfig.scs_missing_from_hm.length; i++) {
-            var cur_sc_missing = vizObj.userConfig.scs_missing_from_hm[i];
-            var index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(cur_sc_missing);
-            vizObj.userConfig.hm_sc_ids_ordered.splice(index, 1);
+        for (var i = 0; i < curVizObj.userConfig.scs_missing_from_hm.length; i++) {
+            var cur_sc_missing = curVizObj.userConfig.scs_missing_from_hm[i];
+            var index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(cur_sc_missing);
+            curVizObj.userConfig.hm_sc_ids_ordered.splice(index, 1);
         }
 
         // keep track of original list of scs, for tree pruning purposes
-        vizObj.view.original_sc_list = $.extend([], vizObj.userConfig.hm_sc_ids_ordered);
+        curVizObj.view.original_sc_list = $.extend([], curVizObj.userConfig.hm_sc_ids_ordered);
 
         // get tree structure
-        vizObj.data.treeStructure = _getTreeStructure(vizObj.userConfig.tree_edges, vizObj.userConfig.root);
+        curVizObj.data.treeStructure = _getTreeStructure(curVizObj.userConfig.tree_edges, curVizObj.userConfig.root);
 
         // GET CNV CONTENT
 
         // cnv plot number of rows
-        vizObj.view.hm = {};
-        vizObj.view.hm.nrows = vizObj.userConfig.hm_sc_ids_ordered.length;
+        curVizObj.view.hm = {};
+        curVizObj.view.hm.nrows = curVizObj.userConfig.hm_sc_ids_ordered.length;
 
         // height of each cnv row
-        vizObj.view.hm.rowHeight = (1/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
+        curVizObj.view.hm.rowHeight = (1/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
 
         // get group annotation info as object w/property "group" : [array of single cells]
-        if (vizObj.view.groupsSpecified) {
-            _reformatGroupAnnots(vizObj);
+        if (curVizObj.view.groupsSpecified) {
+            _reformatGroupAnnots(curVizObj);
         }
 
-        console.log("vizObj");
-        console.log(vizObj);
+        console.log("curVizObj");
+        console.log(curVizObj);
 
         // COLOURS
 
@@ -163,8 +168,8 @@ HTMLWidgets.widget({
             .range(targeted_colours)
 
         // group annotation colours
-        if (vizObj.view.groupsSpecified) {
-            vizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(vizObj.userConfig.sc_groups, "group")));
+        if (curVizObj.view.groupsSpecified) {
+            curVizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(curVizObj.userConfig.sc_groups, "group")));
         }
 
         // BRUSH SELECTION FUNCTION
@@ -173,7 +178,7 @@ HTMLWidgets.widget({
             .y(d3.scale.linear().domain([0, config.cnvHeight]).range([0, config.cnvHeight]))
             .on("brushstart", function() { d3.select(".cnvSVG").classed("brushed", true); })
             .on("brushend", function() {
-                return _brushEnd(vizObj, brush);
+                return _brushEnd(curVizObj, brush);
             });
 
         // TOP BAR DIV
@@ -201,7 +206,8 @@ HTMLWidgets.widget({
             .attr("class", "containerDIV")
             .style("width", config.width + "px")
             .style("height", config.cnvHeight + "px")
-            .style("float", "left");
+            .style("float", "left")
+            .attr("id", view_id);
 
         var containerSVG = containerDIV
             .append("svg:svg")
@@ -213,30 +219,30 @@ HTMLWidgets.widget({
 
         // TREE SVG
 
-        vizObj.view.treeSVG = containerSVG.append("g")  
+        curVizObj.view.treeSVG = containerSVG.append("g")  
             .attr("class", "treeSVG")     
             .attr("transform", "translate(" + 0 + "," + 0 + ")");
 
         // INDICATOR SVG
 
-        vizObj.view.indicatorSVG = containerSVG.append("g")
+        curVizObj.view.indicatorSVG = containerSVG.append("g")
             .attr("class", "indicatorSVG")
             .attr("transform", "translate(" + config.treeWidth + "," + 0 + ")");
 
         // GROUP ANNOTATION SVG
 
-        if (vizObj.view.groupsSpecified) {
-            vizObj.view.groupAnnotSVG = containerSVG.append("g")
+        if (curVizObj.view.groupsSpecified) {
+            curVizObj.view.groupAnnotSVG = containerSVG.append("g")
                 .attr("class", "groupAnnotSVG")
                 .attr("transform", "translate(" + (config.treeWidth + config.indicatorWidth) + "," + 0 + ")");
         }
 
         // CNV SVG
 
-        vizObj.view.cnvSVG = containerSVG.append("g")
+        curVizObj.view.cnvSVG = containerSVG.append("g")
             .attr("class", "cnvSVG")
             .attr("transform", function() {
-                var t_x = (vizObj.view.groupsSpecified) ? 
+                var t_x = (curVizObj.view.groupsSpecified) ? 
                     (config.treeWidth + config.indicatorWidth + config.groupAnnotWidth) :
                     (config.treeWidth + config.indicatorWidth);
                 return "translate(" + t_x + "," + 0 + ")"
@@ -244,12 +250,12 @@ HTMLWidgets.widget({
 
         // CNV LEGEND SVG
 
-        vizObj.view.cnvLegendSVG = containerSVG.append("g")
+        curVizObj.view.cnvLegendSVG = containerSVG.append("g")
             .attr("class", "cnvLegendSVG")
             .attr("transform", function() {
-                var t_x = (vizObj.view.groupsSpecified) ? 
-                    (config.treeWidth + config.indicatorWidth + config.groupAnnotWidth + vizObj.userConfig.heatmapWidth) :
-                    (config.treeWidth + config.indicatorWidth + vizObj.userConfig.heatmapWidth);
+                var t_x = (curVizObj.view.groupsSpecified) ? 
+                    (config.treeWidth + config.indicatorWidth + config.groupAnnotWidth + curVizObj.userConfig.heatmapWidth) :
+                    (config.treeWidth + config.indicatorWidth + curVizObj.userConfig.heatmapWidth);
                 return "translate(" + t_x + "," + 0 + ")"
             });
 
@@ -296,23 +302,23 @@ HTMLWidgets.widget({
             .attr("fill", config.topBarColour)
             .on("mouseover", function() {
                 // if this button is not selected
-                if (d3.selectAll(".brushButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 0) {
                     d3.select(this).attr("fill", config.topBarHighlight);
                 }
             })
             .on("mouseout", function() {
                 // if this button is not selected
-                if (d3.selectAll(".brushButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 0) {
                     d3.select(this).attr("fill", config.topBarColour);
                 }
             })
             .on("click", function() {
                 // if scissors button is selected, turn off scissors
-                if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
-                    _pushScissorsButton(vizObj);
+                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
+                    _pushScissorsButton(curVizObj);
                 }
                 // push selection button function
-                _pushBrushSelectionButton(brush, vizObj);
+                _pushBrushSelectionButton(brush, curVizObj);
             });
         topBarSVG.append("image")
             .attr("xlink:href", selectionButton_base64)
@@ -322,23 +328,23 @@ HTMLWidgets.widget({
             .attr("height", selectionButtonIconWidth)
             .on("mouseover", function() {
                 // if this button is not selected
-                if (d3.selectAll(".brushButtonSelected")[0].length == 0) {
-                    d3.select(".selectionButton").attr("fill", config.topBarHighlight);
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 0) {
+                    d3.select("#" + view_id).select(".selectionButton").attr("fill", config.topBarHighlight);
                 }
             })
             .on("mouseout", function() {
                 // if this button is not selected
-                if (d3.selectAll(".brushButtonSelected")[0].length == 0) {
-                    d3.select(".selectionButton").attr("fill", config.topBarColour);
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 0) {
+                    d3.select("#" + view_id).select(".selectionButton").attr("fill", config.topBarColour);
                 }
             })
             .on("click", function() {
                 // if scissors button is selected, turn off scissors
                 if (d3.selectAll(".scissorsButtonSelected")[0].length == 1) {
-                    _pushScissorsButton(vizObj);
+                    _pushScissorsButton(curVizObj);
                 }
                 // push selection button function
-                _pushBrushSelectionButton(brush, vizObj);
+                _pushBrushSelectionButton(brush, curVizObj);
             });
 
         // scissors button
@@ -353,23 +359,23 @@ HTMLWidgets.widget({
             .attr("fill", config.topBarColour)
             .on("mouseover", function() {
                 // if this button is not selected
-                if (d3.selectAll(".scissorsButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
                     d3.select(this).attr("fill", config.topBarHighlight);
                 }
             })
             .on("mouseout", function() {
                 // if this button is not selected
-                if (d3.selectAll(".scissorsButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
                     d3.select(this).attr("fill", config.topBarColour);
                 }
             })
             .on("click", function() {
                 // if brush selection button is selected, turn it off
-                if (d3.selectAll(".brushButtonSelected")[0].length == 1) {
-                    _pushBrushSelectionButton(brush, vizObj);
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 1) {
+                    _pushBrushSelectionButton(brush, curVizObj);
                 }
                 // push scissors button function
-                _pushScissorsButton(vizObj);
+                _pushScissorsButton(curVizObj);
             });
         topBarSVG.append("image")
             .attr("xlink:href", scissorsButton_base64)
@@ -379,23 +385,23 @@ HTMLWidgets.widget({
             .attr("height", scissorsButtonIconWidth)
             .on("mouseover", function() {
                 // if this button is not selected
-                if (d3.selectAll(".scissorsButtonSelected")[0].length == 0) {
-                    d3.select(".scissorsButton").attr("fill", config.topBarHighlight);
+                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
+                    d3.select("#" + view_id).select(".scissorsButton").attr("fill", config.topBarHighlight);
                 }
             })
             .on("mouseout", function() {
                 // if this button is not selected
-                if (d3.selectAll(".scissorsButtonSelected")[0].length == 0) {
-                    d3.select(".scissorsButton").attr("fill", config.topBarColour);
+                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
+                    d3.select("#" + view_id).select(".scissorsButton").attr("fill", config.topBarColour);
                 }
             })
             .on("click", function() {
                 // if brush selection button is selected, turn it off
-                if (d3.selectAll(".brushButtonSelected")[0].length == 1) {
-                    _pushBrushSelectionButton(brush, vizObj);
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 1) {
+                    _pushBrushSelectionButton(brush, curVizObj);
                 }
                 // push scissors button function
-                _pushScissorsButton(vizObj);
+                _pushScissorsButton(curVizObj);
             });
 
         // graph/tree button
@@ -416,7 +422,7 @@ HTMLWidgets.widget({
             })
             .on("click", function() {
                 // switch between tree and graph views
-                _switchView(vizObj);
+                _switchView(curVizObj);
             });
         topBarSVG.append("image")
             .classed("forceDirectedIcon", true)
@@ -427,14 +433,14 @@ HTMLWidgets.widget({
             .attr("height", graphTreeIconWidth)
             .attr("opacity", 1)
             .on("mouseover", function() {
-                d3.select(".graphTreeButton").attr("fill", config.topBarHighlight);
+                d3.select("#" + view_id).select(".graphTreeButton").attr("fill", config.topBarHighlight);
             })
             .on("mouseout", function() {
-                d3.select(".graphTreeButton").attr("fill", config.topBarColour);
+                d3.select("#" + view_id).select(".graphTreeButton").attr("fill", config.topBarColour);
             })
             .on("click", function() {
                 // switch between tree and graph views
-                _switchView(vizObj);
+                _switchView(curVizObj);
             });
         topBarSVG.append("image")
             .classed("phylogenyIcon", true)
@@ -445,14 +451,14 @@ HTMLWidgets.widget({
             .attr("height", graphTreeIconWidth)
             .attr("opacity", 0)
             .on("mouseover", function() {
-                d3.select(".graphTreeButton").attr("fill", config.topBarHighlight);
+                d3.select("#" + view_id).select(".graphTreeButton").attr("fill", config.topBarHighlight);
             })
             .on("mouseout", function() {
-                d3.select(".graphTreeButton").attr("fill", config.topBarColour);
+                d3.select("#" + view_id).select(".graphTreeButton").attr("fill", config.topBarColour);
             })
             .on("click", function() {
                 // switch between tree and graph views
-                _switchView(vizObj);
+                _switchView(curVizObj);
             });
 
         // TOOLTIP FUNCTIONS
@@ -463,26 +469,26 @@ HTMLWidgets.widget({
             .html(function(d) {
                 return "<strong>Cell:</strong> <span style='color:white'>" + d + "</span>";
             });
-        vizObj.view.indicatorSVG.call(indicatorTip);
+        curVizObj.view.indicatorSVG.call(indicatorTip);
 
-        vizObj.nodeTip = d3.tip()
+        curVizObj.nodeTip = d3.tip()
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function(d) {
                 return "<strong>Cell:</strong> <span style='color:white'>" + d + "</span>";
             });
-        vizObj.view.treeSVG.call(vizObj.nodeTip);
+        curVizObj.view.treeSVG.call(curVizObj.nodeTip);
 
         // PLOT CNV 
 
-        var gridCellsG = vizObj.view.cnvSVG
+        var gridCellsG = curVizObj.view.cnvSVG
             .append("g")
             .classed("gridCells", true)
 
         // for each single cell
-        for (var i = 0; i < vizObj.userConfig.hm_sc_ids_ordered.length; i++) {
-            var cur_sc = vizObj.userConfig.hm_sc_ids_ordered[i];
-            var cur_data = vizObj.userConfig.heatmap_info[[cur_sc]]; 
+        for (var i = 0; i < curVizObj.userConfig.hm_sc_ids_ordered.length; i++) {
+            var cur_sc = curVizObj.userConfig.hm_sc_ids_ordered[i];
+            var cur_data = curVizObj.userConfig.heatmap_info[[cur_sc]]; 
 
             // if this single cell has heatmap data, plot the data
             if (cur_data) {
@@ -496,25 +502,25 @@ HTMLWidgets.widget({
                     .append("rect")
                     .attr("class", function(d) {
                         // group annotation
-                        var group = (vizObj.view.groupsSpecified) ?
-                            _.findWhere(vizObj.userConfig.sc_groups, {single_cell_id: d.sc_id}).group : "none";
+                        var group = (curVizObj.view.groupsSpecified) ?
+                            _.findWhere(curVizObj.userConfig.sc_groups, {single_cell_id: d.sc_id}).group : "none";
                         return "gridCell sc_" + d.sc_id + " group_" + group;
                     })
                     .attr("x", function(d) { 
                         return d.x; 
                     })
                     .attr("y", function(d) { 
-                        d.sc_index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(d.sc_id);
-                        d.y = (d.sc_index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
+                        d.sc_index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(d.sc_id);
+                        d.y = (d.sc_index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight);
                         return d.y; 
                     })
-                    .attr("height", vizObj.view.hm.rowHeight)
+                    .attr("height", curVizObj.view.hm.rowHeight)
                     .attr("width", function(d) { 
                         return d.px_width; 
                     })
                     .attr("fill", function(d) { 
                         // color scale
-                        var cur_colorscale = (vizObj.userConfig.heatmap_type == "cnv") ?
+                        var cur_colorscale = (curVizObj.userConfig.heatmap_type == "cnv") ?
                             cnvColorScale : targetedColorScale;
 
                         // no data
@@ -523,7 +529,7 @@ HTMLWidgets.widget({
                         }
 
                         // cnv data, but above max cnv value
-                        else if (vizObj.userConfig.heatmap_type == "cnv" && 
+                        else if (curVizObj.userConfig.heatmap_type == "cnv" && 
                                 d.gridCell_value > maxCNV) {
                             return cur_colorscale(maxCNV);
                         }
@@ -532,34 +538,34 @@ HTMLWidgets.widget({
                         return cur_colorscale(d.gridCell_value);
                     })
                     .on("mouseover", function(d) {
-                        if (_checkForSelections()) {
+                        if (_checkForSelections(curVizObj)) {
                             // show indicator tooltip & highlight indicator
-                            indicatorTip.show(d.sc_id, d3.select(".indic.sc_" + d.sc_id).node());
-                            _highlightIndicator(d.sc_id, vizObj);
+                            indicatorTip.show(d.sc_id, d3.select("#" + view_id).select(".indic.sc_" + d.sc_id).node());
+                            _highlightIndicator(d.sc_id, curVizObj);
 
                             // highlight node
-                            _highlightNode(d.sc_id, vizObj);
+                            _highlightNode(d.sc_id, curVizObj);
                         }
                     })
                     .on("mouseout", function(d) {
-                        if (_checkForSelections()) {
+                        if (_checkForSelections(curVizObj)) {
                             // hide indicator tooltip & unhighlight indicator
                             indicatorTip.hide(d.sc_id);
-                            _resetIndicator(d.sc_id);
+                            _resetIndicator(curVizObj, d.sc_id);
 
                             // reset node
-                            _resetNode(d.sc_id, vizObj);
+                            _resetNode(d.sc_id, curVizObj);
                         }
                     });
             }
         }
 
         // PLOT CHROMOSOME LEGEND
-        var chromBoxes = vizObj.view.cnvSVG
+        var chromBoxes = curVizObj.view.cnvSVG
             .append("g")
             .classed("chromLegend", true)
             .selectAll(".chromBoxG")
-            .data(vizObj.userConfig.chrom_boxes)
+            .data(curVizObj.userConfig.chrom_boxes)
             .enter().append("g")
             .attr("class", "chromBoxG")
 
@@ -590,11 +596,11 @@ HTMLWidgets.widget({
 
         // PLOT INDICATOR RECTANGLES
 
-        var indicators = vizObj.view.indicatorSVG
+        var indicators = curVizObj.view.indicatorSVG
             .append("g")
             .classed("indicators", true)
             .selectAll(".indic")
-            .data(vizObj.userConfig.hm_sc_ids_ordered)
+            .data(curVizObj.userConfig.hm_sc_ids_ordered)
             .enter()
             .append("rect")
             .attr("class", function(d) {
@@ -602,10 +608,10 @@ HTMLWidgets.widget({
             })
             .attr("x", 0)
             .attr("y", function(d) { 
-                var index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(d);
-                return (index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight); 
+                var index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(d);
+                return (index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight); 
             })
-            .attr("height", vizObj.view.hm.rowHeight)
+            .attr("height", curVizObj.view.hm.rowHeight)
             .attr("width", config.indicatorWidth)
             .attr("fill", config.highlightColour)
             .attr("fill-opacity", 0)
@@ -613,12 +619,12 @@ HTMLWidgets.widget({
         
         // PLOT GROUP ANNOTATION COLUMN
 
-        if (vizObj.view.groupsSpecified) {
-            var groupAnnot = vizObj.view.groupAnnotSVG
+        if (curVizObj.view.groupsSpecified) {
+            var groupAnnot = curVizObj.view.groupAnnotSVG
                 .append("g")
                 .classed("groupAnnotG", true)
                 .selectAll(".groupAnnot")
-                .data(vizObj.userConfig.sc_groups)
+                .data(curVizObj.userConfig.sc_groups)
                 .enter()
                 .append("rect")
                 .attr("class", function(d) {
@@ -626,54 +632,54 @@ HTMLWidgets.widget({
                 })
                 .attr("x", 0)
                 .attr("y", function(d) { 
-                    var index = vizObj.userConfig.hm_sc_ids_ordered.indexOf(d.single_cell_id);
-                    d.y = (index/vizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight)
+                    var index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(d.single_cell_id);
+                    d.y = (index/curVizObj.view.hm.nrows)*(config.cnvHeight-config.chromLegendHeight)
                     return d.y; 
                 })
-                .attr("height", vizObj.view.hm.rowHeight)
+                .attr("height", curVizObj.view.hm.rowHeight)
                 .attr("width", config.groupAnnotWidth-3)
                 .attr("fill", function(d) {
-                    return vizObj.view.colour_assignment[d.group];
+                    return curVizObj.view.colour_assignment[d.group];
                 })
                 .attr("stroke", "none")
                 .on("mouseover", function(d) {
-                    if (_checkForSelections()) {
+                    if (_checkForSelections(curVizObj)) {
                         // highlight indicator & node for all sc's with this group annotation id,
                         // highlight group annotation rectangle in legend
-                        _mouseoverGroupAnnot(d.group, vizObj);
+                        _mouseoverGroupAnnot(d.group, curVizObj);
                     }
                 })
                 .on("mouseout", function(d) {
-                    if (_checkForSelections()) {
+                    if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, group annotation rectangles in legend
-                        _mouseoutGroupAnnot(vizObj);
+                        _mouseoutGroupAnnot(curVizObj);
                     }
                 });
         }
 
         // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
 
-        _plotClassicalPhylogeny(vizObj, 1);
-        _plotForceDirectedGraph(vizObj, 0); // originally force-directed graph has opacity of 0
+        _plotClassicalPhylogeny(curVizObj, 1);
+        _plotForceDirectedGraph(curVizObj, 0); // originally force-directed graph has opacity of 0
 
         // PLOT HEATMAP LEGEND
 
         // heatmap legend title
-        vizObj.view.cnvLegendSVG.append("text")
+        curVizObj.view.cnvLegendSVG.append("text")
             .attr("x", config.legendLeftPadding)
             .attr("y", config.heatmapLegendStartY) 
             .attr("dy", "+0.71em")
             .attr("font-family", "sans-serif")
             .attr("font-size", config.legendTitleHeight)
             .text(function() {
-                return (vizObj.userConfig.heatmap_type == "cnv") ? "CNV" : "VAF";
+                return (curVizObj.userConfig.heatmap_type == "cnv") ? "CNV" : "VAF";
             });
 
         // starting y-coordinate for the heatmap rectangle(s) in legend
         var legendRectStart = config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2;
 
         // heatmap legend rectangle / text group
-        var heatmapLegendG = vizObj.view.cnvLegendSVG
+        var heatmapLegendG = curVizObj.view.cnvLegendSVG
             .selectAll(".heatmapLegendG")
             .data(cnvColorScale.domain())
             .enter()
@@ -681,7 +687,7 @@ HTMLWidgets.widget({
             .classed("heatmapLegendG", true);
 
         // CNV LEGEND
-        if (vizObj.userConfig.heatmap_type == "cnv") {
+        if (curVizObj.userConfig.heatmap_type == "cnv") {
 
             // CNV legend rectangles
             heatmapLegendG
@@ -767,10 +773,10 @@ HTMLWidgets.widget({
         }
 
         // GROUP ANNOTATION LEGEND
-        if (vizObj.view.groupsSpecified) {
+        if (curVizObj.view.groupsSpecified) {
 
             // group annotation legend title
-            vizObj.view.cnvLegendSVG.append("text")
+            curVizObj.view.cnvLegendSVG.append("text")
                 .attr("x", config.legendLeftPadding)
                 .attr("y", config.groupAnnotStartY)
                 .attr("dy", "+0.71em")
@@ -779,9 +785,9 @@ HTMLWidgets.widget({
                 .text("Group");
 
             // group annotation legend rectangle / text group
-            var groupAnnotLegendG = vizObj.view.cnvLegendSVG
+            var groupAnnotLegendG = curVizObj.view.cnvLegendSVG
                 .selectAll(".groupAnnotLegendG")
-                .data(Object.keys(vizObj.data.groups))
+                .data(Object.keys(curVizObj.data.groups))
                 .enter()
                 .append("g")
                 .classed("groupAnnotLegendG", true);
@@ -797,19 +803,19 @@ HTMLWidgets.widget({
                 .attr("height", config.rectHeight)
                 .attr("width", config.rectHeight)
                 .attr("fill", function(d) {
-                    return vizObj.view.colour_assignment[d];
+                    return curVizObj.view.colour_assignment[d];
                 })
                 .on("mouseover", function(d) {
-                    if (_checkForSelections()) {
+                    if (_checkForSelections(curVizObj)) {
                         // highlight indicator & node for all sc's with this group annotation id,
                         // highlight group annotation rectangle in legend
-                        _mouseoverGroupAnnot(d, vizObj);
+                        _mouseoverGroupAnnot(d, curVizObj);
                     }
                 })
                 .on("mouseout", function(d) {
-                    if (_checkForSelections()) {
+                    if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, group annotation rectangles in legend
-                        _mouseoutGroupAnnot(vizObj);
+                        _mouseoutGroupAnnot(curVizObj);
                     }
                 });
 
@@ -827,16 +833,16 @@ HTMLWidgets.widget({
                 .attr("font-size", config.legendFontHeight)
                 .attr("fill", "black")
                 .on("mouseover", function(d) {
-                    if (_checkForSelections()) {
+                    if (_checkForSelections(curVizObj)) {
                         // highlight indicator & node for all sc's with this group annotation id,
                         // highlight group annotation rectangle in legend
-                        _mouseoverGroupAnnot(d, vizObj);
+                        _mouseoverGroupAnnot(d, curVizObj);
                     }
                 })
                 .on("mouseout", function(d) {
-                    if (_checkForSelections()) {
+                    if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, group annotation rectangles in legend
-                        _mouseoutGroupAnnot(vizObj);
+                        _mouseoutGroupAnnot(curVizObj);
                     }
                 });
         }
