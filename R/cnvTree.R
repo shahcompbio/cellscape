@@ -43,10 +43,11 @@ cnvTree <- function(cnv_data = NULL,
                     sc_id_order = NULL, 
                     mut_order = NULL,
                     display_node_ids = FALSE, 
-                    width = 800, 
-                    height = 800) {
+                    width = 1000, 
+                    height = 1200) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
+
   if (is.null(cnv_data) && is.null(mut_data)) {
     stop(paste("User must provide either copy number data (parameter cnv_data)",
       " or mutation data (parameter mut_data).",sep=""))
@@ -112,6 +113,13 @@ cnvTree <- function(cnv_data = NULL,
     cnv_data$start <- as.numeric(as.character(cnv_data$start))
     cnv_data$end <- as.numeric(as.character(cnv_data$end))
     cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
+
+    # check that the number of single cells does not exceed the height of the plot
+    n_scs <- length(unique(cnv_data$single_cell_id))
+    if ((height - 45) < n_scs) { # - 45 for top bar height (30) and space between top bar and main view (15)
+      stop(paste("The number of single cells (",n_scs,") cannot exceed the plot height minus 45px (",
+        (height - 45),"). Either reduce the number of cells, or increase the plot height.",sep=""))
+    }
 
     # get chromosomes, chromosome bounds (min & max bp), genome length
     chroms <- gtools::mixedsort(unique(cnv_data$chr))
@@ -508,6 +516,12 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
     sites <- unique(heatmap_info$site)
   }
   n_sites <- length(sites)
+
+  # check that the number of mutation sites does not exceed 1 pixel per mutation site
+  if (heatmapWidth < n_sites) {
+    stop(paste("The number of mutation sites (",n_sites,") cannot exceed the width of the plot (",
+      heatmapWidth,"). Either reduce the number of mutation sites, or increase the plot width.",sep=""))
+  }
 
   # heatmap cell width
   mut_width <- heatmapWidth/n_sites
