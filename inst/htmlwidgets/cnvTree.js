@@ -105,6 +105,11 @@ HTMLWidgets.widget({
             config.treeWidth -= config.groupAnnotWidth;
         }
 
+        // if the type of data is cnv, reduce tree height to account for chromosome legend
+        if (vizObj.userConfig.heatmap_type == "cnv") {
+            config.treeHeight -= config.chromLegendHeight;
+        }
+
         // GET TREE CONTENT
 
         // if the user hasn't specified a custom single cell id order for the cnv heatmap, order by tree
@@ -189,7 +194,7 @@ HTMLWidgets.widget({
             .style("height", config.spaceBelowTopBar + "px")
             .style("float", "left");
 
-        // CONTAINER DIV
+        // CONTAINER DIV and SVG
 
         var containerDIV = d3.select(el)
             .append("div")
@@ -198,60 +203,55 @@ HTMLWidgets.widget({
             .style("height", config.cnvHeight + "px")
             .style("float", "left");
 
+        var containerSVG = containerDIV
+            .append("svg:svg")
+            .attr("class", "containerSVG")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", config.width)
+            .attr("height", config.cnvHeight);
+
         // TREE SVG
 
-        vizObj.view.treeSVG = containerDIV
-            .append("svg:svg")
-            .attr("class", "treeSVG")
-            .attr("width", config.treeWidth + "px")
-            .attr("height", config.treeHeight + "px")
-            .on('dblclick', function() { // TODO move this function to reset button ??
-
-                // turn off node & link selection
-                d3.selectAll(".nodeSelected")
-                    .classed("nodeSelected",false);
-                d3.selectAll(".linkSelected")
-                    .classed("linkSelected",false);
-
-                // reset nodes, links & indicators
-                _resetNodes(vizObj);
-                _resetLinks(vizObj);
-                _resetIndicators();
-            })
+        vizObj.view.treeSVG = containerSVG.append("g")  
+            .attr("class", "treeSVG")     
+            .attr("transform", "translate(" + 0 + "," + 0 + ")");
 
         // INDICATOR SVG
 
-        var indicatorSVG = containerDIV
-            .append("svg:svg")
+        vizObj.view.indicatorSVG = containerSVG.append("g")
             .attr("class", "indicatorSVG")
-            .attr("width", config.indicatorWidth + "px")
-            .attr("height", config.indicatorHeight + "px");
+            .attr("transform", "translate(" + config.treeWidth + "," + 0 + ")");
 
         // GROUP ANNOTATION SVG
 
         if (vizObj.view.groupsSpecified) {
-            var groupAnnotSVG = containerDIV
-                .append("svg:svg")
+            vizObj.view.groupAnnotSVG = containerSVG.append("g")
                 .attr("class", "groupAnnotSVG")
-                .attr("width", config.groupAnnotWidth + "px")
-                .attr("height", config.groupAnnotHeight + "px");
+                .attr("transform", "translate(" + (config.treeWidth + config.indicatorWidth) + "," + 0 + ")");
         }
 
         // CNV SVG
 
-        var cnvSVG = containerDIV
-            .append("svg:svg")
+        vizObj.view.cnvSVG = containerSVG.append("g")
             .attr("class", "cnvSVG")
-            .attr("width", vizObj.userConfig.heatmapWidth + "px")
-            .attr("height", config.cnvHeight + "px")
+            .attr("transform", function() {
+                var t_x = (vizObj.view.groupsSpecified) ? 
+                    (config.treeWidth + config.indicatorWidth + config.groupAnnotWidth) :
+                    (config.treeWidth + config.indicatorWidth);
+                return "translate(" + t_x + "," + 0 + ")"
+            });
 
         // CNV LEGEND SVG
 
-        var cnvLegendSVG = containerDIV
-            .append("svg:svg")
+        vizObj.view.cnvLegendSVG = containerSVG.append("g")
             .attr("class", "cnvLegendSVG")
-            .attr("width", config.heatmapLegendWidth + "px")
-            .attr("height", config.heatmapLegendHeight + "px")
+            .attr("transform", function() {
+                var t_x = (vizObj.view.groupsSpecified) ? 
+                    (config.treeWidth + config.indicatorWidth + config.groupAnnotWidth + vizObj.userConfig.heatmapWidth) :
+                    (config.treeWidth + config.indicatorWidth + vizObj.userConfig.heatmapWidth);
+                return "translate(" + t_x + "," + 0 + ")"
+            });
 
         // PLOT TOP PANEL
 
@@ -312,7 +312,7 @@ HTMLWidgets.widget({
                     _pushScissorsButton(vizObj);
                 }
                 // push selection button function
-                _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+                _pushBrushSelectionButton(brush, vizObj);
             });
         topBarSVG.append("image")
             .attr("xlink:href", selectionButton_base64)
@@ -338,7 +338,7 @@ HTMLWidgets.widget({
                     _pushScissorsButton(vizObj);
                 }
                 // push selection button function
-                _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+                _pushBrushSelectionButton(brush, vizObj);
             });
 
         // scissors button
@@ -366,7 +366,7 @@ HTMLWidgets.widget({
             .on("click", function() {
                 // if brush selection button is selected, turn it off
                 if (d3.selectAll(".brushButtonSelected")[0].length == 1) {
-                    _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+                    _pushBrushSelectionButton(brush, vizObj);
                 }
                 // push scissors button function
                 _pushScissorsButton(vizObj);
@@ -392,7 +392,7 @@ HTMLWidgets.widget({
             .on("click", function() {
                 // if brush selection button is selected, turn it off
                 if (d3.selectAll(".brushButtonSelected")[0].length == 1) {
-                    _pushBrushSelectionButton(brush, vizObj, cnvSVG);
+                    _pushBrushSelectionButton(brush, vizObj);
                 }
                 // push scissors button function
                 _pushScissorsButton(vizObj);
@@ -463,7 +463,7 @@ HTMLWidgets.widget({
             .html(function(d) {
                 return "<strong>Cell:</strong> <span style='color:white'>" + d + "</span>";
             });
-        indicatorSVG.call(indicatorTip);
+        vizObj.view.indicatorSVG.call(indicatorTip);
 
         vizObj.nodeTip = d3.tip()
             .attr('class', 'd3-tip')
@@ -475,7 +475,7 @@ HTMLWidgets.widget({
 
         // PLOT CNV 
 
-        var gridCellsG = cnvSVG
+        var gridCellsG = vizObj.view.cnvSVG
             .append("g")
             .classed("gridCells", true)
 
@@ -555,7 +555,7 @@ HTMLWidgets.widget({
         }
 
         // PLOT CHROMOSOME LEGEND
-        var chromBoxes = cnvSVG
+        var chromBoxes = vizObj.view.cnvSVG
             .append("g")
             .classed("chromLegend", true)
             .selectAll(".chromBoxG")
@@ -590,7 +590,7 @@ HTMLWidgets.widget({
 
         // PLOT INDICATOR RECTANGLES
 
-        var indicators = indicatorSVG
+        var indicators = vizObj.view.indicatorSVG
             .append("g")
             .classed("indicators", true)
             .selectAll(".indic")
@@ -614,7 +614,7 @@ HTMLWidgets.widget({
         // PLOT GROUP ANNOTATION COLUMN
 
         if (vizObj.view.groupsSpecified) {
-            var groupAnnot = groupAnnotSVG
+            var groupAnnot = vizObj.view.groupAnnotSVG
                 .append("g")
                 .classed("groupAnnotG", true)
                 .selectAll(".groupAnnot")
@@ -659,7 +659,7 @@ HTMLWidgets.widget({
         // PLOT HEATMAP LEGEND
 
         // heatmap legend title
-        cnvLegendSVG.append("text")
+        vizObj.view.cnvLegendSVG.append("text")
             .attr("x", config.legendLeftPadding)
             .attr("y", config.heatmapLegendStartY) 
             .attr("dy", "+0.71em")
@@ -673,7 +673,7 @@ HTMLWidgets.widget({
         var legendRectStart = config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2;
 
         // heatmap legend rectangle / text group
-        var heatmapLegendG = cnvLegendSVG
+        var heatmapLegendG = vizObj.view.cnvLegendSVG
             .selectAll(".heatmapLegendG")
             .data(cnvColorScale.domain())
             .enter()
@@ -770,7 +770,7 @@ HTMLWidgets.widget({
         if (vizObj.view.groupsSpecified) {
 
             // group annotation legend title
-            cnvLegendSVG.append("text")
+            vizObj.view.cnvLegendSVG.append("text")
                 .attr("x", config.legendLeftPadding)
                 .attr("y", config.groupAnnotStartY)
                 .attr("dy", "+0.71em")
@@ -779,7 +779,7 @@ HTMLWidgets.widget({
                 .text("Group");
 
             // group annotation legend rectangle / text group
-            var groupAnnotLegendG = cnvLegendSVG
+            var groupAnnotLegendG = vizObj.view.cnvLegendSVG
                 .selectAll(".groupAnnotLegendG")
                 .data(Object.keys(vizObj.data.groups))
                 .enter()

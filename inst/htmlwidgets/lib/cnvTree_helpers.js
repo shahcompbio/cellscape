@@ -174,9 +174,8 @@ function _resetLinks(vizObj) {
 /* brush selection button push function
 * @param {Object} brush -- brush object
 * @param {Object} vizObj
-* @param {Object} cnvSVG -- cnv SVG object
 */
-function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
+function _pushBrushSelectionButton(brush, vizObj) {
 
     // deselect brush tool
     if (d3.select(".selectionButton").classed("brushButtonSelected")) {
@@ -195,7 +194,7 @@ function _pushBrushSelectionButton(brush, vizObj, cnvSVG) {
         d3.select(".selectionButton").classed("brushButtonSelected", true); 
 
         // create brush tool
-        cnvSVG.append("g") 
+        vizObj.view.cnvSVG.append("g") 
             .attr("class", "brush")
             .call(brush)
             .selectAll('rect')
