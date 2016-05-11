@@ -382,7 +382,9 @@ function _linkClick(curVizObj, link_id) {
 
             // remove single cell from list of single cells
             var index = userConfig.hm_sc_ids_ordered.indexOf(sc_id);
-            userConfig.hm_sc_ids_ordered.splice(index, 1);
+            if (index != -1) {
+                userConfig.hm_sc_ids_ordered.splice(index, 1);
+            }
         })
 
         // adjust copy number matrix to fill the entire space
