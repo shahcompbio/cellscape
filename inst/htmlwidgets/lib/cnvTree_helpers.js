@@ -267,21 +267,25 @@ function _getYCoordinates(curVizObj) {
 */
 function _getXCoordinates(curVizObj) {
     var config = curVizObj.generalConfig;
+
+    // radius of nodes
+    var r = (curVizObj.userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
     
-    curVizObj.data.xCoordinates = {}; // y-coordinates for each single cell (each single cell id is a property)
+    // x-coordinates for each single cell (each single cell id is a property)
+    curVizObj.data.xCoordinates = {}; 
 
     // for each single cell in the tree
     curVizObj.userConfig.tree_nodes.forEach(function(node, sc_id_i) {
 
         // width of tree 
-        var treeWidth = config.treeWidth;
+        var treeWidth = config.treeWidth - 4*r; // spacing of one radius before and after
 
         // number of ancestors for this single cell
         var n_ancestors = curVizObj.data.treeAncestorsArr[node.sc_id].length;
 
         // starting x-coordinate for this single cell
         curVizObj.data.xCoordinates[node.sc_id] = 
-            (treeWidth/(curVizObj.data.tree_height-1)) * n_ancestors; 
+            2*r + (treeWidth/(curVizObj.data.tree_height-1)) * n_ancestors; 
     })
 }
 
@@ -750,7 +754,7 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
     force_layout.on("tick", function() {
 
         // radius of nodes
-        var r = (userConfig.display_node_ids) ? config.tree_r : config.tree_w_labels_r;
+        var r = (userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
 
         nodeCircle.attr("cx", function(d) { 
                 return d.x = Math.max(r, Math.min(config.treeWidth - r, d.x)); 
