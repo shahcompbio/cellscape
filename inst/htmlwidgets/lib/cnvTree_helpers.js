@@ -480,18 +480,21 @@ function _downstreamEffects(curVizObj, link_id) {
 };
 
 /* function to get order of tree nodes
+* @param {Object} descendants -- descendants for each node
 * param link_ids -- ids for all links in tree
 * param node_name -- the name of the current node - start with root
 * param nodeOrder -- array of node order - starts empty, appended to as function executes
 */
-function _getNodeOrder(link_ids, node_name, nodeOrder) {
+function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
 
     // get the targets of this node
     var targetRX = new RegExp("link_source_" + node_name + "_target_(.+)");
     var targets = [];
     link_ids.map(function(id) {
         if (id.match(targetRX)) {
-            targets.push(targetRX.exec(id)[1]);
+            var cur_target = targetRX.exec(id)[1];
+            targets.push({ "sc_id": cur_target, 
+                           "n_desc": descendants[cur_target].length });
         }
     });
 
@@ -499,16 +502,21 @@ function _getNodeOrder(link_ids, node_name, nodeOrder) {
     if (targets.length == 0) {
         nodeOrder.push(node_name);
     }
+    // there are targets
+    else {
+        // order the targets by how many descendants they have
+        _sortByKey(targets, "n_desc");
 
-    // for each of the targets
-    targets.map(function(target, target_i) {
-        // if we're at the middle target, append the current node to the node order array
-        if (target_i == Math.floor(targets.length/2)) {
-            nodeOrder.push(node_name);
-        }
-        // get targets of this target
-        _getNodeOrder(link_ids, target, nodeOrder);
-    });
+        // for each of the targets
+        targets.map(function(target, target_i) {
+            // if we're at the middle target, append the current node to the node order array
+            if (target_i == Math.floor(targets.length/2)) {
+                nodeOrder.push(node_name);
+            }
+            // get targets of this target
+            _getNodeOrder(descendants, link_ids, target.sc_id, nodeOrder);
+        });
+    }
 
     return nodeOrder;
  };
@@ -1287,5 +1295,30 @@ function _downloadPNG(className, fileOutputName) {
     // reset the margin of the svg element
     d3.select("." + className)
         .style("margin", cur_margin);
+}
+
+/* function to sort array of objects by key 
+* modified from: http://stackoverflow.com/questions/8837454/sort-array-of-objects-by-single-key-with-date-value
+*/
+function _sortByKey(array, firstKey, secondKey) {
+    secondKey = secondKey || "NA";
+    return array.sort(function(a, b) {
+        var x = a[firstKey]; var y = b[firstKey];
+        var res = ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        if (secondKey == "NA") {
+            return res;            
+        }
+        else {
+            if (typeof(a[secondKey] == "string")) {
+                return (res == 0) ? (a[secondKey] > b[secondKey]) : res;
+            }
+            else if (typeof(a[secondKey] == "number")) {
+                return (res == 0) ? (a[secondKey] - b[secondKey]) : res;
+            }
+            else {
+                return res;
+            }
+        }
+    });
 }
 

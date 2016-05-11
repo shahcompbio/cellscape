@@ -117,22 +117,6 @@ HTMLWidgets.widget({
 
         // GET TREE CONTENT
 
-        // if the user hasn't specified a custom single cell id order for the cnv heatmap, order by tree
-        if (!curVizObj.userConfig.hm_sc_ids_ordered) {
-            var nodeOrder = _getNodeOrder(curVizObj.userConfig.link_ids, curVizObj.userConfig.root, []);
-            curVizObj.userConfig.hm_sc_ids_ordered = nodeOrder;
-        }
-
-        // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
-        for (var i = 0; i < curVizObj.userConfig.scs_missing_from_hm.length; i++) {
-            var cur_sc_missing = curVizObj.userConfig.scs_missing_from_hm[i];
-            var index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(cur_sc_missing);
-            curVizObj.userConfig.hm_sc_ids_ordered.splice(index, 1);
-        }
-
-        // keep track of original list of scs, for tree pruning purposes
-        curVizObj.view.original_sc_list = $.extend([], curVizObj.userConfig.hm_sc_ids_ordered);
-
         // get tree structures for each node
         curVizObj.data.treeStructures = _getTreeStructures(curVizObj.userConfig.tree_edges);
         
@@ -162,6 +146,22 @@ HTMLWidgets.widget({
                 curVizObj.data.tree_height = (ancestor_arr.length + 1);
             }
         })
+
+        // if the user hasn't specified a custom single cell id order for the cnv heatmap, order by tree
+        if (!curVizObj.userConfig.hm_sc_ids_ordered) {
+            var nodeOrder = _getNodeOrder(curVizObj.data.treeDescendantsArr, curVizObj.userConfig.link_ids, curVizObj.userConfig.root, []);
+            curVizObj.userConfig.hm_sc_ids_ordered = nodeOrder;
+        }
+
+        // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
+        for (var i = 0; i < curVizObj.userConfig.scs_missing_from_hm.length; i++) {
+            var cur_sc_missing = curVizObj.userConfig.scs_missing_from_hm[i];
+            var index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(cur_sc_missing);
+            curVizObj.userConfig.hm_sc_ids_ordered.splice(index, 1);
+        }
+
+        // keep track of original list of scs, for tree pruning purposes
+        curVizObj.view.original_sc_list = $.extend([], curVizObj.userConfig.hm_sc_ids_ordered);
 
         // GET CNV CONTENT
 
