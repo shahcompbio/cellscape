@@ -233,7 +233,7 @@ function _getYCoordinates(curVizObj) {
     curVizObj.data.yCoordinates = {}; // y-coordinates for each single cell (each single cell id is a property)
 
     // for each single cell in the heatmap
-    curVizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id, sc_id_i) {
+    curVizObj.data.hm_sc_ids.forEach(function(sc_id, sc_id_i) {
         // height of heatmap 
         var hmHeight = (curVizObj.userConfig.heatmap_type == "cnv") ? 
             (config.hmHeight-config.chromLegendHeight) : config.hmHeight;
@@ -386,9 +386,9 @@ function _linkClick(curVizObj, link_id) {
             d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id).remove(); // remove indicator
 
             // remove single cell from list of single cells
-            var index = userConfig.hm_sc_ids_ordered.indexOf(sc_id);
+            var index = curVizObj.data.hm_sc_ids.indexOf(sc_id);
             if (index != -1) {
-                userConfig.hm_sc_ids_ordered.splice(index, 1);
+                curVizObj.data.hm_sc_ids.splice(index, 1);
             }
         })
 
@@ -780,98 +780,6 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
     });
 }
 
-/* function to plot classical phylogenetic tree
-* @param {Object} curVizObj
-* @param {Number} opacity -- opacity of tree elements
-*/
-function _plotClassicalPhylogeny(curVizObj, opacity) {
-    var config = curVizObj.generalConfig;
-    var r = (curVizObj.userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
-
-    // layout function
-    var phylo_layout = d3.layout.tree()           
-        .size([config.treeHeight - (r*4), config.treeWidth - (r*4)]);  
-
-    // get tree structure
-    var nodes = phylo_layout.nodes(curVizObj.data.treeStructure);
-    var links = phylo_layout.links(nodes);   
-
-    // swap x and y direction
-    nodes.forEach(function(node) {
-        node.tmp = node.y + r; // add padding of 1 tree node radius
-        node.y = node.x + r; // add padding of 1 tree node radius
-        node.x = node.tmp;
-        delete node.tmp;
-    });
-
-    // create links
-    var link = curVizObj.view.treeSVG.append("g")
-        .classed("treeLinks", true)
-        .selectAll(".tree.link")                  
-        .data(links)                   
-        .enter().append("path")  
-        .attr("class", function(d) {
-            d.link_id = "link_source_" + d.source.sc_id + "_target_" + d.target.sc_id;
-            return "link tree " + d.link_id;
-        })                
-        .attr("d", function(d) { 
-            return _elbow(d); 
-        })
-        .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
-        .attr("stroke-width", "2px")
-        .attr("fill", "none")
-        .attr("fill-opacity", opacity)
-        .attr("stroke-opacity", opacity)
-        .attr("pointer-events", function() {
-            return (opacity == 1) ? "auto" : "none";
-        })
-        .on("mouseover", function(d) {
-            _linkMouseover(curVizObj, d.link_id);
-        })
-        .on("mouseout", function(d) { 
-            _linkMouseout(curVizObj, true); 
-        })
-        .on("click", function(d) {
-            _linkClick(curVizObj, d.link_id);
-        });
-
-    // create nodes
-    var nodeG = curVizObj.view.treeSVG
-        .selectAll(".treeNodesG")
-        .data(nodes)
-        .enter()
-        .append("g")
-        .attr("class", "treeNodesG");;
-
-    nodeG.append("circle")   
-        .attr("class", function(d) {
-            return "tree node node_" + d.sc_id;
-        })  
-        .attr("cx", function(d) { return d.x})
-        .attr("cy", function(d) { return d.y})   
-        .attr("stroke",curVizObj.generalConfig.defaultLinkColour)           
-        .attr("fill", function(d) {
-            return _getNodeColour(curVizObj, d.sc_id);
-        })
-        .attr("r", r)
-        .attr("fill-opacity", opacity)
-        .attr("stroke-opacity", opacity)
-        .attr("pointer-events", function() {
-            return (opacity == 1) ? "auto" : "none";
-        })
-        .on('mouseover', function(d) {
-            _nodeMouseover(curVizObj, d.sc_id);
-        })
-        .on('mouseout', function(d) {
-            _nodeMouseout(curVizObj, d.sc_id);
-        });
-
-    // node single cell labels (if user wants to display them)
-    if (curVizObj.userConfig.display_node_ids) {
-        _plotNodeLabels(curVizObj, "tree", opacity, nodeG);
-    }
-}
-
 /* function to plot node labels
 */
 function _plotNodeLabels(curVizObj, tree_type, opacity, nodeG) {
@@ -1070,7 +978,7 @@ function _updateTrimmedMatrix(curVizObj) {
     var matrix_height = 0;
 
     // for each single cell that's still in the matrix
-    curVizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id) {
+    curVizObj.data.hm_sc_ids.forEach(function(sc_id) {
         // difference between original & new y-coordinates for this single cell
         var original_y = curVizObj.data.originalYCoordinates[sc_id];
         var new_y = curVizObj.data.yCoordinates[sc_id];
@@ -1139,7 +1047,7 @@ function _updateTrimmedMatrix(curVizObj) {
             // check that the group has members in the view
             var group_members_in_view = 
                 _getIntersection(curVizObj.data.groups[group_id], 
-                    curVizObj.userConfig.hm_sc_ids_ordered);
+                    curVizObj.data.hm_sc_ids);
 
             // if no members left in view, delete the group from the legend
             if (group_members_in_view.length == 0) {

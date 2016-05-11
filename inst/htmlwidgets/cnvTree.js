@@ -143,27 +143,25 @@ HTMLWidgets.widget({
             }
         })
 
-        // if the user hasn't specified a custom single cell id order for the cnv heatmap, order by tree
-        if (!curVizObj.userConfig.hm_sc_ids_ordered) {
-            var nodeOrder = _getNodeOrder(curVizObj.data.treeDescendantsArr, curVizObj.userConfig.link_ids, curVizObj.userConfig.root, []);
-            curVizObj.userConfig.hm_sc_ids_ordered = nodeOrder;
-        }
+        // order single cells by tree
+        curVizObj.data.hm_sc_ids = 
+            _getNodeOrder(curVizObj.data.treeDescendantsArr, curVizObj.userConfig.link_ids, curVizObj.userConfig.root, []);
 
         // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
         for (var i = 0; i < curVizObj.userConfig.scs_missing_from_hm.length; i++) {
             var cur_sc_missing = curVizObj.userConfig.scs_missing_from_hm[i];
-            var index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(cur_sc_missing);
-            curVizObj.userConfig.hm_sc_ids_ordered.splice(index, 1);
+            var index = curVizObj.data.hm_sc_ids.indexOf(cur_sc_missing);
+            curVizObj.data.hm_sc_ids.splice(index, 1);
         }
 
         // keep track of original list of scs, for tree pruning purposes
-        curVizObj.view.original_sc_list = $.extend([], curVizObj.userConfig.hm_sc_ids_ordered);
+        curVizObj.view.original_sc_list = $.extend([], curVizObj.data.hm_sc_ids);
 
         // GET CNV CONTENT
 
         // cnv plot number of rows
         curVizObj.view.hm = {};
-        curVizObj.view.hm.nrows = curVizObj.userConfig.hm_sc_ids_ordered.length;
+        curVizObj.view.hm.nrows = curVizObj.data.hm_sc_ids.length;
 
         // height of each cnv row
         curVizObj.view.hm.rowHeight = (1/curVizObj.view.hm.nrows)*(config.hmHeight-config.chromLegendHeight);
@@ -617,8 +615,8 @@ HTMLWidgets.widget({
             .classed("gridCells", true)
 
         // for each single cell
-        for (var i = 0; i < curVizObj.userConfig.hm_sc_ids_ordered.length; i++) {
-            var cur_sc = curVizObj.userConfig.hm_sc_ids_ordered[i];
+        for (var i = 0; i < curVizObj.data.hm_sc_ids.length; i++) {
+            var cur_sc = curVizObj.data.hm_sc_ids[i];
             var cur_data = curVizObj.userConfig.heatmap_info[[cur_sc]]; 
 
             // if this single cell has heatmap data, plot the data
@@ -737,7 +735,7 @@ HTMLWidgets.widget({
             .append("g")
             .classed("indicators", true)
             .selectAll(".indic")
-            .data(curVizObj.userConfig.hm_sc_ids_ordered)
+            .data(curVizObj.data.hm_sc_ids)
             .enter()
             .append("rect")
             .attr("class", function(d) {
@@ -794,7 +792,6 @@ HTMLWidgets.widget({
 
         // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
 
-        // _plotClassicalPhylogeny(curVizObj, 1);
         _plotForceDirectedGraph(curVizObj, 0); // originally force-directed graph has opacity of 0
         _plotAlignedPhylogeny(curVizObj, 1);
 

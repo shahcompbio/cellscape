@@ -25,8 +25,6 @@
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "group" - group assignment
 #'
-#' @param sc_id_order {Array} (Optional) Single cell ids in the desired y-axis order for the heatmap. 
-#'                                       By default, single cells will be ordered by the phylogeny.
 #' @param mut_order {Data Frame} (Optional) Mutations in the desired y-axis order for the heatmap. 
 #'                                     By default, mutations will be ordered based on their position in the genome.
 #'                       (1) {String} "chr" - chromosome number
@@ -40,7 +38,6 @@ cnvTree <- function(cnv_data = NULL,
                     mut_data = NULL, 
                     tree_edges, 
                     sc_groups = NULL, 
-                    sc_id_order = NULL, 
                     mut_order = NULL,
                     display_node_ids = FALSE, 
                     width = 800, 
@@ -262,7 +259,6 @@ cnvTree <- function(cnv_data = NULL,
 
   # forward options using x
   x = list(
-    hm_sc_ids_ordered=sc_id_order, # the single cells present in the heatmap
     sc_groups=sc_groups, # single cells and their associated group ids
     tree_edges=jsonlite::toJSON(tree_edges_for_layout), # tree edges for phylogeny
     tree_nodes=jsonlite::toJSON(tree_nodes_for_layout), # tree nodes for phylogeny
