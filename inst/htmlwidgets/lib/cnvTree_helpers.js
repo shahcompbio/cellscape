@@ -728,21 +728,7 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
 
     // node single cell labels (if user wants to display them)
     if (userConfig.display_node_ids) {
-
-        var nodeLabel = nodeG.append("text")
-            .attr("class", function(d) {
-                return "nodeLabel graph nodeLabel_" + d.sc_id;
-            })
-            .text(function(d) { 
-                var isNumber = !isNaN(d.sc_id);
-                return (isNumber) ? parseInt(d.sc_id, 10) : d.sc_id; 
-            })
-            .attr("font-size", 
-                _getLabelFontSize(_.pluck(userConfig.tree_nodes, "sc_id"), config.tree_w_labels_r * 2))
-            .attr("text-anchor", "middle")
-            .attr("pointer-events", "none")
-            .attr("fill-opacity", opacity)
-            .attr("dy", "+0.35em");
+        var nodeLabel = _plotNodeLabels(curVizObj, "graph", opacity, nodeG);
     }
 
     force_layout.on("tick", function() {
@@ -807,7 +793,9 @@ function _plotClassicalPhylogeny(curVizObj, opacity) {
             d.link_id = "link_source_" + d.source.sc_id + "_target_" + d.target.sc_id;
             return "link tree " + d.link_id;
         })                
-        .attr("d", _elbow)
+        .attr("d", function(d) { 
+            return _elbow(d); 
+        })
         .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
         .attr("fill", "none")
@@ -859,26 +847,32 @@ function _plotClassicalPhylogeny(curVizObj, opacity) {
 
     // node single cell labels (if user wants to display them)
     if (curVizObj.userConfig.display_node_ids) {
-
-        var nodeLabel = nodeG.append("text")
-            .attr("class", function(d) {
-                return "nodeLabel tree nodeLabel_" + d.sc_id;
-            })
-            .text(function(d) { 
-                var isNumber = !isNaN(d.sc_id);
-                return (isNumber) ? parseInt(d.sc_id, 10) : d.sc_id; 
-            })
-            .attr("x", function(d) { return d.x})
-            .attr("y", function(d) { return d.y})
-            .attr("font-size", 
-                _getLabelFontSize(_.pluck(curVizObj.userConfig.tree_nodes, "sc_id"), config.tree_w_labels_r * 2))
-            .attr("text-anchor", "middle")
-            .attr("pointer-events", "none")
-            .attr("fill-opacity", opacity)
-            .attr("dy", "+0.35em");
+        _plotNodeLabels(curVizObj, "tree", opacity, nodeG);
     }
 }
 
+/* function to plot node labels
+*/
+function _plotNodeLabels(curVizObj, tree_type, opacity, nodeG) {
+    var nodeLabel = nodeG.append("text")
+        .attr("class", function(d) {
+            return "nodeLabel " + tree_type + " nodeLabel_" + d.sc_id;
+        })
+        .text(function(d) { 
+            var isNumber = !isNaN(d.sc_id);
+            return (isNumber) ? parseInt(d.sc_id, 10) : d.sc_id; 
+        })
+        .attr("x", function(d) { return d.x})
+        .attr("y", function(d) { return d.y})
+        .attr("font-size", 
+            _getLabelFontSize(_.pluck(curVizObj.userConfig.tree_nodes, "sc_id"), 
+                curVizObj.generalConfig.tree_w_labels_r * 2))
+        .attr("text-anchor", "middle")
+        .attr("pointer-events", "none")
+        .attr("fill-opacity", opacity)
+        .attr("dy", "+0.35em");
+    return nodeLabel;
+}
 
 /* function to plot phylogenetic tree aligned with heatmap
 * @param {Object} curVizObj
@@ -965,23 +959,7 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
 
     // node single cell labels (if user wants to display them)
     if (curVizObj.userConfig.display_node_ids) {
-
-        var nodeLabel = nodeG.append("text")
-            .attr("class", function(d) {
-                return "nodeLabel tree nodeLabel_" + d.sc_id;
-            })
-            .text(function(d) { 
-                var isNumber = !isNaN(d.sc_id);
-                return (isNumber) ? parseInt(d.sc_id, 10) : d.sc_id; 
-            })
-            .attr("x", function(d) { return d.x})
-            .attr("y", function(d) { return d.y})
-            .attr("font-size", 
-                _getLabelFontSize(_.pluck(curVizObj.userConfig.tree_nodes, "sc_id"), config.tree_w_labels_r * 2))
-            .attr("text-anchor", "middle")
-            .attr("pointer-events", "none")
-            .attr("fill-opacity", opacity)
-            .attr("dy", "+0.35em");
+        _plotNodeLabels(curVizObj, "tree", opacity, nodeG);
     }
 }
 

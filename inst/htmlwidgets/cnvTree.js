@@ -798,7 +798,7 @@ HTMLWidgets.widget({
         // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
 
         // _plotClassicalPhylogeny(curVizObj, 1);
-        // _plotForceDirectedGraph(curVizObj, 0); // originally force-directed graph has opacity of 0
+        _plotForceDirectedGraph(curVizObj, 0); // originally force-directed graph has opacity of 0
         _plotAlignedPhylogeny(curVizObj, 1);
 
         // PLOT HEATMAP LEGEND
