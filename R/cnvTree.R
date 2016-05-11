@@ -483,8 +483,17 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
   heatmap_info <- mut_data
   heatmap_info$chr <- as.character(heatmap_info$chr)
   # prepend 0 to single-character chromosomes for natural sorting of chr
-  heatmap_info$chr[which(nchar(heatmap_info$chr) == 1)] <- 
-    paste("0", heatmap_info$chr[which(nchar(heatmap_info$chr) == 1)], sep="")
+  heatmap_info$chr <- sapply(heatmap_info$chr, function(chr) {
+      if (chr == "X" || chr == "x" || chr == "Y" || chr == "y") {
+        return (chr)
+      }
+      else if (nchar(chr) == 1) {
+        return (paste("0", chr, sep=""))
+      }
+      else {
+        return (chr)
+      }
+    })
   heatmap_info <- dplyr::arrange(heatmap_info, single_cell_id, chr, coord)
 
   # get mutation site as one string

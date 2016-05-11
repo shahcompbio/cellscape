@@ -699,7 +699,14 @@ HTMLWidgets.widget({
                             // reset node
                             _resetNode(d.sc_id, curVizObj);
                         }
-                    });
+                    })
+                    .append("title")
+                    .text(function(d) {
+                        // for targeted mutations
+                        if (curVizObj.userConfig.heatmap_type == "targeted") {
+                            return "Mutation Site: " + d.site;
+                        }
+                    })
             }
         }
 
