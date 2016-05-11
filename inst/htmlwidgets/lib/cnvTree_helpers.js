@@ -1130,6 +1130,37 @@ function _updateTrimmedMatrix(curVizObj) {
         .transition()
         .duration(1000)
         .attr("y", matrix_height + (config.chromLegendHeight / 2));
+
+    // check for groups no longer in the view
+    if (curVizObj.view.groupsSpecified) {
+        // for each group
+        Object.keys(curVizObj.data.groups).forEach(function(group_id) {
+            // check that the group has members in the view
+            var group_members_in_view = 
+                _getIntersection(curVizObj.data.groups[group_id], 
+                    curVizObj.userConfig.hm_sc_ids_ordered);
+
+            // if no members left in view, delete the group from the legend
+            if (group_members_in_view.length == 0) {
+                d3.select("#" + curVizObj.view_id).select(".legendGroupRect.group_" + group_id).remove();
+                d3.select("#" + curVizObj.view_id).select(".legendGroupText.group_" + group_id).remove();
+            }
+        })
+
+        // adjust position of groups in legend
+        d3.select("#" + curVizObj.view_id).selectAll(".legendGroupRect")
+            .transition()
+            .duration(1000)
+            .attr("y", function(d,i) {
+                return config.groupAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
+            });
+        d3.select("#" + curVizObj.view_id).selectAll(".legendGroupText")
+            .transition()
+            .duration(1000)
+            .attr("y", function(d,i) {
+                return config.groupAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
+            })
+    }
 }
 
 /* function to get chromosome min and max values
@@ -1351,3 +1382,17 @@ function _sortByKey(array, firstKey, secondKey) {
     });
 }
 
+/* function to get the intersection of two arrays
+* @param {Array} array1 -- first array
+* @param {Array} array2 -- second array
+*/
+function _getIntersection(array1, array2) {
+
+    if (array1 == undefined || array2 == undefined) {
+        return [];
+    }
+
+    return array1.filter(function(n) {
+        return array2.indexOf(n) != -1
+    });
+}
