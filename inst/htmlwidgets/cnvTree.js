@@ -19,7 +19,7 @@ HTMLWidgets.widget({
             groupAnnotWidth: 10, // width of the selected single cell group annotation
 
             // colours
-            defaultNodeColour: "#3458A5",
+            defaultNodeColour: "#B7B7B7",
             highlightColour: "#000000",
             linkHighlightColour: "#000000",
             defaultLinkColour: "#B7B7B7",
