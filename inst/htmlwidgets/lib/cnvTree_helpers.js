@@ -239,7 +239,8 @@ function _getYCoordinates(curVizObj) {
             (config.hmHeight-config.chromLegendHeight) : config.hmHeight;
 
         // starting y-coordinate for this id
-        curVizObj.data.yCoordinates[sc_id] = (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
+        curVizObj.data.yCoordinates[sc_id] = 
+            config.paddingAboveMainView + (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
     });
 
     // for each single cell that doesn't have heatmap data

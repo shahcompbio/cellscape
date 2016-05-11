@@ -12,6 +12,9 @@ HTMLWidgets.widget({
             tree_r: 4, // tree node radius
             tree_w_labels_r: 7, // tree node radius when labels displayed within
 
+            // main view padding above
+            paddingAboveMainView: 7,
+
             // indicator
             indicatorWidth: 7, // width of the selected single cell indicator
 
@@ -29,8 +32,6 @@ HTMLWidgets.widget({
 
             // heatmap and group legends
             heatmapLegendWidth: 50,
-            groupAnnotStartY: 140, // starting y-pixel for group annotation legend
-            heatmapLegendStartY: 1, // starting y-pixel for heatmap legend
             legendTitleHeight: 14, // height of legend titles
             rectHeight: 12, // rectangle in legend
             rectSpacing: 2, // spacing between legend rectangles
@@ -69,9 +70,7 @@ HTMLWidgets.widget({
         var config = curVizObj.generalConfig;
 
         // heatmap configurations
-        config.hmHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
-        config.cnvTop = 0;
-        config.cnvBottom = (config.hmHeight-config.chromLegendHeight);
+        config.hmHeight = config.height - config.topBarHeight - config.spaceBelowTopBar - config.paddingAboveMainView;
 
         // indicator configurations
         config.indicatorHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
@@ -83,8 +82,11 @@ HTMLWidgets.widget({
         config.heatmapLegendHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
 
         // tree configurations
-        config.treeHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
+        config.treeHeight = config.height - config.topBarHeight - config.spaceBelowTopBar - config.paddingAboveMainView;
 
+        // legend starts
+        config.groupAnnotStartY = 140 + config.paddingAboveMainView; // starting y-pixel for group annotation legend
+        config.heatmapLegendStartY = 1 + config.paddingAboveMainView; // starting y-pixel for heatmap legend
         return {}
 
     },
@@ -723,7 +725,7 @@ HTMLWidgets.widget({
         chromBoxes.append("rect")
             .attr("class", function(d) { return "chromBox chr" + d.chr; })
             .attr("x", function(d) { return d.x; })
-            .attr("y", config.hmHeight-config.chromLegendHeight)
+            .attr("y", config.paddingAboveMainView + config.hmHeight - config.chromLegendHeight)
             .attr("height", config.chromLegendHeight)
             .attr("width", function(d) { return d.width; })
             .style("fill", function(d) { 
@@ -737,7 +739,7 @@ HTMLWidgets.widget({
         chromBoxes.append("text")
             .attr("class", function(d) { return "chromBoxText chr" + d.chr; })
             .attr("x", function(d) { return d.x + (d.width / 2); })
-            .attr("y", config.hmHeight - (config.chromLegendHeight / 2))
+            .attr("y", config.paddingAboveMainView + config.hmHeight - (config.chromLegendHeight / 2))
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .attr("font-family", "Arial")
