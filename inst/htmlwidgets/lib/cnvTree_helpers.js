@@ -888,6 +888,25 @@ function _plotNodeLabels(curVizObj, tree_type, opacity, nodeG) {
     return nodeLabel;
 }
 
+/* function to get diagonal for aligned phylogeny
+* @param {Object} curVizObj
+* @param {Object} d -- current data object
+* @param {Number} half_rowHeight -- half the height of one row in the heatmap
+*/
+function _getDiagonal(curVizObj, d, half_rowHeight) {
+
+    var diagonal = d3.svg.diagonal()
+        .projection(function(d) { return [d.y, d.x]; });
+
+    var source = {};
+    var target = {};
+    source.y = curVizObj.data.xCoordinates[d.source_sc_id];
+    source.x = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
+    target.y = curVizObj.data.xCoordinates[d.target_sc_id];
+    target.x = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
+    return diagonal({source: source, target: target});
+}
+
 /* function to plot phylogenetic tree aligned with heatmap
 * @param {Object} curVizObj
 * @param {Number} opacity -- opacity of tree elements
@@ -896,10 +915,6 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
     var config = curVizObj.generalConfig;
     var r = (curVizObj.userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
     var half_rowHeight = (curVizObj.view.hm.rowHeight/2); // half the height of one heatmap row
-
-    var diagonal = d3.svg.diagonal()
-        .projection(function(d) { return [d.y, d.x]; });
-
 
     // create links
     var link = curVizObj.view.treeSVG.append("g")
@@ -912,13 +927,7 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
             return "link tree " + d.link_id;
         })                
         .attr("d", function(d) {
-            var source = {};
-            var target = {};
-            source.y = curVizObj.data.xCoordinates[d.source_sc_id];
-            source.x = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
-            target.y = curVizObj.data.xCoordinates[d.target_sc_id];
-            target.x = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
-            return diagonal({source: source, target: target});
+            return _getDiagonal(curVizObj, d, half_rowHeight);
         })
         .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
@@ -1045,21 +1054,19 @@ function _reformatGroupAnnots(curVizObj) {
 */
 function _updateTrimmedMatrix(curVizObj) {
     var config = curVizObj.generalConfig;
+    var half_rowHeight = (curVizObj.view.hm.rowHeight/2); // half the height of one heatmap row
+
+    // get updated y-coordinates for each single cell
+    _getYCoordinates(curVizObj);
 
     // keep track of matrix height
     var matrix_height = 0;
 
     // for each single cell that's still in the matrix
     curVizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id) {
-        // original y-coordinate for this single cell
-        var original_sc_index = curVizObj.view.original_sc_list.indexOf(sc_id);
-        var original_y = (original_sc_index/curVizObj.view.hm.nrows)*(config.hmHeight-config.chromLegendHeight);
-
-        // new y-coordinate
-        var new_sc_index = curVizObj.userConfig.hm_sc_ids_ordered.indexOf(sc_id);
-        var new_y = (new_sc_index/curVizObj.view.hm.nrows)*(config.hmHeight-config.chromLegendHeight);
-
-        // y-difference
+        // difference between original & new y-coordinates for this single cell
+        var original_y = curVizObj.data.originalYCoordinates[sc_id];
+        var new_y = curVizObj.data.yCoordinates[sc_id];
         var diff_y = original_y - new_y;
 
         // translate copy number profile & indicator
@@ -1090,7 +1097,23 @@ function _updateTrimmedMatrix(curVizObj) {
 
         // update matrix height 
         matrix_height = new_y + curVizObj.view.hm.rowHeight;
+
     });
+
+    // translate aligned tree links
+    d3.selectAll(".tree.link") 
+        .transition()
+        .duration(1000)                       
+        .attr("d", function(d) {
+            return _getDiagonal(curVizObj, d, half_rowHeight);
+        });
+    d3.selectAll(".tree.node")
+        .transition()
+        .duration(1000)
+        .attr("cy", function(d) { 
+            d.y = curVizObj.data.yCoordinates[d.sc_id] + half_rowHeight;
+            return d.y;
+        });
 
     // move chromosome legend up
     d3.select("#" + curVizObj.view_id).selectAll(".chromBox")

@@ -182,6 +182,9 @@ HTMLWidgets.widget({
         _getYCoordinates(curVizObj);
         _getXCoordinates(curVizObj);
 
+        // store original y coordinates, for tree pruning purposes
+        curVizObj.data.originalYCoordinates = $.extend({}, curVizObj.data.yCoordinates);
+
         console.log("curVizObj");
         console.log(curVizObj);
 
