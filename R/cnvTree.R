@@ -40,8 +40,8 @@ cnvTree <- function(cnv_data = NULL,
                     sc_groups = NULL, 
                     mut_order = NULL,
                     display_node_ids = FALSE, 
-                    width = 800, 
-                    height = 900) {
+                    width = 1000, 
+                    height = 1000) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
 

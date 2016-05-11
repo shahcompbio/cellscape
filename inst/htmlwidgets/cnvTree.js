@@ -134,6 +134,9 @@ HTMLWidgets.widget({
         // get ancestors for each node
         curVizObj.data.treeAncestorsArr = _getAncestorIds(curVizObj);
 
+        // get direct ancestors for each ndoe
+        curVizObj.data.direct_ancestors = _getDirectAncestors(curVizObj.data.treeStructure, {});
+
         // get the height of the tree (# nodes)
         curVizObj.data.tree_height = 0;
         Object.keys(curVizObj.data.treeAncestorsArr).forEach(function(key) {
@@ -792,7 +795,7 @@ HTMLWidgets.widget({
 
         // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
 
-        _plotForceDirectedGraph(curVizObj, 0); // originally force-directed graph has opacity of 0
+        // _plotForceDirectedGraph(curVizObj, 0); // originally force-directed graph has opacity of 0
         _plotAlignedPhylogeny(curVizObj, 1);
 
         // PLOT HEATMAP LEGEND

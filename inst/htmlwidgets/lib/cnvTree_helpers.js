@@ -231,34 +231,76 @@ function _getYCoordinates(curVizObj) {
     var config = curVizObj.generalConfig;
     
     curVizObj.data.yCoordinates = {}; // y-coordinates for each single cell (each single cell id is a property)
+    
+    // keep track of single cells that have been assigned
+    var assigned_scs = $.extend([], curVizObj.data.hm_sc_ids);
+
+    // height of heatmap 
+    var hmHeight = (curVizObj.userConfig.heatmap_type == "cnv") ? 
+        (config.hmHeight-config.chromLegendHeight) : config.hmHeight;
 
     // for each single cell in the heatmap
     curVizObj.data.hm_sc_ids.forEach(function(sc_id, sc_id_i) {
-        // height of heatmap 
-        var hmHeight = (curVizObj.userConfig.heatmap_type == "cnv") ? 
-            (config.hmHeight-config.chromLegendHeight) : config.hmHeight;
 
         // starting y-coordinate for this id
         curVizObj.data.yCoordinates[sc_id] = 
             config.paddingAboveMainView + (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
     });
 
-    // for each single cell that doesn't have heatmap data
-    curVizObj.userConfig.scs_missing_from_hm.forEach(function(sc_id, sc_id_i) {
-        var y_coordinates_of_direct_descendants = [];
-
-        // for each of its direct descendants, get the y-coordinate
-        curVizObj.data.direct_descendants[sc_id].forEach(function(desc) {
-            if (curVizObj.data.yCoordinates[desc]) {
-                y_coordinates_of_direct_descendants.push(curVizObj.data.yCoordinates[desc]);
-            }
+    // sort single cells without heatmap data by the number of ancestors they have
+    var missing_scs_sorted = [];
+    curVizObj.userConfig.scs_missing_from_hm.forEach(function(sc_id) {
+        missing_scs_sorted.push({
+            sc_id: sc_id,
+            n_ancestors: curVizObj.data.treeAncestorsArr[sc_id].length
         })
+    })
+    _sortByKey(missing_scs_sorted, "n_ancestors");
 
-        // set the y-coordinate for this latent single cell to be 
-        // the average y-coordinate of these direct descendants
-        var sum_y = y_coordinates_of_direct_descendants.reduce((a, b) => a + b, 0);
-        var average_y = sum_y/(y_coordinates_of_direct_descendants.length);
-        curVizObj.data.yCoordinates[sc_id] = average_y;
+    // for each single cell that doesn't have heatmap data
+    missing_scs_sorted.forEach(function(sc, sc_id_i) {
+        console.log("sc.sc_id");
+        console.log(sc.sc_id);
+        var y_coordinates_of_direct_descendants = [];
+        var cur_direct_descendants = // direct descendants already assigned a y-coordinate
+            _getIntersection(curVizObj.data.direct_descendants[sc.sc_id], assigned_scs);
+        var cur_direct_ancestor = // direct ancestors already assigned a y-coordinate
+            _getIntersection([curVizObj.data.direct_ancestors[sc.sc_id]], assigned_scs);
+
+        // if the cell has descendants in the heatmap
+        if (cur_direct_descendants.length > 0) {
+
+            // for each of its direct descendants, get the y-coordinate
+            cur_direct_descendants.forEach(function(desc) {
+                if (curVizObj.data.yCoordinates[desc]) {
+                    y_coordinates_of_direct_descendants.push(curVizObj.data.yCoordinates[desc]);
+                }
+            })
+
+            // set the y-coordinate for this latent single cell to be 
+            // the average y-coordinate of these direct descendants
+            var sum_y = y_coordinates_of_direct_descendants.reduce((a, b) => a + b, 0);
+            var average_y = sum_y/(y_coordinates_of_direct_descendants.length);
+            curVizObj.data.yCoordinates[sc.sc_id] = average_y;  
+        }
+
+        // if the cell has an ancestor
+        else if (cur_direct_ancestor.length > 0) {
+            console.log("has ancestor");
+            // set the y-coordinate of this latent single cell to be
+            // the y coordinate of its ancestor
+            curVizObj.data.yCoordinates[sc.sc_id] = curVizObj.data.yCoordinates[cur_direct_ancestor]; 
+        }
+
+        // the cell must be a latent root node
+        else {
+            console.log('root');
+            curVizObj.data.yCoordinates[sc.sc_id] = config.paddingAboveMainView + (hmHeight/2);
+        }
+
+        // mark this cell as assigned to a y-coordinate
+        assigned_scs.push(sc.sc_id);
+
     })
 }
 
@@ -618,6 +660,22 @@ function _getDirectDescendants(curNode, dir_descendants) {
     }
 
     return dir_descendants;
+}
+
+/* function to get the DIRECT ancestor id for all nodes
+* @param {Object} curNode -- current node in the tree (originally the root)
+* @param {Object} dir_ancestors -- originally empty array of direct descendants for each node
+*/
+function _getDirectAncestors(curNode, dir_ancestors) {
+
+    if (curNode.children.length > 0) {
+        for (var i = 0; i < curNode.children.length; i++) {
+            dir_ancestors[curNode.children[i].sc_id] = curNode.sc_id;
+            _getDirectAncestors(curNode.children[i], dir_ancestors)
+        }
+    }
+
+    return dir_ancestors;
 }
 
 /* function to get the ancestor ids for all nodes
