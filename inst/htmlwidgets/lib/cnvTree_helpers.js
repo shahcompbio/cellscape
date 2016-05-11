@@ -733,7 +733,10 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
             .attr("class", function(d) {
                 return "nodeLabel graph nodeLabel_" + d.sc_id;
             })
-            .text(function(d) { return parseInt(d.sc_id, 10); })
+            .text(function(d) { 
+                var isNumber = !isNaN(d.sc_id);
+                return (isNumber) ? parseInt(d.sc_id, 10) : d.sc_id; 
+            })
             .attr("font-size", 
                 _getLabelFontSize(_.pluck(userConfig.tree_nodes, "sc_id"), config.tree_w_labels_r * 2))
             .attr("text-anchor", "middle")
@@ -861,7 +864,10 @@ function _plotClassicalPhylogeny(curVizObj, opacity) {
             .attr("class", function(d) {
                 return "nodeLabel tree nodeLabel_" + d.sc_id;
             })
-            .text(function(d) { return parseInt(d.sc_id, 10); })
+            .text(function(d) { 
+                var isNumber = !isNaN(d.sc_id);
+                return (isNumber) ? parseInt(d.sc_id, 10) : d.sc_id; 
+            })
             .attr("x", function(d) { return d.x})
             .attr("y", function(d) { return d.y})
             .attr("font-size", 
@@ -964,7 +970,10 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
             .attr("class", function(d) {
                 return "nodeLabel tree nodeLabel_" + d.sc_id;
             })
-            .text(function(d) { return parseInt(d.sc_id, 10); }) // TODO what about labels that aren't numbers??
+            .text(function(d) { 
+                var isNumber = !isNaN(d.sc_id);
+                return (isNumber) ? parseInt(d.sc_id, 10) : d.sc_id; 
+            })
             .attr("x", function(d) { return d.x})
             .attr("y", function(d) { return d.y})
             .attr("font-size", 
