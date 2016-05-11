@@ -889,6 +889,10 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
     var r = (curVizObj.userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
     var half_rowHeight = (curVizObj.view.hm.rowHeight/2); // half the height of one heatmap row
 
+    var diagonal = d3.svg.diagonal()
+        .projection(function(d) { return [d.y, d.x]; });
+
+
     // create links
     var link = curVizObj.view.treeSVG.append("g")
         .classed("treeLinks", true)
@@ -902,11 +906,11 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
         .attr("d", function(d) {
             var source = {};
             var target = {};
-            source.x = curVizObj.data.xCoordinates[d.source_sc_id];
-            source.y = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
-            target.x = curVizObj.data.xCoordinates[d.target_sc_id];
-            target.y = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
-            return _elbow(d, source, target);
+            source.y = curVizObj.data.xCoordinates[d.source_sc_id];
+            source.x = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
+            target.y = curVizObj.data.xCoordinates[d.target_sc_id];
+            target.x = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
+            return diagonal({source: source, target: target});
         })
         .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
