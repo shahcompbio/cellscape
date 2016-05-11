@@ -133,8 +133,35 @@ HTMLWidgets.widget({
         // keep track of original list of scs, for tree pruning purposes
         curVizObj.view.original_sc_list = $.extend([], curVizObj.userConfig.hm_sc_ids_ordered);
 
-        // get tree structure
-        curVizObj.data.treeStructure = _getTreeStructure(curVizObj.userConfig.tree_edges, curVizObj.userConfig.root);
+        // get tree structures for each node
+        curVizObj.data.treeStructures = _getTreeStructures(curVizObj.userConfig.tree_edges);
+        
+        // the root tree structure
+        curVizObj.data.treeStructure = 
+            _.findWhere(curVizObj.data.treeStructures, {sc_id: curVizObj.userConfig.root});
+
+        // get descendants for each node
+        curVizObj.data.treeDescendantsArr = {};
+        curVizObj.userConfig.tree_nodes.forEach(function(node, idx) {
+            var curRoot = _.findWhere(curVizObj.data.treeStructures, {sc_id: node.sc_id});
+            var curDescendants = _getDescendantIds(curRoot, []);
+            curVizObj.data.treeDescendantsArr[node.sc_id] = curDescendants;
+        })
+
+        // get direct descendants for each node
+        curVizObj.data.direct_descendants = _getDirectDescendants(curVizObj.data.treeStructure, {});
+
+        // get ancestors for each node
+        curVizObj.data.treeAncestorsArr = _getAncestorIds(curVizObj);
+
+        // get the height of the tree (# nodes)
+        curVizObj.data.tree_height = 0;
+        Object.keys(curVizObj.data.treeAncestorsArr).forEach(function(key) {
+            var ancestor_arr = curVizObj.data.treeAncestorsArr[key];
+            if ((ancestor_arr.length + 1) > curVizObj.data.tree_height) {
+                curVizObj.data.tree_height = (ancestor_arr.length + 1);
+            }
+        })
 
         // GET CNV CONTENT
 
@@ -150,9 +177,10 @@ HTMLWidgets.widget({
             _reformatGroupAnnots(curVizObj);
         }
 
-        // GET Y-COORDINATE FOR EACH SINGLE CELL
+        // GET X- and Y-COORDINATE FOR EACH SINGLE CELL
 
         _getYCoordinates(curVizObj);
+        _getXCoordinates(curVizObj);
 
         console.log("curVizObj");
         console.log(curVizObj);
@@ -769,8 +797,9 @@ HTMLWidgets.widget({
 
         // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
 
-        _plotClassicalPhylogeny(curVizObj, 1);
-        _plotForceDirectedGraph(curVizObj, 0); // originally force-directed graph has opacity of 0
+        // _plotClassicalPhylogeny(curVizObj, 1);
+        // _plotForceDirectedGraph(curVizObj, 0); // originally force-directed graph has opacity of 0
+        _plotAlignedPhylogeny(curVizObj, 1);
 
         // PLOT HEATMAP LEGEND
 

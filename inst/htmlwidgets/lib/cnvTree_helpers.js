@@ -232,6 +232,7 @@ function _getYCoordinates(curVizObj) {
     
     curVizObj.data.yCoordinates = {}; // y-coordinates for each single cell (each single cell id is a property)
 
+    // for each single cell in the heatmap
     curVizObj.userConfig.hm_sc_ids_ordered.forEach(function(sc_id, sc_id_i) {
         // height of heatmap 
         var hmHeight = (curVizObj.userConfig.heatmap_type == "cnv") ? 
@@ -239,6 +240,48 @@ function _getYCoordinates(curVizObj) {
 
         // starting y-coordinate for this id
         curVizObj.data.yCoordinates[sc_id] = (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
+    });
+
+    // for each single cell that doesn't have heatmap data
+    curVizObj.userConfig.scs_missing_from_hm.forEach(function(sc_id, sc_id_i) {
+        var y_coordinates_of_direct_descendants = [];
+
+        // for each of its direct descendants, get the y-coordinate
+        curVizObj.data.direct_descendants[sc_id].forEach(function(desc) {
+            if (curVizObj.data.yCoordinates[desc]) {
+                y_coordinates_of_direct_descendants.push(curVizObj.data.yCoordinates[desc]);
+            }
+        })
+
+        // set the y-coordinate for this latent single cell to be 
+        // the average y-coordinate of these direct descendants
+        var sum_y = y_coordinates_of_direct_descendants.reduce((a, b) => a + b, 0);
+        var average_y = sum_y/(y_coordinates_of_direct_descendants.length);
+        curVizObj.data.yCoordinates[sc_id] = average_y;
+    })
+}
+
+
+/* function to get the x-coordinate for each single cell in the tree
+* @param {Object} curVizObj
+*/
+function _getXCoordinates(curVizObj) {
+    var config = curVizObj.generalConfig;
+    
+    curVizObj.data.xCoordinates = {}; // y-coordinates for each single cell (each single cell id is a property)
+
+    // for each single cell in the tree
+    curVizObj.userConfig.tree_nodes.forEach(function(node, sc_id_i) {
+
+        // width of tree 
+        var treeWidth = config.treeWidth;
+
+        // number of ancestors for this single cell
+        var n_ancestors = curVizObj.data.treeAncestorsArr[node.sc_id].length;
+
+        // starting x-coordinate for this single cell
+        curVizObj.data.xCoordinates[node.sc_id] = 
+            (treeWidth/(curVizObj.data.tree_height-1)) * n_ancestors; 
     })
 }
 
@@ -500,18 +543,16 @@ function _getLabelFontSize(labels, width) {
 function _retrieveSCTree(sc_id, nodes) {
    var foundNode = _.findWhere(nodes, {sc_id: sc_id});
    if (!foundNode) {
-      nodes.push({name: sc_id, sc_id: sc_id});
+      nodes.push({children: [], name: sc_id, sc_id: sc_id});
       foundNode = _.findWhere(nodes, {sc_id: sc_id});
    }
    return foundNode;
 };
 
-
-/* function to get the tree structure given an array of edges and the root node 
+/* function to get the tree structures for each node, given an array of edges 
 * param {Array} directed_edges -- array of directed edges objects (source, target)
-* @param {String} root_sc_id -- single cell id for the root cell
 */
-function _getTreeStructure(directed_edges, root_sc_id) {
+function _getTreeStructures(directed_edges) {
    var treeStructures = []; // all (descendant) tree structures for all single cells 
 
    directed_edges.forEach(function(edge) {
@@ -521,17 +562,83 @@ function _getTreeStructure(directed_edges, root_sc_id) {
       else parent.children = [child];
    });
 
-   var treeStructure = _.findWhere(treeStructures, {sc_id: root_sc_id});
-
-   return treeStructure;
+   return treeStructures;
 };
+
+/* function to get descendants id's for the specified key
+* @param {Object} root - key for which we want descendants
+* @param {Array} descendants - initially empty array for descendants to be placed into
+*/
+function _getDescendantIds(root, descendants) {
+    var child;
+
+    if (root["children"].length > 0) {
+        for (var i = 0; i < root["children"].length; i++) {
+            child = root["children"][i];
+            descendants.push(child["sc_id"]);
+            _getDescendantIds(child, descendants);
+        }
+    }
+    return descendants;
+}
+
+/* function to get the DIRECT descendant id for all nodes
+* @param {Object} curNode -- current node in the tree (originally the root)
+* @param {Object} dir_descendants -- originally empty array of direct descendants for each node
+*/
+function _getDirectDescendants(curNode, dir_descendants) {
+    dir_descendants[curNode.sc_id] = [];
+
+    if (curNode.children.length > 0) {
+        for (var i = 0; i < curNode.children.length; i++) {
+            dir_descendants[curNode.sc_id].push(curNode.children[i].sc_id);
+            _getDirectDescendants(curNode.children[i], dir_descendants)
+        }
+    }
+
+    return dir_descendants;
+}
+
+/* function to get the ancestor ids for all nodes
+* @param {Object} curVizObj
+*/
+function _getAncestorIds(curVizObj) {
+    var ancestors = {},
+        curDescendants,
+        descendants_arr = curVizObj.data.treeDescendantsArr,
+        treeNodes = curVizObj.userConfig.tree_nodes;
+
+    // set up each node as originally containing an empty list of ancestors
+    treeNodes.forEach(function(node, idx) {
+        ancestors[node.sc_id] = [];
+    })
+
+    // get ancestors data from the descendants data
+    treeNodes.forEach(function(node, idx) {
+        // for each descendant of this node
+        curDescendants = descendants_arr[node.sc_id];
+        for (var i = 0; i < curDescendants.length; i++) { 
+            // add the node to descentant's ancestor list
+            ancestors[curDescendants[i]].push(node.sc_id);
+        }
+    })
+
+    return ancestors;
+}
 
 /* elbow function to draw phylogeny links 
 */
-function _elbow(d) {
-    return "M" + d.source.x + "," + d.source.y
-        + "H" + (d.source.x + (d.target.x-d.source.x)/3)
-        + "V" + d.target.y + "H" + d.target.x;
+function _elbow(d, source = null, target = null) {
+    if (!(source) && !(target)) {
+        return "M" + d.source.x + "," + d.source.y
+            + "H" + (d.source.x + (d.target.x-d.source.x)/3)
+            + "V" + d.target.y + "H" + d.target.x;
+    }
+    else {
+        return "M" + source.x + "," + source.y
+            + "H" + (source.x + (target.x-source.x)/3)
+            + "V" + target.y + "H" + target.x;
+    }
 }
 
 /* function to plot the force-directed graph
@@ -755,6 +862,109 @@ function _plotClassicalPhylogeny(curVizObj, opacity) {
                 return "nodeLabel tree nodeLabel_" + d.sc_id;
             })
             .text(function(d) { return parseInt(d.sc_id, 10); })
+            .attr("x", function(d) { return d.x})
+            .attr("y", function(d) { return d.y})
+            .attr("font-size", 
+                _getLabelFontSize(_.pluck(curVizObj.userConfig.tree_nodes, "sc_id"), config.tree_w_labels_r * 2))
+            .attr("text-anchor", "middle")
+            .attr("pointer-events", "none")
+            .attr("fill-opacity", opacity)
+            .attr("dy", "+0.35em");
+    }
+}
+
+
+/* function to plot phylogenetic tree aligned with heatmap
+* @param {Object} curVizObj
+* @param {Number} opacity -- opacity of tree elements
+*/
+function _plotAlignedPhylogeny(curVizObj, opacity) {
+    var config = curVizObj.generalConfig;
+    var r = (curVizObj.userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
+    var half_rowHeight = (curVizObj.view.hm.rowHeight/2); // half the height of one heatmap row
+
+    // create links
+    var link = curVizObj.view.treeSVG.append("g")
+        .classed("treeLinks", true)
+        .selectAll(".tree.link")                  
+        .data(curVizObj.userConfig.tree_edges)                   
+        .enter().append("path")  
+        .attr("class", function(d) {
+            d.link_id = "link_source_" + d.source_sc_id + "_target_" + d.target_sc_id;
+            return "link tree " + d.link_id;
+        })                
+        .attr("d", function(d) {
+            var source = {};
+            var target = {};
+            source.x = curVizObj.data.xCoordinates[d.source_sc_id];
+            source.y = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
+            target.x = curVizObj.data.xCoordinates[d.target_sc_id];
+            target.y = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
+            return _elbow(d, source, target);
+        })
+        .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
+        .attr("stroke-width", "2px")
+        .attr("fill", "none")
+        .attr("fill-opacity", opacity)
+        .attr("stroke-opacity", opacity)
+        .attr("pointer-events", function() {
+            return (opacity == 1) ? "auto" : "none";
+        })
+        .on("mouseover", function(d) {
+            _linkMouseover(curVizObj, d.link_id);
+        })
+        .on("mouseout", function(d) { 
+            _linkMouseout(curVizObj, true); 
+        })
+        .on("click", function(d) {
+            _linkClick(curVizObj, d.link_id);
+        });
+
+    // create nodes
+    var nodeG = curVizObj.view.treeSVG
+        .selectAll(".treeNodesG")
+        .data(curVizObj.userConfig.tree_nodes)
+        .enter()
+        .append("g")
+        .attr("class", "treeNodesG");;
+
+    nodeG.append("circle")   
+        .attr("class", function(d) {
+            return "tree node node_" + d.sc_id;
+        })  
+        .attr("cx", function(d) { 
+            d.x = curVizObj.data.xCoordinates[d.sc_id];
+            return d.x;
+        })
+        .attr("cy", function(d) { 
+            d.y = curVizObj.data.yCoordinates[d.sc_id] + half_rowHeight;
+            return d.y;
+        })   
+        .attr("stroke",curVizObj.generalConfig.defaultLinkColour)           
+        .attr("fill", function(d) {
+            return _getNodeColour(curVizObj, d.sc_id);
+        })
+        .attr("r", r)
+        .attr("fill-opacity", opacity)
+        .attr("stroke-opacity", opacity)
+        .attr("pointer-events", function() {
+            return (opacity == 1) ? "auto" : "none";
+        })
+        .on('mouseover', function(d) {
+            _nodeMouseover(curVizObj, d.sc_id);
+        })
+        .on('mouseout', function(d) {
+            _nodeMouseout(curVizObj, d.sc_id);
+        });
+
+    // node single cell labels (if user wants to display them)
+    if (curVizObj.userConfig.display_node_ids) {
+
+        var nodeLabel = nodeG.append("text")
+            .attr("class", function(d) {
+                return "nodeLabel tree nodeLabel_" + d.sc_id;
+            })
+            .text(function(d) { return parseInt(d.sc_id, 10); }) // TODO what about labels that aren't numbers??
             .attr("x", function(d) { return d.x})
             .attr("y", function(d) { return d.y})
             .attr("font-size", 
