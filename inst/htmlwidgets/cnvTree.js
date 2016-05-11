@@ -42,7 +42,6 @@ HTMLWidgets.widget({
             topBarHeight: 30, // height of top panel
             topBarColour: "#D9D9D9",
             topBarHighlight: "#C6C6C6",
-            spaceBelowTopBar: 15, // amount of space (px) below the top bar
 
             // switch between graph/tree
             switchView: true,
@@ -69,20 +68,15 @@ HTMLWidgets.widget({
         curVizObj.generalConfig = $.extend(true, {}, defaults);
         var config = curVizObj.generalConfig;
 
+        // view container configurations
+        config.containerHeight = config.height - config.topBarHeight;
+        config.containerWidth = config.width;
+
         // heatmap configurations
-        config.hmHeight = config.height - config.topBarHeight - config.spaceBelowTopBar - config.paddingAboveMainView;
-
-        // indicator configurations
-        config.indicatorHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
-
-        // group annotation configurations
-        config.groupAnnotHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
-
-        // heatmap legend configurations
-        config.heatmapLegendHeight = config.height - config.topBarHeight - config.spaceBelowTopBar;
+        config.hmHeight = config.height - config.topBarHeight - config.paddingAboveMainView;
 
         // tree configurations
-        config.treeHeight = config.height - config.topBarHeight - config.spaceBelowTopBar - config.paddingAboveMainView;
+        config.treeHeight = config.height - config.topBarHeight - config.paddingAboveMainView;
 
         // legend starts
         config.groupAnnotStartY = 140 + config.paddingAboveMainView; // starting y-pixel for group annotation legend
@@ -234,15 +228,6 @@ HTMLWidgets.widget({
             .style("height", config.topBarHeight + "px")
             .style("float", "left");
 
-        // SPACE BETWEEN TOP BAR AND VIEW DIV
-
-        var spaceDIV = d3.select(el)
-            .append("div")
-            .attr("class", "spaceDIV")
-            .style("width", config.width + "px")
-            .style("height", config.spaceBelowTopBar + "px")
-            .style("float", "left");
-
         // CONTAINER DIV and SVG
 
         var containerDIV = d3.select(el)
@@ -258,8 +243,8 @@ HTMLWidgets.widget({
             .attr("class", "containerSVG_" + view_id)
             .attr("x", 0)
             .attr("y", 0)
-            .attr("width", config.width)
-            .attr("height", config.hmHeight);
+            .attr("width", config.containerWidth)
+            .attr("height", config.containerHeight);
 
         // TREE SVG
 
