@@ -479,7 +479,6 @@ function _downstreamEffects(curVizObj, link_id) {
     });
 };
 
-
 /* function to get order of tree nodes
 * param link_ids -- ids for all links in tree
 * param node_name -- the name of the current node - start with root
@@ -487,21 +486,28 @@ function _downstreamEffects(curVizObj, link_id) {
 */
 function _getNodeOrder(link_ids, node_name, nodeOrder) {
 
-    // append this node to the node order array
-    nodeOrder.push(node_name);
-
     // get the targets of this node
     var targetRX = new RegExp("link_source_" + node_name + "_target_(.+)");
     var targets = [];
     link_ids.map(function(id) {
-       if (id.match(targetRX)) {
-         targets.push(targetRX.exec(id)[1]);
-       }
+        if (id.match(targetRX)) {
+            targets.push(targetRX.exec(id)[1]);
+        }
     });
 
-    // for each of the targets, get their own targets
-    targets.map(function(target) {
-       _getNodeOrder(link_ids, target, nodeOrder);
+    // if there are no targets, append the current node to the node order array
+    if (targets.length == 0) {
+        nodeOrder.push(node_name);
+    }
+
+    // for each of the targets
+    targets.map(function(target, target_i) {
+        // if we're at the middle target, append the current node to the node order array
+        if (target_i == Math.floor(targets.length/2)) {
+            nodeOrder.push(node_name);
+        }
+        // get targets of this target
+        _getNodeOrder(link_ids, target, nodeOrder);
     });
 
     return nodeOrder;
