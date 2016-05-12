@@ -259,15 +259,13 @@ function _getYCoordinates(curVizObj) {
 
     // for each single cell that doesn't have heatmap data
     missing_scs_sorted.forEach(function(sc, sc_id_i) {
-        console.log("sc.sc_id");
-        console.log(sc.sc_id);
         var y_coordinates_of_direct_descendants = [];
         var cur_direct_descendants = // direct descendants already assigned a y-coordinate
             _getIntersection(curVizObj.data.direct_descendants[sc.sc_id], assigned_scs);
         var cur_direct_ancestor = // direct ancestors already assigned a y-coordinate
             _getIntersection([curVizObj.data.direct_ancestors[sc.sc_id]], assigned_scs);
 
-        // if the cell has descendants in the heatmap
+        // if the cell has descendants with y-coordinates already assigned
         if (cur_direct_descendants.length > 0) {
 
             // for each of its direct descendants, get the y-coordinate
@@ -284,9 +282,8 @@ function _getYCoordinates(curVizObj) {
             curVizObj.data.yCoordinates[sc.sc_id] = average_y;  
         }
 
-        // if the cell has an ancestor
+        // if the cell has an ancestor with y-coordinates already assigned
         else if (cur_direct_ancestor.length > 0) {
-            console.log("has ancestor");
             // set the y-coordinate of this latent single cell to be
             // the y coordinate of its ancestor
             curVizObj.data.yCoordinates[sc.sc_id] = curVizObj.data.yCoordinates[cur_direct_ancestor]; 
@@ -294,7 +291,6 @@ function _getYCoordinates(curVizObj) {
 
         // the cell must be a latent root node
         else {
-            console.log('root');
             curVizObj.data.yCoordinates[sc.sc_id] = config.paddingAboveMainView + (hmHeight/2);
         }
 

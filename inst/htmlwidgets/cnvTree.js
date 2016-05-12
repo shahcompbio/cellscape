@@ -189,15 +189,25 @@ HTMLWidgets.widget({
 
         // CNV colour scale
         var maxCNV = 6;
-        var cnvColorScale = d3.scale.ordinal() 
-            .domain([0,1,2,3,4,5,6])
-            .range(["#2e7aab", "#73a9d4", "#D6D5D5", "#fec28b", "#fd8b3a", "#ca632c", "#954c25"]);
+        var cnvColorScale;
+        var discrete_colours = ["#417EAA", "#D6D5D5", "#C63C4C"];
+        // continuous data
+        if (curVizObj.userConfig.continuous_cnv) {
+            cnvColorScale = d3.scale.linear()  
+                .domain([0, 2, maxCNV])             
+                .range(discrete_colours)
+        }
+        // discrete data
+        else {
+            cnvColorScale = d3.scale.ordinal() 
+                .domain([0,1,2,3,4,5,6])
+                .range(["#2e7aab", "#73a9d4", "#D6D5D5", "#fec28b", "#fd8b3a", "#ca632c", "#954c25"]);
+        }
 
         // targeted mutation colour scale
-        var targeted_colours = ["#417EAA", "#F9F7BC", "#C63C4C"];
         var targetedColorScale = d3.scale.linear()  
             .domain([0, 0.5, 1])             
-            .range(targeted_colours)
+            .range(discrete_colours)
 
         // group annotation colours
         if (curVizObj.view.groupsSpecified) {
@@ -813,6 +823,9 @@ HTMLWidgets.widget({
 
         // starting y-coordinate for the heatmap rectangle(s) in legend
         var legendRectStart = config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2;
+        
+        // height for continuous cnv data legend rectangle (make it the same as the discrete CNV legend height)
+        var legendRectHeight = cnvColorScale.domain().length*(config.rectHeight + config.rectSpacing);
 
         // heatmap legend rectangle / text group
         var heatmapLegendG = curVizObj.view.cnvLegendSVG
@@ -825,44 +838,91 @@ HTMLWidgets.widget({
         // CNV LEGEND
         if (curVizObj.userConfig.heatmap_type == "cnv") {
 
-            // CNV legend rectangles
-            heatmapLegendG
-                .append("rect")
-                .attr("x", config.legendLeftPadding)
-                .attr("y", function(d,i) {
-                    return legendRectStart + i*(config.rectHeight + config.rectSpacing);
-                })
-                .attr("height", config.rectHeight)
-                .attr("width", config.rectHeight)
-                .attr("fill", function(d) {
-                    return cnvColorScale(d);
-                });
+            // CONTINUOUS DATA
+            if (curVizObj.userConfig.continuous_cnv) {
+                // linear gradient for fill of targeted mutation legend
+                heatmapLegendG.append("linearGradient")
+                    .attr("id", "targetedGradient")
+                    .attr("gradientUnits", "userSpaceOnUse")
+                    .attr("x1", 0).attr("y1", legendRectStart)
+                    .attr("x2", 0).attr("y2", legendRectStart + legendRectHeight)
+                    .selectAll("stop")
+                    .data([
+                        {offset: "0%", color: discrete_colours[2]},
+                        {offset: ((100 - (2/maxCNV)*100) + "%"), color: discrete_colours[1]}, 
+                        {offset: "100%", color: discrete_colours[0]}
+                    ])
+                    .enter().append("stop")
+                    .attr("offset", function(d) { return d.offset; })
+                    .attr("stop-color", function(d) { return d.color; });
 
-            // CNV legend text
-            heatmapLegendG
-                .append("text")
-                .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
-                .attr("y", function(d,i) {
-                    return config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2 + 
-                        i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
-                })
-                .attr("dy", "+0.35em")
-                .text(function(d) { 
-                    if (d==maxCNV) {
-                        return ">=" + d;
-                    }
-                    return d; 
-                })
-                .attr("font-family", "Arial")
-                .attr("font-size", config.legendFontHeight)
-                .style("fill", "black");
+                // VAF legend rectangle with gradient
+                heatmapLegendG
+                    .append("rect")
+                    .attr("x", config.legendLeftPadding)
+                    .attr("y", legendRectStart)
+                    .attr("width", config.rectHeight)
+                    .attr("height", legendRectHeight)
+                    .attr("fill", "url(#targetedGradient)");
+
+                // VAF legend text
+                heatmapLegendG
+                    .append("text")
+                    .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                    .attr("y", legendRectStart)
+                    .attr("dy", "+0.71em")
+                    .text(maxCNV)
+                    .attr("font-family", "Arial")
+                    .attr("font-size", config.legendFontHeight)
+                    .style("fill", "black");
+                heatmapLegendG
+                    .append("text")
+                    .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                    .attr("y", legendRectStart + legendRectHeight)
+                    .text("0")
+                    .attr("font-family", "Arial")
+                    .attr("font-size", config.legendFontHeight)
+                    .style("fill", "black");
+            }
+
+            // DISCRETE DATA
+            else {
+                // CNV legend rectangles
+                heatmapLegendG
+                    .append("rect")
+                    .attr("x", config.legendLeftPadding)
+                    .attr("y", function(d,i) {
+                        return legendRectStart + i*(config.rectHeight + config.rectSpacing);
+                    })
+                    .attr("height", config.rectHeight)
+                    .attr("width", config.rectHeight)
+                    .attr("fill", function(d) {
+                        return cnvColorScale(d);
+                    });
+
+                // CNV legend text
+                heatmapLegendG
+                    .append("text")
+                    .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                    .attr("y", function(d,i) {
+                        return config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2 + 
+                            i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
+                    })
+                    .attr("dy", "+0.35em")
+                    .text(function(d) { 
+                        if (d==maxCNV) {
+                            return ">=" + d;
+                        }
+                        return d; 
+                    })
+                    .attr("font-family", "Arial")
+                    .attr("font-size", config.legendFontHeight)
+                    .style("fill", "black");
+            }
 
         }
         // TARGETED HEATMAP LEGEND
         else {
-            // height for targeted heatmap legend rectangle (make it the same as the CNV legend height)
-            var legendRectHeight = cnvColorScale.domain().length*(config.rectHeight + config.rectSpacing);
-
             // linear gradient for fill of targeted mutation legend
             heatmapLegendG.append("linearGradient")
                 .attr("id", "targetedGradient")
@@ -871,9 +931,9 @@ HTMLWidgets.widget({
                 .attr("x2", 0).attr("y2", legendRectStart + legendRectHeight)
                 .selectAll("stop")
                 .data([
-                    {offset: "0%", color: targeted_colours[2]},
-                    {offset: "50%", color: targeted_colours[1]},
-                    {offset: "100%", color: targeted_colours[0]}
+                    {offset: "0%", color: discrete_colours[2]},
+                    {offset: "50%", color: discrete_colours[1]},
+                    {offset: "100%", color: discrete_colours[0]}
                 ])
                 .enter().append("stop")
                 .attr("offset", function(d) { return d.offset; })

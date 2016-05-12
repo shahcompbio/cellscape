@@ -30,6 +30,7 @@
 #'                       (1) {String} "chr" - chromosome number
 #'                       (2) {Number} "coord" - genomic coordinate
 #' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
+#' @param continuous_cnv {Boolean} (Optional) Whether to display the copy number data as continuous or discrete. Default is FALSE (discrete).
 #' @param width {Number} (Optional) Width of the plot.
 #' @param height {Number} (Optional) Height of the plot.
 #'
@@ -40,6 +41,7 @@ cnvTree <- function(cnv_data = NULL,
                     sc_groups = NULL, 
                     mut_order = NULL,
                     display_node_ids = FALSE, 
+                    continuous_cnv = FALSE,
                     width = 1000, 
                     height = 1000) {
 
@@ -270,7 +272,8 @@ cnvTree <- function(cnv_data = NULL,
     heatmapWidth=heatmapWidth, # width of the heatmap
     root=root, # name of root
     display_node_ids=display_node_ids, # whether or not to display the node id labels on each node
-    scs_missing_from_hm=scs_missing_from_hm # single cells in tree but not heatmap
+    scs_missing_from_hm=scs_missing_from_hm, # single cells in tree but not heatmap
+    continuous_cnv=continuous_cnv # whether copy number data should be continuous or discrete
   )
 
   # create widget
