@@ -844,6 +844,9 @@ HTMLWidgets.widget({
 
             // CONTINUOUS DATA
             if (curVizObj.userConfig.continuous_cnv) {
+                // 2/maxCNV 
+                var normal_relative = (2/maxCNV);
+
                 // linear gradient for fill of targeted mutation legend
                 heatmapLegendG.append("linearGradient")
                     .attr("id", "targetedGradient")
@@ -853,14 +856,14 @@ HTMLWidgets.widget({
                     .selectAll("stop")
                     .data([
                         {offset: "0%", color: discrete_colours[2]},
-                        {offset: ((100 - (2/maxCNV)*100) + "%"), color: discrete_colours[1]}, 
+                        {offset: (((1 - normal_relative)*100) + "%"), color: discrete_colours[1]}, 
                         {offset: "100%", color: discrete_colours[0]}
                     ])
                     .enter().append("stop")
                     .attr("offset", function(d) { return d.offset; })
                     .attr("stop-color", function(d) { return d.color; });
 
-                // VAF legend rectangle with gradient
+                // legend rectangle with gradient
                 heatmapLegendG
                     .append("rect")
                     .attr("x", config.legendLeftPadding)
@@ -869,13 +872,22 @@ HTMLWidgets.widget({
                     .attr("height", legendRectHeight)
                     .attr("fill", "url(#targetedGradient)");
 
-                // VAF legend text
+                // legend text
                 heatmapLegendG
                     .append("text")
                     .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
                     .attr("y", legendRectStart)
                     .attr("dy", "+0.71em")
                     .text(maxCNV)
+                    .attr("font-family", "Arial")
+                    .attr("font-size", config.legendFontHeight)
+                    .style("fill", "black");
+                heatmapLegendG
+                    .append("text")
+                    .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                    .attr("y", legendRectStart + (1-normal_relative)*legendRectHeight)
+                    .attr("dy", "+0.35em")
+                    .text("2")
                     .attr("font-family", "Arial")
                     .attr("font-size", config.legendFontHeight)
                     .style("fill", "black");
