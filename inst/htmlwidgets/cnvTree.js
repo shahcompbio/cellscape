@@ -704,6 +704,10 @@ HTMLWidgets.widget({
                         if (curVizObj.userConfig.heatmap_type == "targeted") {
                             return "Mutation Site: " + d.site;
                         }
+                        // for cnv 
+                        else {
+                            return "CNV: " + d.gridCell_value;
+                        }
                     })
             }
         }
