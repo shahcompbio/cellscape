@@ -825,7 +825,7 @@ HTMLWidgets.widget({
         var legendRectStart = config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2;
         
         // height for continuous cnv data legend rectangle (make it the same as the discrete CNV legend height)
-        var legendRectHeight = cnvColorScale.domain().length*(config.rectHeight + config.rectSpacing);
+        var legendRectHeight = maxCNV*(config.rectHeight + config.rectSpacing);
 
         // heatmap legend rectangle / text group
         var heatmapLegendG = curVizObj.view.cnvLegendSVG
