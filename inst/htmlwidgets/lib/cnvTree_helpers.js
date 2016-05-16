@@ -255,7 +255,9 @@ function _getYCoordinates(curVizObj) {
             n_ancestors: curVizObj.data.treeAncestorsArr[sc_id].length
         })
     })
-    _sortByKey(missing_scs_sorted, "n_ancestors");
+    // sort by descending number of ancestors
+    _sortByKey(missing_scs_sorted, "n_ancestors"); 
+    missing_scs_sorted.reverse();
 
     // for each single cell that doesn't have heatmap data
     missing_scs_sorted.forEach(function(sc, sc_id_i) {
