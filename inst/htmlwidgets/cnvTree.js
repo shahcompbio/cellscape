@@ -361,7 +361,9 @@ HTMLWidgets.widget({
             .on("click", function() {
                 // download the svg
                 downloadSVG("containerSVG_" + view_id);
-            });
+            })
+            .append("title")
+            .text("Download SVG");
         topBarSVG.append("text")
             .attr("class", "svgButtonText")
             .attr("x", config.width - 10)
@@ -371,7 +373,9 @@ HTMLWidgets.widget({
             .attr("font-family", "Arial")
             .attr("fill", "white")
             .attr("pointer-events","none")
-            .text("SVG");
+            .text("SVG")
+            .append("title")
+            .text("Download SVG");
         topBarSVG.append("image")
             .attr("xlink:href", downloadButton_base64)
             .attr("x", config.width - bigButtonWidth + 10)
@@ -387,7 +391,9 @@ HTMLWidgets.widget({
             .on("click", function() {
                 // download the svg
                 downloadSVG("containerSVG_" + view_id);
-            });
+            })
+            .append("title")
+            .text("Download SVG");
 
 
         // PNG button
@@ -409,7 +415,9 @@ HTMLWidgets.widget({
             .on("click", function(){
                 // download the png
                 _downloadPNG("containerSVG_" + view_id, "containerSVG_" + view_id + ".png");
-            });
+            })
+            .append("title")
+            .text("Download PNG");
         topBarSVG.append("text")
             .attr("class", "pngButtonText")
             .attr("x", config.width - bigButtonWidth - 10)
@@ -419,7 +427,9 @@ HTMLWidgets.widget({
             .attr("font-family", "Arial")
             .attr("fill", "white")
             .attr("pointer-events","none")
-            .text("PNG");
+            .text("PNG")
+            .append("title")
+            .text("Download PNG");
         topBarSVG.append("image")
             .attr("xlink:href", downloadButton_base64)
             .attr("x", config.width - 2*bigButtonWidth + 10)
@@ -435,7 +445,9 @@ HTMLWidgets.widget({
             .on("click", function() {
                 // download the png
                 _downloadPNG("containerSVG_" + view_id, "containerSVG_" + view_id + ".png");
-            });
+            })
+            .append("title")
+            .text("Download PNG");
 
         // brush selection button
         topBarSVG.append("rect")
@@ -466,7 +478,9 @@ HTMLWidgets.widget({
                 }
                 // push selection button function
                 _pushBrushSelectionButton(brush, curVizObj);
-            });
+            })
+            .append("title")
+            .text("Select Single Cells in Heatmap");
         topBarSVG.append("image")
             .attr("xlink:href", selectionButton_base64)
             .attr("x", smallButtonWidth/2 - (selectionButtonIconWidth/2))
@@ -492,7 +506,9 @@ HTMLWidgets.widget({
                 }
                 // push selection button function
                 _pushBrushSelectionButton(brush, curVizObj);
-            });
+            })
+            .append("title")
+            .text("Select Single Cells in Heatmap");
 
         // scissors button
         topBarSVG.append("rect")
@@ -523,7 +539,9 @@ HTMLWidgets.widget({
                 }
                 // push scissors button function
                 _pushScissorsButton(curVizObj);
-            });
+            })
+            .append("title")
+            .text("Prune Tree/Graph");
         topBarSVG.append("image")
             .attr("xlink:href", scissorsButton_base64)
             .attr("x", smallButtonWidth*3/2 - (scissorsButtonIconWidth/2))
@@ -549,7 +567,9 @@ HTMLWidgets.widget({
                 }
                 // push scissors button function
                 _pushScissorsButton(curVizObj);
-            });
+            })
+            .append("title")
+            .text("Prune Tree/Graph");
 
         // graph/tree button
         topBarSVG.append("rect")
@@ -570,7 +590,9 @@ HTMLWidgets.widget({
             .on("click", function() {
                 // switch between tree and graph views
                 _switchView(curVizObj);
-            });
+            })
+            .append("title")
+            .text("Switch Tree/Graph View");
         topBarSVG.append("image")
             .classed("forceDirectedIcon", true)
             .attr("xlink:href", forceDirectedIcon_base64)
@@ -588,7 +610,9 @@ HTMLWidgets.widget({
             .on("click", function() {
                 // switch between tree and graph views
                 _switchView(curVizObj);
-            });
+            })
+            .append("title")
+            .text("Switch Tree/Graph View");
         topBarSVG.append("image")
             .classed("phylogenyIcon", true)
             .attr("xlink:href", phylogenyIcon_base64)
@@ -606,7 +630,9 @@ HTMLWidgets.widget({
             .on("click", function() {
                 // switch between tree and graph views
                 _switchView(curVizObj);
-            });
+            })
+            .append("title")
+            .text("Switch Tree/Graph View");
 
         // TOOLTIP FUNCTIONS
 
