@@ -312,19 +312,27 @@ function _getXCoordinates(curVizObj) {
     
     // x-coordinates for each single cell (each single cell id is a property)
     curVizObj.data.xCoordinates = {}; 
+    curVizObj.data.xCoordinatesDist = {}; // x coordinates with distances taken into account
 
     // for each single cell in the tree
     curVizObj.userConfig.tree_nodes.forEach(function(node, sc_id_i) {
 
         // width of tree 
         var treeWidth = config.treeWidth - 4*r; // spacing of one radius before and after
+        var spaceBeforeStart = 2*r; // space before the first x-coordinate
 
         // number of ancestors for this single cell
         var n_ancestors = curVizObj.data.treeAncestorsArr[node.sc_id].length;
 
         // starting x-coordinate for this single cell
         curVizObj.data.xCoordinates[node.sc_id] = 
-            2*r + (treeWidth/(curVizObj.data.tree_height-1)) * n_ancestors; 
+            spaceBeforeStart + (treeWidth/(curVizObj.data.tree_height-1)) * n_ancestors; 
+
+        // if there is distance info for each edge
+        if (curVizObj.userConfig.distances_provided) {
+            curVizObj.data.xCoordinatesDist[node.sc_id] = 
+                spaceBeforeStart + (curVizObj.data.pathDists[node.sc_id] / curVizObj.data.max_tree_path_dist)*treeWidth;
+        }
     })
 }
 
@@ -701,6 +709,45 @@ function _getAncestorIds(curVizObj) {
     return ancestors;
 }
 
+/* function to get the length of the path to each node (and the maximum path distance)
+* @param {Object} curVizObj 
+* @param {String} cur_sc_id -- current single cell id
+* @param {Number} dist_thus_far -- cumulative distance to the current node
+*/
+function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
+
+    // set up path distance object
+    if (!curVizObj.data.pathDists) {
+        curVizObj.data.pathDists = {};
+    }
+
+    // set up maximum path distance variable
+    if (!curVizObj.data.max_tree_path_dist) {
+        curVizObj.data.max_tree_path_dist = 0;
+    }
+
+    // set the distance for the current node
+    curVizObj.data.pathDists[cur_sc_id] = dist_thus_far;
+
+    // for each descendant
+    curVizObj.data.direct_descendants[cur_sc_id].forEach(function(desc) {
+        // get link distance for the link connecting this descendant to its ancestor
+        var cur_link = _.findWhere(curVizObj.userConfig.tree_edges, 
+            {source_sc_id: cur_sc_id, target_sc_id: desc});
+        var cur_dist = cur_link.dist;
+
+        // update maximum path distance
+        var cumulative_dist = dist_thus_far+cur_dist;
+        if (cumulative_dist > curVizObj.data.max_tree_path_dist) {
+            curVizObj.data.max_tree_path_dist = cumulative_dist;
+        }
+
+        // get the path lengths for its descendants
+        _getDistToNodes(curVizObj, desc, cumulative_dist)
+    });;
+}
+
+
 /* elbow function to draw phylogeny links 
 */
 function _elbow(d, source = null, target = null) {
@@ -869,10 +916,18 @@ function _getDiagonal(curVizObj, d, half_rowHeight) {
 
     var source = {};
     var target = {};
-    source.y = curVizObj.data.xCoordinates[d.source_sc_id];
     source.x = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
-    target.y = curVizObj.data.xCoordinates[d.target_sc_id];
     target.x = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
+    // edge distances are provided
+    if (curVizObj.userConfig.distances_provided) {
+        source.y = curVizObj.data.xCoordinatesDist[d.source_sc_id];
+        target.y = curVizObj.data.xCoordinatesDist[d.target_sc_id];
+    }
+    // edge distances not provided
+    else {
+        source.y = curVizObj.data.xCoordinates[d.source_sc_id];
+        target.y = curVizObj.data.xCoordinates[d.target_sc_id];
+    }
     return diagonal({source: source, target: target});
 }
 
@@ -914,7 +969,13 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
         })
         .on("click", function(d) {
             _linkClick(curVizObj, d.link_id);
-        });
+        })
+        .append("title")
+        .text(function(d) {
+            if (d.dist) {
+                return d.dist;                
+            }
+        })
 
     // create nodes
     var nodeG = curVizObj.view.treeSVG
@@ -929,7 +990,8 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
             return "tree node node_" + d.sc_id;
         })  
         .attr("cx", function(d) { 
-            d.x = curVizObj.data.xCoordinates[d.sc_id];
+            d.x = (curVizObj.userConfig.distances_provided) ? 
+                curVizObj.data.xCoordinatesDist[d.sc_id] : curVizObj.data.xCoordinates[d.sc_id];
             return d.x;
         })
         .attr("cy", function(d) { 

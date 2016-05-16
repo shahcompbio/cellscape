@@ -20,6 +20,7 @@
 #' @param tree_edges {Data frame} Edges for the single cell phylogenetic tree.
 #'   Format: columns are (1) {String} "source" - edge source (single cell id)
 #'                       (2) {String} "target" - edge target (single cell id)
+#'                       (2) {Number} (Optional) "dist" - edge distance
 #'
 #' @param sc_groups {Data frame} (Optional) Group assignment (annotation) for each single cell.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
@@ -190,6 +191,23 @@ cnvTree <- function(cnv_data = NULL,
   # ensure data is of the correct type
   tree_edges$source <- as.character(tree_edges$source)
   tree_edges$target <- as.character(tree_edges$target)
+  if ("dist" %in% colnames(tree_edges)) {
+    tree_edges$dist <- as.numeric(as.character(tree_edges$dist))
+    distances_provided <- TRUE
+
+    # if there are negative distances, convert them to 0.01
+    negative_dists <- tree_edges$dist[which(tree_edges$dist < 0)]
+    if (length(negative_dists) > 0) {
+      value_for_neg_dists <- 0.01
+      print(paste("WARNING: Negative distances found in tree edges data frame. Any negative distance will be ",
+        "converted to ", value_for_neg_dists, ".", sep=""))
+      tree_edges$dist[which(tree_edges$dist < 0)] <- value_for_neg_dists
+    }
+  }
+  else {
+    tree_edges$dist <- NaN
+    distances_provided <- FALSE
+  }
 
   # list of tree nodes for d3 phylogenetic layout function
   unique_nodes <- unique(c(tree_edges$source, tree_edges$target))
@@ -207,6 +225,7 @@ cnvTree <- function(cnv_data = NULL,
     link_id=apply(tree_edges, 1, function(edge) { 
         return(paste("link_source_", edge["source"], "_target_", edge["target"], sep="")) 
       }),
+    dist=tree_edges$dist,
     stringsAsFactors=FALSE)
   tree_edges_for_layout$source <- as.numeric(as.character(tree_edges_for_layout$source))
   tree_edges_for_layout$target <- as.numeric(as.character(tree_edges_for_layout$target))
@@ -265,6 +284,7 @@ cnvTree <- function(cnv_data = NULL,
     tree_edges=jsonlite::toJSON(tree_edges_for_layout), # tree edges for phylogeny
     tree_nodes=jsonlite::toJSON(tree_nodes_for_layout), # tree nodes for phylogeny
     link_ids=link_ids, # ids for all links in the phylogeny
+    distances_provided=distances_provided, # whether or not distances are provided for tree edges
     chroms=chroms, # chromosomes
     chrom_boxes=jsonlite::toJSON(chrom_boxes), # chromosome legend boxes
     heatmap_info=jsonlite::toJSON(heatmap_info), # heatmap information 

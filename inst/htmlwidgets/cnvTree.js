@@ -146,6 +146,11 @@ HTMLWidgets.widget({
             }
         })
 
+        // get the cumulative distances to each node & the maximum cumulative path distance
+        if (curVizObj.userConfig.distances_provided) {
+            _getDistToNodes(curVizObj, curVizObj.userConfig.root, 0); 
+        }
+
         // order single cells by tree
         curVizObj.data.hm_sc_ids = 
             _getNodeOrder(curVizObj.data.treeDescendantsArr, curVizObj.userConfig.link_ids, curVizObj.userConfig.root, []);
