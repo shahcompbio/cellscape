@@ -26,12 +26,7 @@ function _brushEnd(curVizObj, brush) {
             _highlightNode(sc_id, curVizObj);    
         });
     } else {
-        d3.select("#" + curVizObj.view_id).select(".cnvSVG").classed("brushed", false)
-        d3.select("#" + curVizObj.view_id).selectAll(".gridCell").classed("active", false)
-
-        // reset nodes and indicators
-        _resetNodes(curVizObj);
-        _resetIndicators(curVizObj);
+        _clearBrush(curVizObj);
     }
 
     // clear brush
@@ -45,6 +40,17 @@ function _checkForSelections(curVizObj) {
             (d3.select("#" + curVizObj.view_id).selectAll(".linkSelected")[0].length == 0) && // link selection
             (d3.select("#" + curVizObj.view_id).selectAll(".brushButtonSelected")[0].length == 0) && // brush button not selected
             (d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 0)) // scissors button not selected
+}
+
+/* function to clear any brush selection
+*/
+function _clearBrush(curVizObj) {
+    d3.select("#" + curVizObj.view_id).select(".cnvSVG").classed("brushed", false)
+    d3.select("#" + curVizObj.view_id).selectAll(".gridCell").classed("active", false)
+
+    // reset nodes and indicators
+    _resetNodes(curVizObj);
+    _resetIndicators(curVizObj);
 }
 
 /* mouseover function for group annotations
