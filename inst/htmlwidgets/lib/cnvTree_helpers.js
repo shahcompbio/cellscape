@@ -721,9 +721,10 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
         curVizObj.data.pathDists = {};
     }
 
-    // set up maximum path distance variable
+    // set up maximum (and runner up) path distance variable
     if (!curVizObj.data.max_tree_path_dist) {
         curVizObj.data.max_tree_path_dist = 0;
+        curVizObj.data.secondMax_tree_path_dist = 0;
     }
 
     // set the distance for the current node
@@ -736,9 +737,10 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
             {source_sc_id: cur_sc_id, target_sc_id: desc});
         var cur_dist = cur_link.dist;
 
-        // update maximum path distance
+        // update maximum (and runner-up) path distance
         var cumulative_dist = dist_thus_far+cur_dist;
         if (cumulative_dist > curVizObj.data.max_tree_path_dist) {
+            curVizObj.data.secondMax_tree_path_dist = curVizObj.data.max_tree_path_dist;
             curVizObj.data.max_tree_path_dist = cumulative_dist;
         }
 
@@ -771,15 +773,37 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
     var config = curVizObj.generalConfig,
         userConfig = curVizObj.userConfig;
 
-    // layout function
-    var force_layout = d3.layout.force()
-        .size([config.treeWidth, config.treeHeight])
-        .linkDistance(20)
-        .gravity(.09)
-        .charge(-20)
-        .nodes(userConfig.tree_nodes)
-        .links(userConfig.tree_edges)
-        .start();
+    // if tree edge distances are specified
+    if (curVizObj.userConfig.distances_provided) {
+        // layout function
+        var force_layout = d3.layout.force()
+            .size([config.treeWidth, config.treeHeight])
+            .linkDistance(function(d) {
+
+                // smallest dimension on the view (width or height)
+                var smallest_dim = (config.treeWidth < config.treeHeight) ? config.treeWidth : config.treeHeight;
+
+                // divide by 2 so that two max paths can fit on the smallest dimension
+                return (d.dist/curVizObj.data.max_tree_path_dist)*(smallest_dim/2); 
+            })
+            .gravity(.09)
+            .charge(-100)
+            .nodes(userConfig.tree_nodes)
+            .links(userConfig.tree_edges)
+            .start();     
+    }
+    // tree edge distances NOT specified
+    else {
+        // layout function
+        var force_layout = d3.layout.force()
+            .size([config.treeWidth, config.treeHeight])
+            .linkDistance(20)
+            .gravity(.09)
+            .charge(-20)
+            .nodes(userConfig.tree_nodes)
+            .links(userConfig.tree_edges)
+            .start();        
+    }
 
     // plot links
     var link = curVizObj.view.treeSVG
@@ -975,7 +999,7 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
             if (d.dist) {
                 return d.dist;                
             }
-        })
+        });
 
     // create nodes
     var nodeG = curVizObj.view.treeSVG

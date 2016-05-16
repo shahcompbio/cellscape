@@ -198,7 +198,7 @@ cnvTree <- function(cnv_data = NULL,
     # if there are negative distances, convert them to 0.01
     negative_dists <- tree_edges$dist[which(tree_edges$dist < 0)]
     if (length(negative_dists) > 0) {
-      value_for_neg_dists <- 0.01
+      value_for_neg_dists <- 0.1
       print(paste("WARNING: Negative distances found in tree edges data frame. Any negative distance will be ",
         "converted to ", value_for_neg_dists, ".", sep=""))
       tree_edges$dist[which(tree_edges$dist < 0)] <- value_for_neg_dists
