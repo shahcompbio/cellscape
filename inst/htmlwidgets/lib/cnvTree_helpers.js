@@ -775,9 +775,8 @@ function _elbow(d, source = null, target = null) {
 
 /* function to plot the force-directed graph
 * @param {Object} curVizObj
-* @param {Number} opacity -- opacity of graph elements
 */
-function _plotForceDirectedGraph(curVizObj, opacity) {
+function _plotForceDirectedGraph(curVizObj) {
     var config = curVizObj.generalConfig,
         userConfig = curVizObj.userConfig;
 
@@ -826,10 +825,10 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
         }) 
         .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
-        .attr("fill-opacity", opacity)
-        .attr("stroke-opacity", opacity)
+        .attr("fill-opacity", config.graphOpacity)
+        .attr("stroke-opacity", config.graphOpacity)
         .attr("pointer-events", function() {
-            return (opacity == 1) ? "auto" : "none";
+            return (config.graphOpacity == 1) ? "auto" : "none";
         })
         .on("mouseover", function(d) {
             _linkMouseover(curVizObj, d.link_id);
@@ -844,11 +843,11 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
     // plot nodes
     var nodeG = curVizObj.view.treeSVG.append("g")
         .classed("graphNodes", true)
-        .selectAll(".nodesG")
+        .selectAll(".graphNodesG")
         .data(userConfig.tree_nodes)
         .enter()
         .append("g")
-        .attr("class", "nodesG");
+        .attr("class", "graphNodesG");
 
     // node circles
     var nodeCircle = nodeG.append("circle")
@@ -867,10 +866,10 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
              return _getNodeColour(curVizObj, d.sc_id);
         })
         .attr("stroke", "#838181")
-        .attr("fill-opacity", opacity)
-        .attr("stroke-opacity", opacity)
+        .attr("fill-opacity", config.graphOpacity)
+        .attr("stroke-opacity", config.graphOpacity)
         .attr("pointer-events", function() {
-            return (opacity == 1) ? "auto" : "none";
+            return (config.graphOpacity == 1) ? "auto" : "none";
         })
         .on('mouseover', function(d) {
             _nodeMouseover(curVizObj, d.sc_id);
@@ -882,7 +881,7 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
 
     // node single cell labels (if user wants to display them)
     if (userConfig.display_node_ids) {
-        var nodeLabel = _plotNodeLabels(curVizObj, "graph", opacity, nodeG);
+        var nodeLabel = _plotNodeLabels(curVizObj, "graph");
     }
 
     force_layout.on("tick", function() {
@@ -914,9 +913,16 @@ function _plotForceDirectedGraph(curVizObj, opacity) {
 }
 
 /* function to plot node labels
+* @param {String} tree_type -- "tree" or "graph"
 */
-function _plotNodeLabels(curVizObj, tree_type, opacity, nodeG) {
-    var nodeLabel = nodeG.append("text")
+function _plotNodeLabels(curVizObj, tree_type) {
+    var config = curVizObj.generalConfig;
+
+    var nodesG = (tree_type == "tree") ? 
+        curVizObj.view.treeSVG.selectAll(".treeNodesG") : curVizObj.view.treeSVG.selectAll(".graphNodesG");
+
+    var nodeLabel = nodesG
+        .append("text")
         .attr("class", function(d) {
             return "nodeLabel " + tree_type + " nodeLabel_" + d.sc_id;
         })
@@ -931,7 +937,9 @@ function _plotNodeLabels(curVizObj, tree_type, opacity, nodeG) {
                 curVizObj.generalConfig.tree_w_labels_r * 2))
         .attr("text-anchor", "middle")
         .attr("pointer-events", "none")
-        .attr("fill-opacity", opacity)
+        .attr("fill-opacity", function() {
+            return (tree_type == "tree") ? config.treeOpacity : config.graphOpacity;
+        })
         .attr("dy", "+0.35em");
     return nodeLabel;
 }
@@ -950,12 +958,12 @@ function _getDiagonal(curVizObj, d, half_rowHeight) {
     var target = {};
     source.x = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
     target.x = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
-    // edge distances are provided
-    if (curVizObj.userConfig.distances_provided) {
+    // we're scaling by edge distance
+    if (curVizObj.generalConfig.distOn) {
         source.y = curVizObj.data.xCoordinatesDist[d.source_sc_id];
         target.y = curVizObj.data.xCoordinatesDist[d.target_sc_id];
     }
-    // edge distances not provided
+    // not scaling by edge distances
     else {
         source.y = curVizObj.data.xCoordinates[d.source_sc_id];
         target.y = curVizObj.data.xCoordinates[d.target_sc_id];
@@ -965,9 +973,8 @@ function _getDiagonal(curVizObj, d, half_rowHeight) {
 
 /* function to plot phylogenetic tree aligned with heatmap
 * @param {Object} curVizObj
-* @param {Number} opacity -- opacity of tree elements
 */
-function _plotAlignedPhylogeny(curVizObj, opacity) {
+function _plotAlignedPhylogeny(curVizObj) {
     var config = curVizObj.generalConfig;
     var r = (curVizObj.userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
     var half_rowHeight = (curVizObj.view.hm.rowHeight/2); // half the height of one heatmap row
@@ -988,10 +995,10 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
         .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
         .attr("fill", "none")
-        .attr("fill-opacity", opacity)
-        .attr("stroke-opacity", opacity)
+        .attr("fill-opacity", config.treeOpacity)
+        .attr("stroke-opacity", config.treeOpacity)
         .attr("pointer-events", function() {
-            return (opacity == 1) ? "auto" : "none";
+            return (config.treeOpacity == 1) ? "auto" : "none";
         })
         .on("mouseover", function(d) {
             _linkMouseover(curVizObj, d.link_id);
@@ -1022,8 +1029,7 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
             return "tree node node_" + d.sc_id;
         })  
         .attr("cx", function(d) { 
-            d.x = (curVizObj.userConfig.distances_provided) ? 
-                curVizObj.data.xCoordinatesDist[d.sc_id] : curVizObj.data.xCoordinates[d.sc_id];
+            d.x = curVizObj.data.xCoordinates[d.sc_id];
             return d.x;
         })
         .attr("cy", function(d) { 
@@ -1035,10 +1041,10 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
             return _getNodeColour(curVizObj, d.sc_id);
         })
         .attr("r", r)
-        .attr("fill-opacity", opacity)
-        .attr("stroke-opacity", opacity)
+        .attr("fill-opacity", config.treeOpacity)
+        .attr("stroke-opacity", config.treeOpacity)
         .attr("pointer-events", function() {
-            return (opacity == 1) ? "auto" : "none";
+            return (config.treeOpacity == 1) ? "auto" : "none";
         })
         .on('mouseover', function(d) {
             _nodeMouseover(curVizObj, d.sc_id);
@@ -1049,7 +1055,7 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
 
     // node single cell labels (if user wants to display them)
     if (curVizObj.userConfig.display_node_ids) {
-        _plotNodeLabels(curVizObj, "tree", opacity, nodeG);
+        _plotNodeLabels(curVizObj, "tree");
     }
 }
 
@@ -1058,39 +1064,67 @@ function _plotAlignedPhylogeny(curVizObj, opacity) {
 function _switchView(curVizObj) {
     var config = curVizObj.generalConfig;
 
-    // if tree is on, switch to graph view
-    if (config.switchView) {
-        d3.select("#" + curVizObj.view_id).selectAll(".tree.node").attr("fill-opacity", 0).attr("stroke-opacity", 0)
-            .attr("pointer-events", "none");
-        d3.select("#" + curVizObj.view_id).selectAll(".tree.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
-            .attr("pointer-events", "none");
-        d3.select("#" + curVizObj.view_id).selectAll(".tree.nodeLabel").attr("fill-opacity", 0);
-        d3.select("#" + curVizObj.view_id).selectAll(".graph.node").attr("fill-opacity", 1).attr("stroke-opacity", 1)
-            .attr("pointer-events", "auto");
-        d3.select("#" + curVizObj.view_id).selectAll(".graph.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
-            .attr("pointer-events", "auto");
-        d3.select("#" + curVizObj.view_id).selectAll(".graph.nodeLabel").attr("fill-opacity", 1);
+    // flip opacities of tree & graph
+    config.treeOpacity = + !config.treeOpacity;
+    config.graphOpacity = + !config.graphOpacity;
 
-        d3.select("#" + curVizObj.view_id).select(".forceDirectedIcon").attr("opacity", 0);
-        d3.select("#" + curVizObj.view_id).select(".phylogenyIcon").attr("opacity", 1);
-    }
-    // if graph is on, switch to tree view
-    else {
-        d3.select("#" + curVizObj.view_id).selectAll(".tree.node").attr("fill-opacity", 1).attr("stroke-opacity", 1)
-            .attr("pointer-events", "auto");
-        d3.select("#" + curVizObj.view_id).selectAll(".tree.link").attr("fill-opacity", 1).attr("stroke-opacity", 1)
-            .attr("pointer-events", "auto");
-        d3.select("#" + curVizObj.view_id).selectAll(".tree.nodeLabel").attr("fill-opacity", 1);
-        d3.select("#" + curVizObj.view_id).selectAll(".graph.node").attr("fill-opacity", 0).attr("stroke-opacity", 0)
-            .attr("pointer-events", "none");
-        d3.select("#" + curVizObj.view_id).selectAll(".graph.link").attr("fill-opacity", 0).attr("stroke-opacity", 0)
-            .attr("pointer-events", "none");
-        d3.select("#" + curVizObj.view_id).selectAll(".graph.nodeLabel").attr("fill-opacity", 0);
+    d3.select("#" + curVizObj.view_id).selectAll(".tree.node")
+        .attr("fill-opacity", config.treeOpacity)
+        .attr("stroke-opacity", config.treeOpacity)
+        .attr("pointer-events", "none");
+    d3.select("#" + curVizObj.view_id).selectAll(".tree.link")
+        .attr("fill-opacity", config.treeOpacity)
+        .attr("stroke-opacity", config.treeOpacity)
+        .attr("pointer-events", "none");
+    d3.select("#" + curVizObj.view_id).selectAll(".tree.nodeLabel")
+        .attr("fill-opacity", config.treeOpacity);
+    d3.select("#" + curVizObj.view_id).selectAll(".graph.node")
+        .attr("fill-opacity", config.graphOpacity)
+        .attr("stroke-opacity", config.graphOpacity)
+        .attr("pointer-events", "auto");
+    d3.select("#" + curVizObj.view_id).selectAll(".graph.link")
+        .attr("fill-opacity", config.graphOpacity)
+        .attr("stroke-opacity", config.graphOpacity)
+        .attr("pointer-events", "auto");
+    d3.select("#" + curVizObj.view_id).selectAll(".graph.nodeLabel")
+        .attr("fill-opacity", config.graphOpacity);
 
-        d3.select("#" + curVizObj.view_id).select(".forceDirectedIcon").attr("opacity", 1);
-        d3.select("#" + curVizObj.view_id).select(".phylogenyIcon").attr("opacity", 0);
-    }
+    d3.select("#" + curVizObj.view_id).select(".forceDirectedIcon").attr("opacity", config.treeOpacity);
+    d3.select("#" + curVizObj.view_id).select(".phylogenyIcon").attr("opacity", config.graphOpacity);
+
     config.switchView = !config.switchView
+}
+
+/* function to plot tree/graph scaled by edge distances
+* @param {Object} curVizObj
+*/
+function _scaleTree(curVizObj) {
+    var config = curVizObj.generalConfig;
+    var half_rowHeight = (curVizObj.view.hm.rowHeight/2); // half the height of one heatmap row
+    curVizObj.generalConfig.distOn = !curVizObj.generalConfig.distOn;
+
+    // SCALE nodes & labels
+    if (curVizObj.generalConfig.distOn) {
+        curVizObj.view.treeSVG.selectAll(".treeNodesG")
+            .attr("transform", function(d) {
+                var dx = curVizObj.data.xCoordinatesDist[d.sc_id] - curVizObj.data.xCoordinates[d.sc_id];
+                return "translate(" + dx + ",0)";
+            });
+    }
+
+    // UNSCALE nodes & labels
+    else {
+        curVizObj.view.treeSVG.selectAll(".treeNodesG")
+            .attr("transform", "translate(0,0)");
+    }
+
+    // scale or unscale links
+    curVizObj.view.treeSVG.selectAll(".tree.link")                     
+    .attr("d", function(d) {
+        return _getDiagonal(curVizObj, d, half_rowHeight);
+    });
+
+       
 }
 
 // GROUP ANNOTATION FUNCTIONS

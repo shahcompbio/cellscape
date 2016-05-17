@@ -11,6 +11,9 @@ HTMLWidgets.widget({
             // tree
             tree_r: 4, // tree node radius
             tree_w_labels_r: 7, // tree node radius when labels displayed within
+            distOn: false, // whether or not we're scaling by edge distances
+            treeOpacity: 1, // tree starts with opacity 1 
+            graphOpacity: 0, // graph starts with opacity 0
 
             // main view padding above
             paddingAboveMainView: 7,
@@ -334,14 +337,14 @@ HTMLWidgets.widget({
         var forceDirectedIcon_base64 = "data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjUxMnB4IiB2aWV3Qm94PSIwIDAgMzE0LjAxNCAzMTQuMDE1IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAzMTQuMDE0IDMxNC4wMTU7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPGc+Cgk8ZyBpZD0iX3gzNF8yOC5fTmV0d29yayI+CgkJPGc+CgkJCTxwYXRoIGQ9Ik0yNjYuOTExLDEwOS44OThjLTIwLjQ5OCwwLTM3Ljg5NCwxMy4xMjUtNDQuMzU0LDMxLjQwOEgxMTYuNDA2bDUxLjczNC01MS43MzJjNi4xNDcsMi45MzYsMTMsNC42MzEsMjAuMjcsNC42MzEgICAgIGMyNi4wMDQsMCw0Ny4xMDQtMjEuMDk1LDQ3LjEwNC00Ny4xMDRDMjM1LjUxMywyMS4wODcsMjE0LjQxNCwwLDE4OC40MSwwYy0yNi4wMDUsMC00Ny4xMDQsMjEuMDg3LTQ3LjEwNCw0Ny4xMDIgICAgIGMwLDcuMjY4LDEuNjk1LDE0LjEyMiw0LjYzMSwyMC4yNjRsLTYxLjI3OCw2MS4yODhjLTguNTktMTEuMzgzLTIyLjIwMS0xOC43NDctMzcuNTU4LTE4Ljc0NyAgICAgQzIxLjA5MywxMDkuOTA2LDAsMTMwLjk5MSwwLDE1Ny4wMDdjMCwyNi4wMDQsMjEuMDkzLDQ3LjEwMyw0Ny4xMDEsNDcuMTAzYzE1LjM2NSwwLDI4Ljk2OC03LjM2MSwzNy41NTgtMTguNzU1bDYxLjI3OCw2MS4yODYgICAgIGMtMi45MzYsNi4xNTEtNC42MzEsMTMuMDA0LTQuNjMxLDIwLjI3YzAsMjYuMDA0LDIxLjA5OSw0Ny4xMDQsNDcuMTA0LDQ3LjEwNGMyNi4wMDQsMCw0Ny4xMDQtMjEuMSw0Ny4xMDQtNDcuMTA0ICAgICBjMC0yNi4wMTctMjEuMS00Ny4xLTQ3LjEwNC00Ny4xYy03LjI3LDAtMTQuMTIyLDEuNjkxLTIwLjI3LDQuNjI5bC01MS43MzQtNTEuNzMyaDEwNi4xNTEgICAgIGM2LjQ2OCwxOC4yODYsMjMuODU1LDMxLjQwMiw0NC4zNTQsMzEuNDAyYzI2LjAwOSwwLDQ3LjEwNC0yMS4wOTksNDcuMTA0LTQ3LjEwMyAgICAgQzMxNC4wMTQsMTMwLjk5MSwyOTIuOTE5LDEwOS44OTgsMjY2LjkxMSwxMDkuODk4eiBNMTg4LjQxLDMxLjQwMmM4LjY2NCwwLDE1LjcwMSw3LjAyNSwxNS43MDEsMTUuNjk5ICAgICBjMCw4LjY2OC03LjAzNywxNS43MDEtMTUuNzAxLDE1LjcwMXMtMTUuNzAxLTcuMDMzLTE1LjcwMS0xNS43MDFDMTcyLjcwOCwzOC40MjgsMTc5Ljc0NiwzMS40MDIsMTg4LjQxLDMxLjQwMnogTTQ3LjEwMiwxNzIuNzA4ICAgICBjLTguNjY2LDAtMTUuNjk5LTcuMDM3LTE1LjY5OS0xNS43MDFjMC04LjY3NCw3LjAzMy0xNS43MDEsMTUuNjk5LTE1LjcwMWM4LjY2OCwwLDE1LjcwMSw3LjAyNywxNS43MDEsMTUuNzAxICAgICBDNjIuODAzLDE2NS42NzEsNTUuNzcsMTcyLjcwOCw0Ny4xMDIsMTcyLjcwOHogTTE4OC40MSwyNTEuMjE0YzguNjY0LDAsMTUuNzAxLDcuMDIxLDE1LjcwMSwxNS42OTcgICAgIGMwLDguNjY0LTcuMDM3LDE1LjcwMS0xNS43MDEsMTUuNzAxcy0xNS43MDEtNy4wMzctMTUuNzAxLTE1LjcwMUMxNzIuNzA4LDI1OC4yMzQsMTc5Ljc0NiwyNTEuMjE0LDE4OC40MSwyNTEuMjE0eiAgICAgIE0yNjYuOTExLDE3Mi43MDhjLTguNjYsMC0xNS42OTctNy4wMzctMTUuNjk3LTE1LjcwMWMwLTguNjc0LDcuMDM3LTE1LjcwMSwxNS42OTctMTUuNzAxYzguNjY0LDAsMTUuNzAxLDcuMDI3LDE1LjcwMSwxNS43MDEgICAgIEMyODIuNjEyLDE2NS42NzEsMjc1LjU3NSwxNzIuNzA4LDI2Ni45MTEsMTcyLjcwOHoiIGZpbGw9IiNGRkZGRkYiLz4KCQk8L2c+Cgk8L2c+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPC9zdmc+Cg=="
         var phylogenyIcon_base64 = "data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjUxMnB4IiB2aWV3Qm94PSIwIDAgMzE0LjAxNCAzMTQuMDE1IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAzMTQuMDE0IDMxNC4wMTU7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPGc+Cgk8ZyBpZD0iX3gzNF8yOS5fTmV0d29yayI+CgkJPGc+CgkJCTxwYXRoIGQ9Ik0yODIuNjEyLDIyMi41NTd2LTQ5Ljg0OWMwLTE3LjM0Mi0xNC4wNTgtMzEuNDAyLTMxLjM5OC0zMS40MDJoLTc4LjUwNVY5MS40NjQgICAgIGMxOC4yODYtNi40NzQsMzEuNDAyLTIzLjg2NiwzMS40MDItNDQuMzY4YzAtMjYuMDA4LTIxLjEtNDcuMDk2LTQ3LjEwNC00Ny4wOTZjLTI2LjAwOCwwLTQ3LjEwMiwyMS4wODctNDcuMTAyLDQ3LjA5NiAgICAgYzAsMjAuNTAyLDEzLjExNywzNy44OTQsMzEuNCw0NC4zNjh2NDkuODQySDYyLjgwM2MtMTcuMzQsMC0zMS40LDE0LjA2LTMxLjQsMzEuNDAydjQ5Ljg0OUMxMy4xMTcsMjI5LjAxNywwLDI0Ni40MTMsMCwyNjYuOTExICAgICBjMCwyNi4wMDQsMjEuMDkzLDQ3LjEwNCw0Ny4xMDEsNDcuMTA0czQ3LjEwMy0yMS4xLDQ3LjEwMy00Ny4xMDRjMC0yMC40OTgtMTMuMTE4LTM3Ljg5NS0zMS40MDItNDQuMzU0di00OS44NDloNzguNTAzdjQ5Ljg0OSAgICAgYy0xOC4yODQsNi40Ni0zMS40LDIzLjg1Ni0zMS40LDQ0LjM1NGMwLDI2LjAwNCwyMS4wOTMsNDcuMTA0LDQ3LjEwMiw0Ny4xMDRjMjYuMDA0LDAsNDcuMTA0LTIxLjEsNDcuMTA0LTQ3LjEwNCAgICAgYzAtMjAuNDk4LTEzLjExNi0zNy44OTUtMzEuNDAyLTQ0LjM1NHYtNDkuODQ5aDc4LjUwNXY0OS44NDljLTE4LjI4NSw2LjQ2LTMxLjQwMSwyMy44NTYtMzEuNDAxLDQ0LjM1NCAgICAgYzAsMjYuMDA0LDIxLjA5NSw0Ny4xMDQsNDcuMDk5LDQ3LjEwNGMyNi4wMDksMCw0Ny4xMDQtMjEuMSw0Ny4xMDQtNDcuMTA0QzMxNC4wMTQsMjQ2LjQxMywzMDAuODk4LDIyOS4wMTcsMjgyLjYxMiwyMjIuNTU3eiAgICAgIE00Ny4xMDIsMjgyLjYxMmMtOC42NjYsMC0xNS42OTktNy4wMzctMTUuNjk5LTE1LjcwMWMwLTguNjc3LDcuMDMzLTE1LjY5NywxNS42OTktMTUuNjk3YzguNjY4LDAsMTUuNzAxLDcuMDIxLDE1LjcwMSwxNS42OTcgICAgIEM2Mi44MDMsMjc1LjU3NSw1NS43NywyODIuNjEyLDQ3LjEwMiwyODIuNjEyeiBNMTU3LjAwNywyODIuNjEyYy04LjY2NiwwLTE1LjcwMS03LjAzNy0xNS43MDEtMTUuNzAxICAgICBjMC04LjY3Nyw3LjAzNS0xNS42OTcsMTUuNzAxLTE1LjY5N2M4LjY2NCwwLDE1LjcwMSw3LjAyMSwxNS43MDEsMTUuNjk3QzE3Mi43MDgsMjc1LjU3NSwxNjUuNjcxLDI4Mi42MTIsMTU3LjAwNywyODIuNjEyeiAgICAgIE0xNTcuMDA3LDYyLjgwM2MtOC42NjYsMC0xNS43MDEtNy4wMzMtMTUuNzAxLTE1LjcwN2MwLTguNjc2LDcuMDM1LTE1LjY5MywxNS43MDEtMTUuNjkzYzguNjY0LDAsMTUuNzAxLDcuMDI1LDE1LjcwMSwxNS42OTMgICAgIEMxNzIuNzA4LDU1Ljc2MiwxNjUuNjcxLDYyLjgwMywxNTcuMDA3LDYyLjgwM3ogTTI2Ni45MTEsMjgyLjYxMmMtOC42NiwwLTE1LjY5Ny03LjAzNy0xNS42OTctMTUuNzAxICAgICBjMC04LjY3Nyw3LjAzNy0xNS42OTcsMTUuNjk3LTE1LjY5N2M4LjY2NCwwLDE1LjcwMSw3LjAyMSwxNS43MDEsMTUuNjk3QzI4Mi42MTIsMjc1LjU3NSwyNzUuNTc1LDI4Mi42MTIsMjY2LjkxMSwyODIuNjEyeiIgZmlsbD0iI0ZGRkZGRiIvPgoJCTwvZz4KCTwvZz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8L3N2Zz4K"
         var downloadButton_base64 = "data:image/svg+xml;base64," + "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNC4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDQzMzYzKSAgLS0+DQo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPg0KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCINCgkgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjUxMnB4IiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgNTEyIDUxMiIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8cG9seWdvbiBmaWxsPSIjRkZGRkZGIiBwb2ludHM9IjM1NC41LDMzMy41IDMzMy41LDMxMy41IDI3MS44MzUsMzY1LjU2NCAyNzEuODM1LDcuOTE3IDI0MC4xNjUsNy45MTcgMjQwLjE2NSwzNjUuNTY0IDE4MC41LDMxNC41IA0KCTE1Ny41LDMzNi41IDI1Niw0MjYuMTg4ICIvPg0KPHBvbHlnb24gZmlsbD0iI0ZGRkZGRiIgcG9pbnRzPSIyOC41LDQ3Mi40MTIgNDg5LjUsNDcyLjQxMiA0OTAuNSw1MDQuMDgyIDI3LjUsNTA0LjA4MiAiLz4NCjxwb2x5Z29uIGZpbGw9IiNGRkZGRkYiIHBvaW50cz0iMjYuNTgsMzY2LjQxMiA2My40NjcsMzY2LjQxMiA2My41NDcsNTAyLjUgMjYuNSw1MDIuNSAiLz4NCjxwb2x5Z29uIGZpbGw9IiNGRkZGRkYiIHBvaW50cz0iNDUyLjUzMywzNjUuNDEyIDQ4OS40MTksMzY1LjQxMiA0ODkuNSw1MDEuNSA0NTIuNDUzLDUwMS41ICIvPg0KPC9zdmc+DQo="
-        var rulerIcon_base64 = "data:image/svg+xml;base64," + "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTkuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDMyLjAwNiAzMi4wMDYiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDMyLjAwNiAzMi4wMDY7IiB4bWw6c3BhY2U9InByZXNlcnZlIiB3aWR0aD0iNTEycHgiIGhlaWdodD0iNTEycHgiPgo8Zz4KCTxwYXRoIGQ9Ik0zMS41MDUsMjMuNjNIMC41Yy0wLjEzMywwLTAuMjYtMC4wNTMtMC4zNTQtMC4xNDZTMCwyMy4yNjMsMCwyMy4xM0wwLjAwMiw4Ljg3OGMwLTAuMjc2LDAuMjI0LTAuNSwwLjUtMC41aDMxLjAwNCAgIGMwLjEzMywwLDAuMjYsMC4wNTMsMC4zNTQsMC4xNDZzMC4xNDYsMC4yMjEsMC4xNDYsMC4zNTRMMzIuMDA1LDIzLjEzQzMyLjAwNSwyMy40MDYsMzEuNzgxLDIzLjYzLDMxLjUwNSwyMy42M3ogTTEsMjIuNjNoMzAuMDA1ICAgbDAuMDAxLTEzLjI1MkgxLjAwMkwxLDIyLjYzeiIgZmlsbD0iI0ZGRkZGRiIvPgoJPGc+CgkJPHBhdGggZD0iTTI2LjIwOSwxMi44NjVjLTAuMjc2LDAtMC41LTAuMjI0LTAuNS0wLjVWOC44NzZjMC0wLjI3NiwwLjIyNC0wLjUsMC41LTAuNXMwLjUsMC4yMjQsMC41LDAuNXYzLjQ4OSAgICBDMjYuNzA5LDEyLjY0MiwyNi40ODUsMTIuODY1LDI2LjIwOSwxMi44NjV6IiBmaWxsPSIjRkZGRkZGIi8+CgkJPHBhdGggZD0iTTIxLjEwOCwxNS4xMDNjLTAuMjc2LDAtMC41LTAuMjI0LTAuNS0wLjVWOC44NzZjMC0wLjI3NiwwLjIyNC0wLjUsMC41LTAuNXMwLjUsMC4yMjQsMC41LDAuNXY1LjcyNyAgICBDMjEuNjA4LDE0Ljg3OSwyMS4zODUsMTUuMTAzLDIxLjEwOCwxNS4xMDN6IiBmaWxsPSIjRkZGRkZGIi8+CgkJPHBhdGggZD0iTTE2LjAwNCwxMi44NjVjLTAuMjc2LDAtMC41LTAuMjI0LTAuNS0wLjVWOC44NzZjMC0wLjI3NiwwLjIyNC0wLjUsMC41LTAuNXMwLjUsMC4yMjQsMC41LDAuNXYzLjQ4OSAgICBDMTYuNTA0LDEyLjY0MiwxNi4yOCwxMi44NjUsMTYuMDA0LDEyLjg2NXoiIGZpbGw9IiNGRkZGRkYiLz4KCQk8cGF0aCBkPSJNMTAuODk5LDE1LjEwM2MtMC4yNzYsMC0wLjUtMC4yMjQtMC41LTAuNVY4Ljg3NmMwLTAuMjc2LDAuMjI0LTAuNSwwLjUtMC41czAuNSwwLjIyNCwwLjUsMC41djUuNzI3ICAgIEMxMS4zOTksMTQuODc5LDExLjE3NiwxNS4xMDMsMTAuODk5LDE1LjEwM3oiIGZpbGw9IiNGRkZGRkYiLz4KCQk8cGF0aCBkPSJNNS43OTksMTIuODY0Yy0wLjI3NiwwLTAuNS0wLjIyNC0wLjUtMC41VjguODc2YzAtMC4yNzYsMC4yMjQtMC41LDAuNS0wLjVzMC41LDAuMjI0LDAuNSwwLjV2My40ODggICAgQzYuMjk5LDEyLjY0MSw2LjA3NSwxMi44NjQsNS43OTksMTIuODY0eiIgZmlsbD0iI0ZGRkZGRiIvPgoJPC9nPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+Cjwvc3ZnPgo="
+        var rulerIcon_base64 = "data:image/svg+xml;base64," + "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNC4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDQzMzYzKSAgLS0+DQo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPg0KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCINCgkgd2lkdGg9IjMxNi45OXB4IiBoZWlnaHQ9IjEyNy42N3B4IiB2aWV3Qm94PSIwIDAgMzE2Ljk5IDEyNy42NyIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMzE2Ljk5IDEyNy42NyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8cmVjdCB4PSI4LjczOSIgeT0iOS43MDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLXdpZHRoPSIyMyIgd2lkdGg9IjI5OS45OTkiIGhlaWdodD0iMTA5LjcwOCIvPg0KPGxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjIzIiB4MT0iNjEuMTM3IiB5MT0iOS43NSIgeDI9IjYxLjEzNyIgeTI9IjQ3LjUzMSIvPg0KPGxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjIzIiB4MT0iMTEwLjYyMiIgeTE9IjEwLjExNSIgeDI9IjExMC42MjIiIHkyPSI3NS43MjgiLz4NCjxsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLXdpZHRoPSIyMyIgeDE9IjE2MS4xNjUiIHkxPSIxMC4yNzYiIHgyPSIxNjEuMTY1IiB5Mj0iNDguMDU4Ii8+DQo8bGluZSBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iMjMiIHgxPSIyMDkuNzY3IiB5MT0iMTAuMDg2IiB4Mj0iMjA5Ljc2NyIgeTI9Ijc3LjE4NCIvPg0KPGxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjIzIiB4MT0iMjU5LjI4MiIgeTE9IjkuNjAxIiB4Mj0iMjU5LjI4MiIgeTI9IjQ3LjM4MiIvPg0KPC9zdmc+DQo="
 
         // icon sizes
         var selectionButtonIconWidth = 16;
         var scissorsButtonIconWidth = 16;
         var graphTreeIconWidth = 16;
         var downloadButtonIconWidth = config.topBarHeight - 10; // icon size for download button
-        var rulerIconWidth = 16;
+        var rulerIconWidth = 21;
 
 
         // SVG button
@@ -638,66 +641,68 @@ HTMLWidgets.widget({
             .append("title")
             .text("Switch Tree/Graph View");
 
-        // // ruler icon button
-        // topBarSVG.append("rect")
-        //     .attr("class", "scissorsButton")
-        //     .attr("x", smallButtonWidth*3)
-        //     .attr("y", 0)
-        //     .attr("width", smallButtonWidth)
-        //     .attr("height", config.topBarHeight)
-        //     .attr("rx", 10)
-        //     .attr("ry", 10)
-        //     .attr("fill", config.topBarColour)
-        //     .on("mouseover", function() {
-        //         // if this button is not selected
-        //         if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
-        //             d3.select(this).attr("fill", config.topBarHighlight);
-        //         }
-        //     })
-        //     .on("mouseout", function() {
-        //         // if this button is not selected
-        //         if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
-        //             d3.select(this).attr("fill", config.topBarColour);
-        //         }
-        //     })
-        //     .on("click", function() {
-        //         // if brush selection button is selected, turn it off
-        //         if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 1) {
-        //             _pushBrushSelectionButton(brush, curVizObj);
-        //         }
-        //         // push scissors button function
-        //         _pushScissorsButton(curVizObj);
-        //     })
-        //     .append("title")
-        //     .text("Prune Tree/Graph");
-        // topBarSVG.append("image")
-        //     .attr("xlink:href", scissorsButton_base64)
-        //     .attr("x", smallButtonWidth*7/2 - (graphTreeIconWidth/2))
-        //     .attr("y", 7)
-        //     .attr("width", scissorsButtonIconWidth)
-        //     .attr("height", scissorsButtonIconWidth)
-        //     .on("mouseover", function() {
-        //         // if this button is not selected
-        //         if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
-        //             d3.select("#" + view_id).select(".scissorsButton").attr("fill", config.topBarHighlight);
-        //         }
-        //     })
-        //     .on("mouseout", function() {
-        //         // if this button is not selected
-        //         if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
-        //             d3.select("#" + view_id).select(".scissorsButton").attr("fill", config.topBarColour);
-        //         }
-        //     })
-        //     .on("click", function() {
-        //         // if brush selection button is selected, turn it off
-        //         if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 1) {
-        //             _pushBrushSelectionButton(brush, curVizObj);
-        //         }
-        //         // push scissors button function
-        //         _pushScissorsButton(curVizObj);
-        //     })
-        //     .append("title")
-        //     .text("Prune Tree/Graph");
+        // ruler icon button
+        if (curVizObj.userConfig.distances_provided) {
+            topBarSVG.append("rect")
+                .attr("class", "rulerButton")
+                .attr("x", smallButtonWidth*3)
+                .attr("y", 0)
+                .attr("width", smallButtonWidth)
+                .attr("height", config.topBarHeight)
+                .attr("rx", 10)
+                .attr("ry", 10)
+                .attr("fill", config.topBarColour)
+                .on("mouseover", function() {
+                    // if this button is not selected
+                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length == 0) {
+                        d3.select(this).attr("fill", config.topBarHighlight);
+                    }
+                })
+                .on("mouseout", function() {
+                    // if this button is not selected
+                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length == 0) {
+                        d3.select(this).attr("fill", config.topBarColour);
+                    }
+                })
+                .on("click", function() {
+                    // if brush selection button is selected, turn it off
+                    if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 1) {
+                        _pushBrushSelectionButton(brush, curVizObj);
+                    }
+                    // scale or unscale tree
+                    _scaleTree(curVizObj);
+                })
+                .append("title")
+                .text("Scale Tree/Graph");
+            topBarSVG.append("image")
+                .attr("xlink:href", rulerIcon_base64)
+                .attr("x", smallButtonWidth*7/2 - (rulerIconWidth/2))
+                .attr("y", 5)
+                .attr("width", rulerIconWidth)
+                .attr("height", rulerIconWidth)
+                .on("mouseover", function() {
+                    // if this button is not selected
+                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length == 0) {
+                        d3.select("#" + view_id).select(".rulerButton").attr("fill", config.topBarHighlight);
+                    }
+                })
+                .on("mouseout", function() {
+                    // if this button is not selected
+                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length == 0) {
+                        d3.select("#" + view_id).select(".rulerButton").attr("fill", config.topBarColour);
+                    }
+                })
+                .on("click", function() {
+                    // if brush selection button is selected, turn it off
+                    if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 1) {
+                        _pushBrushSelectionButton(brush, curVizObj);
+                    }
+                    // scale or unscale tree
+                    _scaleTree(curVizObj);
+                })
+                .append("title")
+                .text("Scale Tree/Graph");
+        }
 
         // TOOLTIP FUNCTIONS
 
@@ -905,8 +910,8 @@ HTMLWidgets.widget({
 
         // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
 
-        _plotForceDirectedGraph(curVizObj, 0); // originally force-directed graph has opacity of 0
-        _plotAlignedPhylogeny(curVizObj, 1);
+        _plotForceDirectedGraph(curVizObj); // originally force-directed graph has opacity of 0
+        _plotAlignedPhylogeny(curVizObj);
 
         // PLOT HEATMAP LEGEND
 
