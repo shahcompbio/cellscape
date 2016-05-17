@@ -185,6 +185,9 @@ function _pushBrushSelectionButton(brush, curVizObj) {
 
     // deselect brush tool
     if (d3.select("#" + curVizObj.view_id).select(".selectionButton").classed("brushButtonSelected")) {
+        // deselect any nodes and indicators
+        _clearBrush(curVizObj);
+
         // remove brush tool
         d3.select("#" + curVizObj.view_id).select(".brush").remove();
 
@@ -780,41 +783,15 @@ function _plotForceDirectedGraph(curVizObj) {
     var config = curVizObj.generalConfig,
         userConfig = curVizObj.userConfig;
 
-    // clear pre-existing graph
-    curVizObj.view.treeSVG.selectAll(".graphLinks").remove();
-    curVizObj.view.treeSVG.selectAll(".graphNodes").remove();
-
-    // SCALE
-    if (curVizObj.generalConfig.distOn) {
-        // layout function
-        var force_layout = d3.layout.force()
-            .size([config.treeWidth, config.treeHeight])
-            .linkDistance(function(d) {
-
-                // smallest dimension on the view (width or height)
-                var smallest_dim = (config.treeWidth < config.treeHeight) ? config.treeWidth : config.treeHeight;
-
-                // divide by 2 so that two max paths can fit on the smallest dimension
-                return (d.dist/curVizObj.data.max_tree_path_dist)*(smallest_dim/2); 
-            })
-            .gravity(.09)
-            .charge(-100)
-            .nodes(userConfig.tree_nodes)
-            .links(userConfig.tree_edges)
-            .start();     
-    }
-    // UNSCALE
-    else {
-        // layout function
-        var force_layout = d3.layout.force()
-            .size([config.treeWidth, config.treeHeight])
-            .linkDistance(20)
-            .gravity(.09)
-            .charge(-20)
-            .nodes(userConfig.tree_nodes)
-            .links(userConfig.tree_edges)
-            .start();        
-    }
+    // layout function
+    var force_layout = d3.layout.force()
+        .size([config.treeWidth, config.treeHeight])
+        .linkDistance(20)
+        .gravity(.09)
+        .charge(-20)
+        .nodes(userConfig.tree_nodes)
+        .links(userConfig.tree_edges)
+        .start();        
 
     // plot links
     var link = curVizObj.view.treeSVG
@@ -914,6 +891,79 @@ function _plotForceDirectedGraph(curVizObj) {
             .attr("x2", function(d) { return d.target.x; })
             .attr("y2", function(d) { return d.target.y; });
     });
+}
+
+function _rePlotForceLayout(curVizObj) {
+    var config = curVizObj.generalConfig,
+        userConfig = curVizObj.userConfig;
+
+    // SCALE
+    if (curVizObj.generalConfig.distOn) {
+        // layout function
+        var force_layout = d3.layout.force()
+            .size([config.treeWidth, config.treeHeight])
+            .linkDistance(function(d) {
+
+                // smallest dimension on the view (width or height)
+                var smallest_dim = (config.treeWidth < config.treeHeight) ? config.treeWidth : config.treeHeight;
+
+                // divide by 2 so that two max paths can fit on the smallest dimension
+                return (d.dist/curVizObj.data.max_tree_path_dist)*(smallest_dim/2); 
+            })
+            .gravity(.09)
+            .charge(-100)
+            .nodes(userConfig.tree_nodes)
+            .links(userConfig.tree_edges)
+            .start();     
+    }
+    // UNSCALE
+    else {
+        // layout function
+        var force_layout = d3.layout.force()
+            .size([config.treeWidth, config.treeHeight])
+            .linkDistance(20)
+            .gravity(.09)
+            .charge(-20)
+            .nodes(userConfig.tree_nodes)
+            .links(userConfig.tree_edges)
+            .start();        
+    }
+
+    // node circles
+    var nodeCircle = curVizObj.view.treeSVG.selectAll(".graph.node")
+        .on('mousedown.drag', null);
+    nodeCircle
+        .call(force_layout.drag);
+
+    force_layout.on("tick", function() {
+
+        // radius of nodes
+        var r = (userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
+
+        nodeCircle.attr("cx", function(d) { 
+                return d.x = Math.max(r, Math.min(config.treeWidth - r, d.x)); 
+            })
+            .attr("cy", function(d) { 
+                return d.y = Math.max(r, Math.min(config.treeHeight - r, d.y)); 
+            });
+
+        if (userConfig.display_node_ids) {
+            curVizObj.view.treeSVG.selectAll(".graph.nodeLabel")
+                .attr("x", function(d) { 
+                    return d.x = Math.max(r, Math.min(config.treeWidth - r, d.x)); 
+                })
+                .attr("y", function(d) { 
+                    return d.y = Math.max(r, Math.min(config.treeHeight - r, d.y)); 
+                });
+        }
+
+        curVizObj.view.treeSVG.selectAll(".link.graph")
+            .attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+    });
+
 }
 
 /* function to plot node labels
@@ -1075,21 +1125,29 @@ function _switchView(curVizObj) {
     d3.select("#" + curVizObj.view_id).selectAll(".tree.node")
         .attr("fill-opacity", config.treeOpacity)
         .attr("stroke-opacity", config.treeOpacity)
-        .attr("pointer-events", "none");
+        .attr("pointer-events", function() {
+            return (config.treeOpacity == 1) ? "auto" : "none";
+        });
     d3.select("#" + curVizObj.view_id).selectAll(".tree.link")
         .attr("fill-opacity", config.treeOpacity)
         .attr("stroke-opacity", config.treeOpacity)
-        .attr("pointer-events", "none");
+        .attr("pointer-events", function() {
+            return (config.treeOpacity == 1) ? "auto" : "none";
+        });
     d3.select("#" + curVizObj.view_id).selectAll(".tree.nodeLabel")
         .attr("fill-opacity", config.treeOpacity);
     d3.select("#" + curVizObj.view_id).selectAll(".graph.node")
         .attr("fill-opacity", config.graphOpacity)
         .attr("stroke-opacity", config.graphOpacity)
-        .attr("pointer-events", "auto");
+        .attr("pointer-events", function() {
+            return (config.graphOpacity == 1) ? "auto" : "none";
+        });
     d3.select("#" + curVizObj.view_id).selectAll(".graph.link")
         .attr("fill-opacity", config.graphOpacity)
         .attr("stroke-opacity", config.graphOpacity)
-        .attr("pointer-events", "auto");
+        .attr("pointer-events", function() {
+            return (config.graphOpacity == 1) ? "auto" : "none";
+        });
     d3.select("#" + curVizObj.view_id).selectAll(".graph.nodeLabel")
         .attr("fill-opacity", config.graphOpacity);
 
@@ -1129,7 +1187,7 @@ function _scaleTree(curVizObj) {
     });
 
     // scale or unscale graph
-    _plotForceDirectedGraph(curVizObj);
+    _rePlotForceLayout(curVizObj);
 
        
 }
@@ -1205,19 +1263,29 @@ function _updateTrimmedMatrix(curVizObj) {
     });
 
     // translate aligned tree links
-    d3.selectAll(".tree.link") 
+    d3.select("#" + curVizObj.view_id).selectAll(".tree.link") 
         .transition()
         .duration(1000)                       
         .attr("d", function(d) {
             return _getDiagonal(curVizObj, d, half_rowHeight);
         });
-    d3.selectAll(".tree.node")
+
+    // translate aligned tree nodes
+    d3.select("#" + curVizObj.view_id).selectAll(".tree.node")
         .transition()
         .duration(1000)
         .attr("cy", function(d) { 
             d.y = curVizObj.data.yCoordinates[d.sc_id] + half_rowHeight;
             return d.y;
         });
+
+    // translate aligned tree nodelabels
+    d3.select("#" + curVizObj.view_id).selectAll(".tree.nodeLabel")
+        .transition()
+        .duration(1000)
+        .attr("y", function(d) { 
+            return d.y = curVizObj.data.yCoordinates[d.sc_id] + half_rowHeight; 
+        })
 
     // move chromosome legend up
     d3.select("#" + curVizObj.view_id).selectAll(".chromBox")
