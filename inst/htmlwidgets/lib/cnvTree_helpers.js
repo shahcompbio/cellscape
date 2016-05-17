@@ -550,62 +550,39 @@ function _downstreamEffects(curVizObj, link_id) {
 * param nodeOrder -- array of node order - starts empty, appended to as function executes
 */
 function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
-    var finalOrder = [];
 
-    // get group for this node
-    var found_sc_with_group = _.findWhere(curVizObj.userConfig.sc_groups, {single_cell_id: node_name});
-    var cur_group = (found_sc_with_group) ? found_sc_with_group.group : undefined;
-
-    // create object for this node
-    var node_obj = {
-        "sc_id": node_name, 
-        "n_desc": descendants[node_name].length,
-        "group": cur_group
-    }
-
-    // get the targets of this node, adding them to "targets" list
+    // get the targets of this node
     var targetRX = new RegExp("link_source_" + node_name + "_target_(.+)");
     var targets = [];
     link_ids.map(function(id) {
         if (id.match(targetRX)) {
             var cur_target = targetRX.exec(id)[1];
-            targets.push({
-                "sc_id": cur_target,
-                "n_desc": descendants[cur_target].length
-            });
+            targets.push({ "sc_id": cur_target, 
+                           "n_desc": descendants[cur_target].length });
         }
     });
 
     // if there are no targets, append the current node to the node order array
     if (targets.length == 0) {
-        nodeOrder.push(node_obj);
+        nodeOrder.push(node_name);
     }
     // there are targets
     else {
-        // order the targets by number of descendants they have
+        // order the targets by how many descendants they have
         _sortByKey(targets, "n_desc");
 
         // for each of the targets
         targets.map(function(target, target_i) {
             // if we're at the middle target, append the current node to the node order array
             if (target_i == Math.floor(targets.length/2)) {
-                nodeOrder.push(node_obj);
+                nodeOrder.push(node_name);
             }
             // get targets of this target
             _getNodeOrder(descendants, link_ids, target.sc_id, nodeOrder);
         });
     }
 
-    // prioritize ordering by groups (split by groups and then join)
-    // for each group, add nodes in that group to the final order
-    _.uniq(_.pluck(nodeOrder, "group")).forEach(function(group) {
-        var cur_group_nodes = _.filter(nodeOrder, function(node) {
-            return node.group == group;
-        })
-        finalOrder = finalOrder.concat(cur_group_nodes);
-    });
-
-    return _.pluck(finalOrder, "sc_id");
+    return nodeOrder;
  };
 
 /* function to get font size for labels, given their content the size of the nodes that contain them
