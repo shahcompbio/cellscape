@@ -556,9 +556,18 @@ function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
     var targets = [];
     link_ids.map(function(id) {
         if (id.match(targetRX)) {
+            // current target sc id
             var cur_target = targetRX.exec(id)[1];
+
+            // get link distance for the link connecting this node to its target
+            var cur_link = _.findWhere(curVizObj.userConfig.tree_edges, 
+                {source_sc_id: node_name, target_sc_id: cur_target});
+            var cur_dist = cur_link.dist;
+
+            // add this target
             targets.push({ "sc_id": cur_target, 
-                           "n_desc": descendants[cur_target].length });
+                           "n_desc": descendants[cur_target].length,
+                           "link_dist": cur_dist });
         }
     });
 
@@ -568,8 +577,9 @@ function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
     }
     // there are targets
     else {
-        // order the targets by how many descendants they have
-        _sortByKey(targets, "n_desc");
+        // order the targets by link distance then number of descendants
+        // -- if link distance no provided, will sort by how many descendants they have
+        _sortByKey(targets, "link_dist", "n_desc");
 
         // for each of the targets
         targets.map(function(target, target_i) {
@@ -720,12 +730,17 @@ function _getAncestorIds(curVizObj) {
     return ancestors;
 }
 
-/* function to get the length of the path to each node (and the maximum path distance)
+/* function to get the length of the path to each node (and the maximum path distance, and min link dist for each node)
 * @param {Object} curVizObj 
 * @param {String} cur_sc_id -- current single cell id
 * @param {Number} dist_thus_far -- cumulative distance to the current node
 */
 function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
+
+    // set up minimum target link distance object (of all targets for a given node, what is the minimum edge distance)
+    if (!curVizObj.data.minTargetLink) {
+        curVizObj.data.minTargetLink = {};
+    }
 
     // set up path distance object
     if (!curVizObj.data.pathDists) {
@@ -741,12 +756,20 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
     // set the distance for the current node
     curVizObj.data.pathDists[cur_sc_id] = dist_thus_far;
 
+    // set the minimum target link distance for the current node
+    curVizObj.data.minTargetLink[cur_sc_id] = Infinity;
+
     // for each descendant
     curVizObj.data.direct_descendants[cur_sc_id].forEach(function(desc) {
         // get link distance for the link connecting this descendant to its ancestor
         var cur_link = _.findWhere(curVizObj.userConfig.tree_edges, 
             {source_sc_id: cur_sc_id, target_sc_id: desc});
         var cur_dist = cur_link.dist;
+
+        // update minimum target link distance for this node
+        if (cur_dist < curVizObj.data.minTargetLink[cur_sc_id]) {
+            curVizObj.data.minTargetLink[cur_sc_id] = cur_dist;
+        }
 
         // update maximum (and runner-up) path distance
         var cumulative_dist = dist_thus_far+cur_dist;
@@ -760,21 +783,18 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
     });;
 }
 
-
-/* elbow function to draw phylogeny links 
+/* scaled elbow function (takes into account the minimum link distance for the single cell)
 */
-function _elbow(d, source = null, target = null) {
-    if (!(source) && !(target)) {
-        return "M" + d.source.x + "," + d.source.y
-            + "H" + (d.source.x + (d.target.x-d.source.x)/3)
-            + "V" + d.target.y + "H" + d.target.x;
-    }
-    else {
-        return "M" + source.x + "," + source.y
-            + "H" + (source.x + (target.x-source.x)/3)
-            + "V" + target.y + "H" + target.x;
-    }
+function _scaledElbow(curVizObj, d, source_name, source, target) {
+
+    // minimum link distance for this single cell
+    var min_link_dist = (curVizObj.data.minTargetLink[source_name]/curVizObj.data.max_tree_path_dist)*curVizObj.generalConfig.treeWidth; // TODO add padding
+
+    return "M" + source.x + "," + source.y
+        + "H" + (source.x + (min_link_dist)/2)
+        + "V" + target.y + "H" + target.x;
 }
+
 
 /* function to plot the force-directed graph
 * @param {Object} curVizObj
@@ -1003,22 +1023,27 @@ function _plotNodeLabels(curVizObj, tree_type) {
 * @param {Object} d -- current data object
 * @param {Number} half_rowHeight -- half the height of one row in the heatmap
 */
-function _getDiagonal(curVizObj, d, half_rowHeight) {
-
-    var diagonal = d3.svg.diagonal()
-        .projection(function(d) { return [d.y, d.x]; });
+function _getElbow(curVizObj, d, half_rowHeight) {
 
     var source = {};
     var target = {};
-    source.x = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
-    target.x = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
-    // we're scaling by edge distance
+    // we're scaling by edge distance -- get elbow
     if (curVizObj.generalConfig.distOn) {
-        source.y = curVizObj.data.xCoordinatesDist[d.source_sc_id];
-        target.y = curVizObj.data.xCoordinatesDist[d.target_sc_id];
+        source.y = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
+        target.y = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
+        source.x = curVizObj.data.xCoordinatesDist[d.source_sc_id];
+        target.x = curVizObj.data.xCoordinatesDist[d.target_sc_id];
+
+        return _scaledElbow(curVizObj, d, d.source_sc_id, source, target);
     }
-    // not scaling by edge distances
+    // not scaling by edge distances -- get bezier diagonal
     else {
+
+        var diagonal = d3.svg.diagonal()
+            .projection(function(d) { return [d.y, d.x]; });
+
+        source.x = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
+        target.x = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
         source.y = curVizObj.data.xCoordinates[d.source_sc_id];
         target.y = curVizObj.data.xCoordinates[d.target_sc_id];
     }
@@ -1044,7 +1069,7 @@ function _plotAlignedPhylogeny(curVizObj) {
             return "link tree " + d.link_id;
         })                
         .attr("d", function(d) {
-            return _getDiagonal(curVizObj, d, half_rowHeight);
+            return _getElbow(curVizObj, d, half_rowHeight);
         })
         .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
@@ -1172,20 +1197,27 @@ function _scaleTree(curVizObj) {
                 var dx = curVizObj.data.xCoordinatesDist[d.sc_id] - curVizObj.data.xCoordinates[d.sc_id];
                 return "translate(" + dx + ",0)";
             });
+
+        // scale or unscale links
+        curVizObj.view.treeSVG.selectAll(".tree.link")                     
+            .attr("d", function(d) {
+                return _getElbow(curVizObj, d, half_rowHeight);
+            });
     }
 
     // UNSCALE nodes & labels
     else {
         curVizObj.view.treeSVG.selectAll(".treeNodesG")
             .attr("transform", "translate(0,0)");
+
+        // scale or unscale links
+        curVizObj.view.treeSVG.selectAll(".tree.link")                     
+            .attr("d", function(d) {
+                return _getElbow(curVizObj, d, half_rowHeight);
+            });
     }
 
-    // scale or unscale links
-    curVizObj.view.treeSVG.selectAll(".tree.link")                     
-    .attr("d", function(d) {
-        return _getDiagonal(curVizObj, d, half_rowHeight);
-    });
-
+    
     // scale or unscale graph
     _rePlotForceLayout(curVizObj);
 
@@ -1267,7 +1299,7 @@ function _updateTrimmedMatrix(curVizObj) {
         .transition()
         .duration(1000)                       
         .attr("d", function(d) {
-            return _getDiagonal(curVizObj, d, half_rowHeight);
+            return _getElbow(curVizObj, d, half_rowHeight);
         });
 
     // translate aligned tree nodes
