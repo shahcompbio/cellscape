@@ -780,8 +780,12 @@ function _plotForceDirectedGraph(curVizObj) {
     var config = curVizObj.generalConfig,
         userConfig = curVizObj.userConfig;
 
-    // if tree edge distances are specified
-    if (curVizObj.userConfig.distances_provided) {
+    // clear pre-existing graph
+    curVizObj.view.treeSVG.selectAll(".graphLinks").remove();
+    curVizObj.view.treeSVG.selectAll(".graphNodes").remove();
+
+    // SCALE
+    if (curVizObj.generalConfig.distOn) {
         // layout function
         var force_layout = d3.layout.force()
             .size([config.treeWidth, config.treeHeight])
@@ -799,7 +803,7 @@ function _plotForceDirectedGraph(curVizObj) {
             .links(userConfig.tree_edges)
             .start();     
     }
-    // tree edge distances NOT specified
+    // UNSCALE
     else {
         // layout function
         var force_layout = d3.layout.force()
@@ -860,7 +864,7 @@ function _plotForceDirectedGraph(curVizObj) {
                 return config.tree_w_labels_r;
             }
             // don't display labels
-            return config.tree_r
+            return config.tree_r;
         })
         .attr("fill", function(d) {
              return _getNodeColour(curVizObj, d.sc_id);
@@ -1123,6 +1127,9 @@ function _scaleTree(curVizObj) {
     .attr("d", function(d) {
         return _getDiagonal(curVizObj, d, half_rowHeight);
     });
+
+    // scale or unscale graph
+    _plotForceDirectedGraph(curVizObj);
 
        
 }
