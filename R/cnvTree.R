@@ -4,7 +4,8 @@
 #'   
 #' @import htmlwidgets, gtools, jsonlite, reshape2, stringr, dplyr
 #'
-#' @param cnv_data {Data frame} (Required if mut_data not provided) Single cell copy number segments data.
+#' @param cnv_data {Data frame} (Required if mut_data not provided) Single cell copy number segments data. 
+#'   Note that every single cell id must be present in the tree_edges data frame.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "chr" - chromosome number
 #'                       (3) {Number} "start" - start position
@@ -12,6 +13,7 @@
 #'                       (5) {Number} "integer_copy_number" - copy number state.
 #'
 #' @param mut_data {Data frame} (Required if cnv_data not provided) Single cell targeted mutation data frame.
+#'   Note that every single cell id must be present in the tree_edges data frame.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "chr" - chromosome number
 #'                       (3) {Number} "coord" - genomic coordinate
@@ -277,6 +279,20 @@ cnvTree <- function(cnv_data = NULL,
   scs_in_hm <- names(heatmap_info) # single cells in heatmap
   scs_in_tree <- unique(c(tree_edges$source, tree_edges$target))
   scs_missing_from_hm <- setdiff(scs_in_tree, scs_in_hm)
+
+  # ENSURE ALL SINGLE CELLS IN THE CNV DATA ARE IN THE TREE EDGES DATA
+  scs_missing_from_tree <- setdiff(scs_in_hm, scs_in_tree)
+  if (length(scs_missing_from_tree) > 0) {
+    if (is.null(cnv_data)) {
+      data_type <- "mutations"
+    }
+    else {
+      data_type <- "cnv"
+    }
+    stop(paste("The following single cell ID(s) are present in the ", data_type, " data but ",
+        "are missing from the tree edges data: ",
+        paste(scs_missing_from_tree, collapse=", "), ".", sep=""))
+  }
 
   # forward options using x
   x = list(
