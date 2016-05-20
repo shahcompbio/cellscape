@@ -259,23 +259,6 @@ cnvTree <- function(cnv_data = NULL,
     root <- sources
   }
 
-  # SINGLE CELL GROUPS
-  if (!is.null(sc_groups)) {
-    # ensure column names are correct
-    if (!("single_cell_id" %in% colnames(sc_groups)) ||
-        !("group" %in% colnames(sc_groups))) {
-      stop(paste("Single cell group assignment data frame must have the following column names: ", 
-          "\"single_cell_id\", \"group\"", sep=""))
-    }
-
-    # ensure data is of the correct type
-    sc_groups$single_cell_id <- as.character(sc_groups$single_cell_id)
-    sc_groups$group <- as.character(sc_groups$group)
-
-    # to json
-    sc_groups <- jsonlite::toJSON(sc_groups)
-  }
-
   # GET SINGLE CELLS THAT ARE IN THE TREE BUT DON'T HAVE ASSOCIATED HEATMAP DATA
   scs_in_hm <- names(heatmap_info) # single cells in heatmap
   scs_in_tree <- unique(c(tree_edges$source, tree_edges$target))
@@ -294,6 +277,41 @@ cnvTree <- function(cnv_data = NULL,
         "are missing from the tree edges data: ",
         paste(scs_missing_from_tree, collapse=", "), 
         ". They will not be shown in the visualization.", sep=""))
+  }
+
+  # SINGLE CELL GROUPS
+  if (!is.null(sc_groups)) {
+    # ensure column names are correct
+    if (!("single_cell_id" %in% colnames(sc_groups)) ||
+        !("group" %in% colnames(sc_groups))) {
+      stop(paste("Single cell group assignment data frame must have the following column names: ", 
+          "\"single_cell_id\", \"group\"", sep=""))
+    }
+
+    # ensure data is of the correct type
+    sc_groups$single_cell_id <- as.character(sc_groups$single_cell_id)
+    sc_groups$group <- as.character(sc_groups$group)
+
+    # ENSURE ALL SINGLE CELLS IN THE HEATMAP DATA ARE IN THE GROUPS DATA
+    scs_in_groups <- unique(sc_groups$single_cell_id)
+    scs_missing_from_groups <- setdiff(scs_in_hm, scs_in_groups)
+    if (length(scs_missing_from_groups) > 0) {
+      if (is.null(cnv_data)) {
+        data_type <- "mutations"
+      }
+      else {
+        data_type <- "cnv"
+      }
+      stop(paste("The following single cell ID(s) are present in the ", data_type, " data but ",
+          "are missing from the single cell groups data: ",
+          paste(scs_missing_from_groups, collapse=", "), 
+          ". All single cells in the ", data_type, 
+          " data must be represented in the single cell groups data.", 
+          sep=""))
+    }
+
+    # to json
+    sc_groups <- jsonlite::toJSON(sc_groups)
   }
 
   # forward options using x

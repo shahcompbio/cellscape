@@ -793,7 +793,6 @@ function _plotForceDirectedGraph(curVizObj) {
     var config = curVizObj.generalConfig,
         userConfig = curVizObj.userConfig;
 
-    // layout function
     var force_layout = d3.layout.force()
         .size([config.treeWidth, config.treeHeight])
         .linkDistance(20)
@@ -913,12 +912,8 @@ function _rePlotForceLayout(curVizObj) {
         var force_layout = d3.layout.force()
             .size([config.treeWidth, config.treeHeight])
             .linkDistance(function(d) {
-
-                // smallest dimension on the view (width or height)
-                var smallest_dim = (config.treeWidth < config.treeHeight) ? config.treeWidth : config.treeHeight;
-
                 // divide by 2 so that two max paths can fit on the smallest dimension
-                return (d.dist/curVizObj.data.max_tree_path_dist)*(smallest_dim/2); 
+                return (d.dist/curVizObj.data.max_tree_path_dist)*(config.smallest_tree_dim/2); 
             })
             .gravity(.09)
             .charge(-100)

@@ -104,6 +104,9 @@ HTMLWidgets.widget({
         // tree configurations
         config.treeWidth = config.width - config.indicatorWidth - config.heatmapLegendWidth - curVizObj.userConfig.heatmapWidth;
 
+        // smallest tree dimension on the view (width or height)
+        config.smallest_tree_dim = (config.treeWidth < config.treeHeight) ? config.treeWidth : config.treeHeight;
+
         // if group annotation specified, reduce the width of the tree
         if (curVizObj.view.groupsSpecified) {
             config.treeWidth -= config.groupAnnotWidth;
