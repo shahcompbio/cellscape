@@ -33,7 +33,6 @@
 #'                       (1) {String} "chr" - chromosome number
 #'                       (2) {Number} "coord" - genomic coordinate
 #' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
-#' @param continuous_cnv {Boolean} (Optional) Whether to display the copy number data as continuous or discrete. Default is FALSE (discrete).
 #' @param width {Number} (Optional) Width of the plot.
 #' @param height {Number} (Optional) Height of the plot.
 #'
@@ -44,7 +43,6 @@ cnvTree <- function(cnv_data = NULL,
                     sc_groups = NULL, 
                     mut_order = NULL,
                     display_node_ids = FALSE, 
-                    continuous_cnv = FALSE,
                     width = 1000, 
                     height = 1000) {
 
@@ -115,6 +113,9 @@ cnvTree <- function(cnv_data = NULL,
     cnv_data$start <- as.numeric(as.character(cnv_data$start))
     cnv_data$end <- as.numeric(as.character(cnv_data$end))
     cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
+
+    # determine whether the data is discrete or continuous
+    continuous_cnv <- !all(cnv_data$integer_copy_number == floor(cnv_data$integer_copy_number))
 
     # check that the number of single cells does not exceed the height of the plot
     n_scs <- length(unique(cnv_data$single_cell_id))
@@ -289,9 +290,10 @@ cnvTree <- function(cnv_data = NULL,
     else {
       data_type <- "cnv"
     }
-    stop(paste("The following single cell ID(s) are present in the ", data_type, " data but ",
+    print(paste("WARNING: The following single cell ID(s) are present in the ", data_type, " data but ",
         "are missing from the tree edges data: ",
-        paste(scs_missing_from_tree, collapse=", "), ".", sep=""))
+        paste(scs_missing_from_tree, collapse=", "), 
+        ". They will not be shown in the visualization.", sep=""))
   }
 
   # forward options using x
