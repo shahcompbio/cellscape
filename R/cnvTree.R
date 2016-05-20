@@ -115,7 +115,8 @@ cnvTree <- function(cnv_data = NULL,
     cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
 
     # determine whether the data is discrete or continuous
-    continuous_cnv <- !all(cnv_data$integer_copy_number == floor(cnv_data$integer_copy_number))
+    cnvs_without_nas <- na.omit(cnv_data$integer_copy_number)
+    continuous_cnv <- !all(cnvs_without_nas == floor(cnvs_without_nas))
 
     # check that the number of single cells does not exceed the height of the plot
     n_scs <- length(unique(cnv_data$single_cell_id))
@@ -164,6 +165,9 @@ cnvTree <- function(cnv_data = NULL,
     mut_data$chr <- as.character(mut_data$chr)
     mut_data$coord <- as.numeric(as.character(mut_data$coord))
     mut_data$VAF <- as.numeric(as.character(mut_data$VAF))
+
+    # set continuous cnv to false (we're now using VAF data that is always continuous)
+    continuous_cnv <- FALSE
 
     # get chromosomes
     chroms <- gtools::mixedsort(unique(mut_data$chr))
