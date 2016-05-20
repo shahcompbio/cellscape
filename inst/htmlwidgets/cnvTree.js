@@ -979,7 +979,7 @@ HTMLWidgets.widget({
                     .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
                     .attr("y", legendRectStart)
                     .attr("dy", "+0.71em")
-                    .text(maxCNV)
+                    .text(">=" + maxCNV)
                     .attr("font-family", "Arial")
                     .attr("font-size", config.legendFontHeight)
                     .style("fill", "black");
