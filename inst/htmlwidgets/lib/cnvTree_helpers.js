@@ -1177,6 +1177,10 @@ function _scaleTree(curVizObj) {
 
     // SCALE nodes & labels
     if (curVizObj.generalConfig.distOn) {
+        // mark this button as rulerButtonSelected
+        d3.select("#" + curVizObj.view_id).select(".rulerButton").classed("rulerButtonSelected", true); 
+
+        // move nodes to their scaled locadtion
         curVizObj.view.treeSVG.selectAll(".treeNodesG")
             .attr("transform", function(d) {
                 var dx = curVizObj.data.xCoordinatesDist[d.sc_id] - curVizObj.data.xCoordinates[d.sc_id];
@@ -1192,6 +1196,13 @@ function _scaleTree(curVizObj) {
 
     // UNSCALE nodes & labels
     else {
+        // remove "rulerButtonSelected" class from button
+        d3.select("#" + curVizObj.view_id).select(".rulerButton").classed("rulerButtonSelected", false); 
+
+        // reset colour of the brush scissors button
+        d3.select("#" + curVizObj.view_id).select(".rulerButton").attr("fill", curVizObj.generalConfig.topBarColour);
+
+        // move nodes to their unscaled position
         curVizObj.view.treeSVG.selectAll(".treeNodesG")
             .attr("transform", "translate(0,0)");
 
