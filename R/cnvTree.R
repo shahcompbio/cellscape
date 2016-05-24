@@ -33,6 +33,7 @@
 #'                       (1) {String} "chr" - chromosome number
 #'                       (2) {Number} "coord" - genomic coordinate
 #' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
+#' @param show_warnings {Boolean} (Optional) Whether or not to show any warnings. Default is TRUE.
 #' @param width {Number} (Optional) Width of the plot.
 #' @param height {Number} (Optional) Height of the plot.
 #'
@@ -43,6 +44,7 @@ cnvTree <- function(cnv_data = NULL,
                     sc_groups = NULL, 
                     mut_order = NULL,
                     display_node_ids = FALSE, 
+                    show_warnings = TRUE,
                     width = 1000, 
                     height = 1000) {
 
@@ -206,8 +208,10 @@ cnvTree <- function(cnv_data = NULL,
     negative_dists <- tree_edges$dist[which(tree_edges$dist < 0)]
     if (length(negative_dists) > 0) {
       value_for_neg_dists <- 0.1
-      print(paste("WARNING: Negative distances found in tree edges data frame. Any negative distance will be ",
-        "converted to ", value_for_neg_dists, ".", sep=""))
+      if (show_warnings) {
+        print(paste("WARNING: Negative distances found in tree edges data frame. Any negative distance will be ",
+          "converted to ", value_for_neg_dists, ".", sep=""))
+      }
       tree_edges$dist[which(tree_edges$dist < 0)] <- value_for_neg_dists
     }
   }
@@ -277,10 +281,12 @@ cnvTree <- function(cnv_data = NULL,
     else {
       data_type <- "cnv"
     }
-    print(paste("WARNING: The following single cell ID(s) are present in the ", data_type, " data but ",
-        "are missing from the tree edges data: ",
-        paste(scs_missing_from_tree, collapse=", "), 
-        ". They will not be shown in the visualization.", sep=""))
+    if (show_warnings) {
+      print(paste("WARNING: The following single cell ID(s) are present in the ", data_type, " data but ",
+          "are missing from the tree edges data: ",
+          paste(scs_missing_from_tree, collapse=", "), 
+          ". They will not be shown in the visualization.", sep=""))
+    }
   }
 
   # SINGLE CELL GROUPS
