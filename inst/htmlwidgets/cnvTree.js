@@ -202,6 +202,7 @@ HTMLWidgets.widget({
         var maxCNV = 6;
         var cnvColorScale;
         var discrete_colours = ["#417EAA", "#D6D5D5", "#C63C4C"];
+        var targeted_colours = ["#df5952", "#ffffbf", "#6a90c3"];
         // continuous data
         if (curVizObj.userConfig.continuous_cnv) {
             cnvColorScale = d3.scale.linear()  
@@ -218,7 +219,7 @@ HTMLWidgets.widget({
         // targeted mutation colour scale
         var targetedColorScale = d3.scale.linear()  
             .domain([0, 0.5, 1])             
-            .range(discrete_colours)
+            .range(targeted_colours)
 
         // group annotation colours
         if (curVizObj.view.groupsSpecified) {
@@ -1051,9 +1052,9 @@ HTMLWidgets.widget({
                 .attr("x2", 0).attr("y2", legendRectStart + legendRectHeight)
                 .selectAll("stop")
                 .data([
-                    {offset: "0%", color: discrete_colours[2]},
-                    {offset: "50%", color: discrete_colours[1]},
-                    {offset: "100%", color: discrete_colours[0]}
+                    {offset: "0%", color: targeted_colours[2]},
+                    {offset: "50%", color: targeted_colours[1]},
+                    {offset: "100%", color: targeted_colours[0]}
                 ])
                 .enter().append("stop")
                 .attr("offset", function(d) { return d.offset; })
