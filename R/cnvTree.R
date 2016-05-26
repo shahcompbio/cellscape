@@ -528,7 +528,7 @@ getMutOrder <- function(mut_data) {
   cur_data <- cur_data[,c("site", "single_cell_id", "VAF")]
 
   # get a data frame of sites by single cell ID, containing VAF
-  mat <- dcast(cur_data, site ~ single_cell_id, value.var="VAF")
+  mat <- reshape2::dcast(cur_data, site ~ single_cell_id, value.var="VAF")
   rownames(mat) <- mat$site # set rownames to site names
   mat <- mat[, -which(colnames(mat) == "site")] # remove site column
 
