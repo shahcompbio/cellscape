@@ -28,10 +28,6 @@
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "group" - group assignment
 #'
-#' @param mut_order {Data Frame} (Optional) Mutations in the desired y-axis order for the heatmap. 
-#'                                     By default, mutations will be ordered based on their position in the genome.
-#'                       (1) {String} "chr" - chromosome number
-#'                       (2) {Number} "coord" - genomic coordinate
 #' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
 #' @param show_warnings {Boolean} (Optional) Whether or not to show any warnings. Default is TRUE.
 #' @param width {Number} (Optional) Width of the plot.
@@ -42,7 +38,6 @@ cnvTree <- function(cnv_data = NULL,
                     mut_data = NULL, 
                     tree_edges, 
                     sc_groups = NULL, 
-                    mut_order = NULL,
                     display_node_ids = FALSE, 
                     show_warnings = TRUE,
                     width = 1000, 
@@ -64,27 +59,6 @@ cnvTree <- function(cnv_data = NULL,
 
   # heatmap width (pixels)
   heatmapWidth <- (width/2) - 40 
-
-  # MUTATION ORDER
-
-  if (!is.null(mut_order)) {
-
-    # check it's a data frame
-    if (!is.data.frame(mut_order)) {
-      stop("Mutation order data (parameter mut_order) must be a data frame.")
-    }
-
-    # ensure column names are correct
-    if (!("chr" %in% colnames(mut_order)) ||
-        !("coord" %in% colnames(mut_order))) {
-      stop(paste("Mutation order data frame (parameter mut_order) must have the following column names: ", 
-          "\"chr\", \"coord\"", sep=""))
-    }
-
-    # correct data types
-    mut_order$chr <- as.character(mut_order$chr)
-    mut_order$coord <- as.numeric(as.character(mut_order$coord))
-  }
 
   # CNV DATA
 
@@ -178,6 +152,9 @@ cnvTree <- function(cnv_data = NULL,
     chrom_bounds <- NULL
     genome_length <- NULL
     chrom_boxes <- NULL
+
+    # get the order of mutations based on a hierarchical clustering of the data
+    mut_order <- getMutOrder(mut_data)
 
     # heatmap information for each cell
     heatmap_info <- getTargetedHeatmapForEachSC(mut_data, mut_order, heatmapWidth)
@@ -537,59 +514,50 @@ getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
   return (consecutive_px_merged_split)
 }
 
+#' function to get mutation order for targeted data
+#' @param {Data Frame} mut_data -- mutations data
+getMutOrder <- function(mut_data) {
+  separator <- ":"
+
+  cur_data <- mut_data
+
+  # get mutation site as one string
+  cur_data$site <- paste(trimws(cur_data$chr), trimws(cur_data$coord), sep=separator)
+
+  # get only site, VAF and single cell id
+  cur_data <- cur_data[,c("site", "single_cell_id", "VAF")]
+
+  # get a data frame of sites by single cell ID, containing VAF
+  mat <- dcast(cur_data, site ~ single_cell_id, value.var="VAF")
+  rownames(mat) <- mat$site # set rownames to site names
+  mat <- mat[, -which(colnames(mat) == "site")] # remove site column
+
+  # hierarchically cluster mutations
+  mut_dists <- dist(mat, method="euclidean")
+  mut_clust <- hclust(mut_dists, method='complete')
+
+  # get the order of hierarchically clustered mutations
+  mut_order <- rownames(mat)[mut_clust$order]
+
+  return(mut_order)
+}
 
 #' function to get targeted heatmap information 
 #' @param {Data Frame} mut_data -- mutations data
-#' @param {Data Frame} mut_order -- order of mutations for heatmap
+#' @param {Array} mut_order -- order of mutations for heatmap (chromosome:coordinate)
 #' @param {Number} heatmapWidth -- width of the heatmap (in pixels)
 getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
 
   # sort mutations by single cell, genomic position
   heatmap_info <- mut_data
   heatmap_info$chr <- as.character(heatmap_info$chr)
-  # prepend 0 to single-character chromosomes for natural sorting of chr
-  heatmap_info$chr <- sapply(heatmap_info$chr, function(chr) {
-      if (chr == "X" || chr == "x" || chr == "Y" || chr == "y") {
-        return (chr)
-      }
-      else if (nchar(chr) == 1) {
-        return (paste("0", chr, sep=""))
-      }
-      else {
-        return (chr)
-      }
-    })
   heatmap_info <- dplyr::arrange(heatmap_info, single_cell_id, chr, coord)
 
   # get mutation site as one string
   heatmap_info$site <- paste(trimws(heatmap_info$chr), trimws(heatmap_info$coord), sep=":")
 
-  # get all unique mutation sites (in order given by user, if provided)
-  if (!is.null(mut_order)) {
-    # check that all sites in mutation order df are given in mutation data, and vice versa
-    mut_order_sites <- paste(trimws(mut_order$chr), trimws(mut_order$coord), sep=":")
-    mut_data_sites <- heatmap_info$site
-    sites_missing_from_mut_order <- setdiff(mut_data_sites, mut_order_sites) 
-    sites_missing_from_mut_data <- setdiff(mut_order_sites, mut_data_sites)
-
-    if (length(sites_missing_from_mut_order) > 0) {
-      stop(paste("The following sites given in targeted mutations data frame (parameter mut_data)",
-        " are missing from mutation order data frame (parameter mut_order): ("
-        , paste(sites_missing_from_mut_order,collapse=", "), ").",sep=""))
-    }
-    if (length(sites_missing_from_mut_data) > 0) {
-      stop(paste("The following sites given in mutation order data frame (parameter mut_order)",
-        " are missing from targeted mutations data frame (parameter mut_data): ("
-        , paste(sites_missing_from_mut_data,collapse=", "), ").",sep=""))
-    }
-
-    # note sites in order
-    sites <- mut_order_sites
-  }
-  else {
-    sites <- unique(heatmap_info$site)
-  }
-  n_sites <- length(sites)
+  # get the number of sites
+  n_sites <- length(unique(mut_order))
 
   # check that the number of mutation sites does not exceed 1 pixel per mutation site
   if (heatmapWidth < n_sites) {
@@ -603,7 +571,7 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
   # attach heatmap cell x information and width information to each mutation
   heatmap_info$x <- sapply(heatmap_info$site, function(site) {
       # index of this site in the list of mutation sites
-      index_of_site <- which(sites == site) - 1
+      index_of_site <- which(mut_order == site) - 1
       return(index_of_site * mut_width);
     })
   heatmap_info$px_width <- mut_width
