@@ -25,6 +25,7 @@ HTMLWidgets.widget({
             distOn: false, // whether or not we're scaling by edge distances
             treeOpacity: 1, // tree starts with opacity 1 
             graphOpacity: 0, // graph starts with opacity 0
+            phantomRoot: "phantomRoot",
 
             // general padding (above main view, between views)
             paddingGeneral: 15,
@@ -131,6 +132,18 @@ HTMLWidgets.widget({
 
         // GET TREE CONTENT
 
+        // get genotype tree structure
+        // if (time_space_view_provided) {
+        //     var nodesByName = [];
+        //     for (var i = 0; i < curVizObj.userConfig.tree_edges.length; i++) {
+        //         var parent = _ts_findNodeByName(nodesByName, curVizObj.userConfig.tree_edges[i].source);
+        //         var child = _ts_findNodeByName(nodesByName, curVizObj.userConfig.tree_edges[i].target);
+        //         parent["children"].push(child);
+        //     }
+        //     var root_tree = _ts_findNodeByName(nodesByName, phantomRoot); 
+        //     curVizObj.data.gtypeTreeStructure = root_tree; 
+        // }
+
         // get tree structures for each node
         curVizObj.data.treeStructures = _getTreeStructures(curVizObj.userConfig.sc_tree_edges);
         
@@ -154,6 +167,12 @@ HTMLWidgets.widget({
 
         // get direct ancestors for each ndoe
         curVizObj.data.direct_ancestors = _getDirectAncestors(curVizObj.data.treeStructure, {});
+
+        // get linear chains in genotype tree
+        if (time_space_view_provided) {
+            curVizObj.data.treeChainRoots = []; // keep track of linear chain segment roots
+            curVizObj.data.treeChains = _getLinearTreeSegments(curVizObj, curVizObj.data.treeStructure, {}, "");
+        }
 
         // get the height of the tree (# nodes)
         curVizObj.data.tree_height = 0;
@@ -235,6 +254,9 @@ HTMLWidgets.widget({
 
         // genotype annotation colours
         if (curVizObj.view.gtypesSpecified) {
+            tmp = _getPhyloColours(curVizObj);
+            console.log("colours");
+            console.log(tmp);
             curVizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));
         }
 

@@ -233,6 +233,98 @@ function _pushScissorsButton(curVizObj) {
 
 // TREE FUNCTIONS
 
+
+/*
+* function to, using the tree hierarchy, get the linear segments' starting key and length (including starting key)
+* @param {Object} curNode -- current key in the tree
+* @param {Object} chains -- originally empty object of the segments 
+*                           (key is segment start key, value is array of descendants in this chain)
+* @param {Object} base -- the base key of this chain (originally "")
+*/
+function _getLinearTreeSegments(curVizObj, curNode, chains, base) {
+
+    // if it's a new base, create the base, with no descendants in its array yet
+    if (base == "") {
+        base = curNode.id;
+        chains[base] = [];
+        curVizObj.data.treeChainRoots.push(curNode.id);
+    }
+    // if it's a linear descendant, append the current key to the chain
+    else {
+        chains[base].push(curNode.id);
+    }
+
+    // if the current key has 1 child to search through
+    if (curNode.children.length == 1) { 
+        _getLinearTreeSegments(curVizObj, curNode.children[0], chains, base);
+    }
+
+    // otherwise for each child, create a blank base (will become that child)
+    else {
+        for (var i = 0; i < curNode.children.length; i++) {
+            _getLinearTreeSegments(curVizObj, curNode.children[i], chains, "");
+        }
+    }
+
+    return chains;
+}
+
+
+/* function to calculate colours based on phylogeny 
+* @param {Object} curVizObj -- vizObj for the current view
+*/
+function _getPhyloColours(curVizObj) {
+
+    var colour_assignment = {}, // standard colour assignment
+        alpha_colour_assignment = {}; // alpha colour assignment
+
+    var s = 0.88, // saturation
+        l = 0.77; // lightness
+
+    // number of nodes
+    var n_nodes = curVizObj.data.treeChainRoots.length;
+
+    // colour each tree chain root a sequential colour from the spectrum
+    for (var i = 0; i < n_nodes; i++) {
+        var cur_node = curVizObj.data.treeChainRoots[i];
+        var h = (i/n_nodes + 0.96) % 1;
+        var rgb = _hslToRgb(h, s, l); // hsl to rgb
+        var col = _rgb2hex("rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")"); // rgb to hex
+
+        colour_assignment[cur_node] = col;
+
+        // for each of the chain's descendants
+        var prev_colour = col;
+        curVizObj.data.treeChains[cur_node].forEach(function(desc, desc_i) {
+            // if we're on the phantom root's branch and it's the first descendant
+            if (cur_node == curVizObj.generalConfig.phantomRoot && desc_i == 0) {
+
+                // do not decrease the brightness
+                colour_assignment[desc] = prev_colour;
+            }
+            // we're not on the phantom root branch's first descendant
+            else {
+                // colour the descendant a lighter version of the previous colour in the chain
+                colour_assignment[desc] = 
+                    _decrease_brightness(prev_colour, 20);
+
+                // set the previous colour to the lightened colour
+                prev_colour = colour_assignment[desc]; 
+            }
+        })
+    }
+
+
+    // get the alpha colour assignment
+    Object.keys(colour_assignment).forEach(function(key, key_idx) {
+        alpha_colour_assignment[key] = 
+            _increase_brightness(colour_assignment[key], curVizObj.userConfig.alpha);
+    });
+
+    return {"colour_assignment": colour_assignment, "alpha_colour_assignment": alpha_colour_assignment};
+}
+
+
 /* function to get the y-coordinate for each single cell
 * @param {Object} curVizObj
 */
@@ -1590,3 +1682,89 @@ function _getIntersection(array1, array2) {
         return array2.indexOf(n) != -1
     });
 }
+
+
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param   Number  h       The hue
+ * @param   Number  s       The saturation
+ * @param   Number  l       The lightness
+ * @return  Array           The RGB representation
+ */
+function _hslToRgb(h, s, l){
+    var r, g, b;
+
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var hue2rgb = function hue2rgb(p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+// convert RGB to hex
+// http://stackoverflow.com/questions/1740700/get-hex-value-rather-than-rgb-value-using-jquery
+function _rgb2hex(rgb) {
+     if (  rgb.search("rgb") == -1 ) {
+          return rgb;
+     } else {
+          rgb = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+))?\)$/);
+          function hex(x) {
+               return ("0" + parseInt(x).toString(16)).slice(-2);
+          }
+          return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]); 
+     }
+}
+
+// function to increase brightness of hex colour
+// from: http://stackoverflow.com/questions/6443990/javascript-calculate-brighter-colour
+function _increase_brightness(hex, percent){
+    // strip the leading # if it's there
+    hex = hex.replace(/^\s*#|\s*$/g, '');
+
+    // convert 3 char codes --> 6, e.g. `E0F` --> `EE00FF`
+    if(hex.length == 3){
+        hex = hex.replace(/(.)/g, '$1$1');
+    }
+
+    var r = parseInt(hex.substr(0, 2), 16),
+        g = parseInt(hex.substr(2, 2), 16),
+        b = parseInt(hex.substr(4, 2), 16);
+
+    return '#' +
+       ((0|(1<<8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
+       ((0|(1<<8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
+       ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
+}
+
+// function to decrease brightness of hex colour
+// from: http://stackoverflow.com/questions/12660919/javascript-brightness-function-decrease
+function _decrease_brightness(hex, percent){
+    var r = parseInt(hex.substr(1, 2), 16),
+        g = parseInt(hex.substr(3, 2), 16),
+        b = parseInt(hex.substr(5, 2), 16);
+
+   return '#' +
+       ((0|(1<<8) + r * (100 - percent) / 100).toString(16)).substr(1) +
+       ((0|(1<<8) + g * (100 - percent) / 100).toString(16)).substr(1) +
+       ((0|(1<<8) + b * (100 - percent) / 100).toString(16)).substr(1);
+}
+
