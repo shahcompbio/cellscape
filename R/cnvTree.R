@@ -279,23 +279,10 @@ cnvTree <- function(cnv_data = NULL,
     sc_groups$single_cell_id <- as.character(sc_groups$single_cell_id)
     sc_groups$group <- as.character(sc_groups$group)
 
-    # ENSURE ALL SINGLE CELLS IN THE HEATMAP DATA ARE IN THE GROUPS DATA
+    # remove all single cells that are not in the tree
     scs_in_groups <- unique(sc_groups$single_cell_id)
-    scs_missing_from_groups <- setdiff(scs_in_hm, scs_in_groups)
-    if (length(scs_missing_from_groups) > 0) {
-      if (is.null(cnv_data)) {
-        data_type <- "mutations"
-      }
-      else {
-        data_type <- "cnv"
-      }
-      stop(paste("The following single cell ID(s) are present in the ", data_type, " data but ",
-          "are missing from the single cell groups data: ",
-          paste(scs_missing_from_groups, collapse=", "), 
-          ". All single cells in the ", data_type, 
-          " data must be represented in the single cell groups data.", 
-          sep=""))
-    }
+    scs_missing_from_tree <- setdiff(scs_in_groups,scs_in_tree)
+    sc_groups <- sc_groups[which(!(sc_groups$single_cell_id %in% scs_missing_from_tree)),]
 
     # to json
     sc_groups <- jsonlite::toJSON(sc_groups)
