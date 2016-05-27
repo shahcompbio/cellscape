@@ -749,8 +749,15 @@ HTMLWidgets.widget({
                     .append("rect")
                     .attr("class", function(d) {
                         // group annotation
-                        var group = (curVizObj.view.groupsSpecified) ?
-                            _.findWhere(curVizObj.userConfig.sc_groups, {single_cell_id: d.sc_id}).group : "none";
+                        var group;
+                        if (curVizObj.view.groupsSpecified) {
+                            // check that this single cell has a group
+                            var sc_w_group = _.findWhere(curVizObj.userConfig.sc_groups, {single_cell_id: d.sc_id});
+                            group = (sc_w_group) ? sc_w_group.group : "none";
+                        }
+                        else {
+                            group = "none";
+                        }
                         return "gridCell sc_" + d.sc_id + " group_" + group;
                     })
                     .attr("x", function(d) { 
