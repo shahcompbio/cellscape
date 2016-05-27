@@ -21,8 +21,8 @@ HTMLWidgets.widget({
             // indicator
             indicatorWidth: 7, // width of the selected single cell indicator
 
-            // group annotations
-            groupAnnotWidth: 10, // width of the selected single cell group annotation
+            // genotype annotations
+            gtypeAnnotWidth: 10, // width of the selected single cell genotype annotation
 
             // colours
             defaultNodeColour: "#B7B7B7",
@@ -33,7 +33,7 @@ HTMLWidgets.widget({
             // chromosome legend
             chromLegendHeight: 15, // height of chromosome legend
 
-            // heatmap and group legends
+            // heatmap and genotype legends
             heatmapLegendWidth: 50,
             legendTitleHeight: 14, // height of legend titles
             rectHeight: 12, // rectangle in legend
@@ -82,7 +82,7 @@ HTMLWidgets.widget({
         config.treeHeight = config.height - config.topBarHeight - config.paddingAboveMainView;
 
         // legend starts
-        config.groupAnnotStartY = 140 + config.paddingAboveMainView; // starting y-pixel for group annotation legend
+        config.gtypeAnnotStartY = 140 + config.paddingAboveMainView; // starting y-pixel for genotype annotation legend
         config.heatmapLegendStartY = 1 + config.paddingAboveMainView; // starting y-pixel for heatmap legend
         return {}
 
@@ -97,7 +97,7 @@ HTMLWidgets.widget({
         // GET PARAMS FROM R
 
         curVizObj.userConfig = x;
-        curVizObj.view.groupsSpecified = (curVizObj.userConfig.sc_groups != null); // (T/F) group annotation is specified
+        curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot != null); // (T/F) genotype annotation is specified
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
@@ -107,9 +107,9 @@ HTMLWidgets.widget({
         // smallest tree dimension on the view (width or height)
         config.smallest_tree_dim = (config.treeWidth < config.treeHeight) ? config.treeWidth : config.treeHeight;
 
-        // if group annotation specified, reduce the width of the tree
-        if (curVizObj.view.groupsSpecified) {
-            config.treeWidth -= config.groupAnnotWidth;
+        // if genotype annotation specified, reduce the width of the tree
+        if (curVizObj.view.gtypesSpecified) {
+            config.treeWidth -= config.gtypeAnnotWidth;
         }
 
         // if the type of data is cnv, reduce tree height to account for chromosome legend
@@ -120,7 +120,7 @@ HTMLWidgets.widget({
         // GET TREE CONTENT
 
         // get tree structures for each node
-        curVizObj.data.treeStructures = _getTreeStructures(curVizObj.userConfig.tree_edges);
+        curVizObj.data.treeStructures = _getTreeStructures(curVizObj.userConfig.sc_tree_edges);
         
         // the root tree structure
         curVizObj.data.treeStructure = 
@@ -128,7 +128,7 @@ HTMLWidgets.widget({
 
         // get descendants for each node
         curVizObj.data.treeDescendantsArr = {};
-        curVizObj.userConfig.tree_nodes.forEach(function(node, idx) {
+        curVizObj.userConfig.sc_tree_nodes.forEach(function(node, idx) {
             var curRoot = _.findWhere(curVizObj.data.treeStructures, {sc_id: node.sc_id});
             var curDescendants = _getDescendantIds(curRoot, []);
             curVizObj.data.treeDescendantsArr[node.sc_id] = curDescendants;
@@ -180,8 +180,8 @@ HTMLWidgets.widget({
         // height of each cnv row
         curVizObj.view.hm.rowHeight = (1/curVizObj.view.hm.nrows)*(config.hmHeight-config.chromLegendHeight);
 
-        // get group annotation info as object w/property "group" : [array of single cells]
-        if (curVizObj.view.groupsSpecified) {
+        // get genotype annotation info as object w/property "genotype" : [array of single cells]
+        if (curVizObj.view.gtypesSpecified) {
             _reformatGroupAnnots(curVizObj);
         }
 
@@ -221,9 +221,9 @@ HTMLWidgets.widget({
             .domain([0, 0.5, 1])             
             .range(targeted_colours)
 
-        // group annotation colours
-        if (curVizObj.view.groupsSpecified) {
-            curVizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(curVizObj.userConfig.sc_groups, "group")));
+        // genotype annotation colours
+        if (curVizObj.view.gtypesSpecified) {
+            curVizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));
         }
 
         // BRUSH SELECTION FUNCTION
@@ -283,9 +283,9 @@ HTMLWidgets.widget({
 
         // GROUP ANNOTATION SVG
 
-        if (curVizObj.view.groupsSpecified) {
-            curVizObj.view.groupAnnotSVG = containerSVG.append("g")
-                .attr("class", "groupAnnotSVG")
+        if (curVizObj.view.gtypesSpecified) {
+            curVizObj.view.gtypeAnnotSVG = containerSVG.append("g")
+                .attr("class", "gtypeAnnotSVG")
                 .attr("transform", "translate(" + (config.treeWidth + config.indicatorWidth) + "," + 0 + ")");
         }
 
@@ -294,8 +294,8 @@ HTMLWidgets.widget({
         curVizObj.view.cnvSVG = containerSVG.append("g")
             .attr("class", "cnvSVG")
             .attr("transform", function() {
-                var t_x = (curVizObj.view.groupsSpecified) ? 
-                    (config.treeWidth + config.indicatorWidth + config.groupAnnotWidth) :
+                var t_x = (curVizObj.view.gtypesSpecified) ? 
+                    (config.treeWidth + config.indicatorWidth + config.gtypeAnnotWidth) :
                     (config.treeWidth + config.indicatorWidth);
                 return "translate(" + t_x + "," + 0 + ")"
             });
@@ -305,8 +305,8 @@ HTMLWidgets.widget({
         curVizObj.view.cnvLegendSVG = containerSVG.append("g")
             .attr("class", "cnvLegendSVG")
             .attr("transform", function() {
-                var t_x = (curVizObj.view.groupsSpecified) ? 
-                    (config.treeWidth + config.indicatorWidth + config.groupAnnotWidth + curVizObj.userConfig.heatmapWidth) :
+                var t_x = (curVizObj.view.gtypesSpecified) ? 
+                    (config.treeWidth + config.indicatorWidth + config.gtypeAnnotWidth + curVizObj.userConfig.heatmapWidth) :
                     (config.treeWidth + config.indicatorWidth + curVizObj.userConfig.heatmapWidth);
                 return "translate(" + t_x + "," + 0 + ")"
             });
@@ -748,17 +748,17 @@ HTMLWidgets.widget({
                     .enter()
                     .append("rect")
                     .attr("class", function(d) {
-                        // group annotation
-                        var group;
-                        if (curVizObj.view.groupsSpecified) {
-                            // check that this single cell has a group
-                            var sc_w_group = _.findWhere(curVizObj.userConfig.sc_groups, {single_cell_id: d.sc_id});
-                            group = (sc_w_group) ? sc_w_group.group : "none";
+                        // genotype annotation
+                        var genotype;
+                        if (curVizObj.view.gtypesSpecified) {
+                            // check that this single cell has a genotype
+                            var sc_w_gtype = _.findWhere(curVizObj.userConfig.sc_annot, {single_cell_id: d.sc_id});
+                            genotype = (sc_w_gtype) ? sc_w_gtype.genotype : "none";
                         }
                         else {
-                            group = "none";
+                            genotype = "none";
                         }
-                        return "gridCell sc_" + d.sc_id + " group_" + group;
+                        return "gridCell sc_" + d.sc_id + " gtype_" + genotype;
                     })
                     .attr("x", function(d) { 
                         return d.x; 
@@ -882,16 +882,16 @@ HTMLWidgets.widget({
         
         // PLOT GROUP ANNOTATION COLUMN
 
-        if (curVizObj.view.groupsSpecified) {
-            var groupAnnot = curVizObj.view.groupAnnotSVG
+        if (curVizObj.view.gtypesSpecified) {
+            var gtypeAnnot = curVizObj.view.gtypeAnnotSVG
                 .append("g")
-                .classed("groupAnnotG", true)
-                .selectAll(".groupAnnot")
-                .data(curVizObj.userConfig.sc_groups)
+                .classed("gtypeAnnotG", true)
+                .selectAll(".gtypeAnnot")
+                .data(curVizObj.userConfig.sc_annot)
                 .enter()
                 .append("rect")
                 .attr("class", function(d) {
-                    return "groupAnnot group_" + d.group + " sc_" + d.single_cell_id;
+                    return "gtypeAnnot gtype_" + d.genotype + " sc_" + d.single_cell_id;
                 })
                 .attr("x", 0)
                 .attr("y", function(d) { 
@@ -899,21 +899,21 @@ HTMLWidgets.widget({
                     return d.y; 
                 })
                 .attr("height", curVizObj.view.hm.rowHeight)
-                .attr("width", config.groupAnnotWidth-3)
+                .attr("width", config.gtypeAnnotWidth-3)
                 .attr("fill", function(d) {
-                    return curVizObj.view.colour_assignment[d.group];
+                    return curVizObj.view.colour_assignment[d.genotype];
                 })
                 .attr("stroke", "none")
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // highlight indicator & node for all sc's with this group annotation id,
-                        // highlight group annotation rectangle in legend
-                        _mouseoverGroupAnnot(d.group, curVizObj);
+                        // highlight indicator & node for all sc's with this genotype annotation id,
+                        // highlight genotype annotation rectangle in legend
+                        _mouseoverGroupAnnot(d.genotype, curVizObj);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // reset indicators, nodes, group annotation rectangles in legend
+                        // reset indicators, nodes, genotype annotation rectangles in legend
                         _mouseoutGroupAnnot(curVizObj);
                     }
                 });
@@ -943,7 +943,7 @@ HTMLWidgets.widget({
         // height for continuous cnv data legend rectangle (make it the same as the discrete CNV legend height)
         var legendRectHeight = maxCNV*(config.rectHeight + config.rectSpacing);
 
-        // heatmap legend rectangle / text group
+        // heatmap legend rectangle / text genotype
         var heatmapLegendG = curVizObj.view.cnvLegendSVG
             .selectAll(".heatmapLegendG")
             .data(cnvColorScale.domain())
@@ -1097,32 +1097,32 @@ HTMLWidgets.widget({
         }
 
         // GROUP ANNOTATION LEGEND
-        if (curVizObj.view.groupsSpecified) {
+        if (curVizObj.view.gtypesSpecified) {
 
-            // group annotation legend title
+            // genotype annotation legend title
             curVizObj.view.cnvLegendSVG.append("text")
                 .attr("x", config.legendLeftPadding)
-                .attr("y", config.groupAnnotStartY)
+                .attr("y", config.gtypeAnnotStartY)
                 .attr("dy", "+0.71em")
                 .attr("font-family", "Arial")
                 .attr("font-size", config.legendTitleHeight)
                 .text("Group");
 
-            // group annotation legend rectangle / text group
-            var groupAnnotLegendG = curVizObj.view.cnvLegendSVG
-                .selectAll(".groupAnnotLegendG")
-                .data(Object.keys(curVizObj.data.groups))
+            // genotype annotation legend rectangle / text genotype
+            var gtypeAnnotLegendG = curVizObj.view.cnvLegendSVG
+                .selectAll(".gtypeAnnotLegendG")
+                .data(Object.keys(curVizObj.data.gtypes))
                 .enter()
                 .append("g")
-                .classed("groupAnnotLegendG", true);
+                .classed("gtypeAnnotLegendG", true);
 
-            // group annotation legend rectangles
-            groupAnnotLegendG
+            // genotype annotation legend rectangles
+            gtypeAnnotLegendG
                 .append("rect")
-                .attr("class", function(d) { return "legendGroupRect group_" + d; })
+                .attr("class", function(d) { return "legendGroupRect gtype_" + d; })
                 .attr("x", config.legendLeftPadding)
                 .attr("y", function(d,i) {
-                    return config.groupAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
+                    return config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
                 })
                 .attr("height", config.rectHeight)
                 .attr("width", config.rectHeight)
@@ -1131,25 +1131,25 @@ HTMLWidgets.widget({
                 })
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // highlight indicator & node for all sc's with this group annotation id,
-                        // highlight group annotation rectangle in legend
+                        // highlight indicator & node for all sc's with this genotype annotation id,
+                        // highlight genotype annotation rectangle in legend
                         _mouseoverGroupAnnot(d, curVizObj);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // reset indicators, nodes, group annotation rectangles in legend
+                        // reset indicators, nodes, genotype annotation rectangles in legend
                         _mouseoutGroupAnnot(curVizObj);
                     }
                 });
 
-            // group annotation legend text
-            groupAnnotLegendG
+            // genotype annotation legend text
+            gtypeAnnotLegendG
                 .append("text")
-                .attr("class", function(d) { return "legendGroupText group_" + d; })
+                .attr("class", function(d) { return "legendGroupText gtype_" + d; })
                 .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
                 .attr("y", function(d,i) {
-                    return config.groupAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
+                    return config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
                 })
                 .attr("dy", "+0.35em")
                 .text(function(d) { return d; })
@@ -1158,14 +1158,14 @@ HTMLWidgets.widget({
                 .attr("fill", "black")
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // highlight indicator & node for all sc's with this group annotation id,
-                        // highlight group annotation rectangle in legend
+                        // highlight indicator & node for all sc's with this genotype annotation id,
+                        // highlight genotype annotation rectangle in legend
                         _mouseoverGroupAnnot(d, curVizObj);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // reset indicators, nodes, group annotation rectangles in legend
+                        // reset indicators, nodes, genotype annotation rectangles in legend
                         _mouseoutGroupAnnot(curVizObj);
                     }
                 });

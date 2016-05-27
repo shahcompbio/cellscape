@@ -9,7 +9,7 @@ function _brushEnd(curVizObj, brush) {
     if (!brush.empty()) {
 
         // highlight selected grid cell rows
-        d3.select("#" + curVizObj.view_id).selectAll(".groupAnnot").classed("active", function(d) {
+        d3.select("#" + curVizObj.view_id).selectAll(".gtypeAnnot").classed("active", function(d) {
             // if any transformation has occurred
             var t = d3.transform(d3.select(this).attr("transform")), 
                 t_y = t.translate[1];
@@ -53,24 +53,24 @@ function _clearBrush(curVizObj) {
     _resetIndicators(curVizObj);
 }
 
-/* mouseover function for group annotations
-* highlights indicator & node for all sc's with this group annotation id, highlights group annotation rectangle in legend
-* @param {String} group -- group to highlight
+/* mouseover function for genotype annotations
+* highlights indicator & node for all sc's with this genotype annotation id, highlights genotype annotation rectangle in legend
+* @param {String} genotype -- genotype to highlight
 * @param {Object} curVizObj
 */
-function _mouseoverGroupAnnot(group, curVizObj) {
-    // highlight indicator & node for all sc's with this group annotation id
-    curVizObj.data.groups[group].forEach(function(sc) {
+function _mouseoverGroupAnnot(genotype, curVizObj) {
+    // highlight indicator & node for all sc's with this genotype annotation id
+    curVizObj.data.gtypes[genotype].forEach(function(sc) {
         _highlightIndicator(sc, curVizObj);
         _highlightNode(sc, curVizObj);
     })
 
-    // highlight group annotation rectangle in legend
-    _highlightGroupAnnotLegendRect(group, curVizObj);
+    // highlight genotype annotation rectangle in legend
+    _highlightGroupAnnotLegendRect(genotype, curVizObj);
 }
 
-/* mouseover function for group annotations
-* reset indicators, nodes, group annotation rectangles in legend
+/* mouseover function for genotype annotations
+* reset indicators, nodes, genotype annotation rectangles in legend
 * @param {Object} curVizObj
 */
 function _mouseoutGroupAnnot(curVizObj) {
@@ -78,7 +78,7 @@ function _mouseoutGroupAnnot(curVizObj) {
     _resetIndicators(curVizObj);
     _resetNodes(curVizObj);
 
-    // reset group annotation rectangles in legend
+    // reset genotype annotation rectangles in legend
     _resetGroupAnnotLegendRects(curVizObj);
 }
 
@@ -91,16 +91,16 @@ function _highlightNode(sc_id, curVizObj) {
         .style("fill", curVizObj.generalConfig.highlightColour);
 }
 
-/* function to highlight a group annotation rectangle in the legend
-* @param {String} group_id -- group id
+/* function to highlight a genotype annotation rectangle in the legend
+* @param {String} gtype_id -- genotype id
 * @param {Object} curVizObj
 */
-function _highlightGroupAnnotLegendRect(group_id, curVizObj) {
-    d3.select("#" + curVizObj.view_id).select(".legendGroupRect.group_" + group_id)
+function _highlightGroupAnnotLegendRect(gtype_id, curVizObj) {
+    d3.select("#" + curVizObj.view_id).select(".legendGroupRect.gtype_" + gtype_id)
         .attr("stroke", curVizObj.generalConfig.highlightColour);
 }
 
-/* function to unhighlight group annotation rectangles in the legend
+/* function to unhighlight genotype annotation rectangles in the legend
 */
 function _resetGroupAnnotLegendRects(curVizObj) {
     d3.select("#" + curVizObj.view_id).selectAll(".legendGroupRect")
@@ -150,14 +150,14 @@ function _resetNodes(curVizObj) {
 * @param {String} sc_id -- single cell id
 */
 function _getNodeColour(curVizObj, sc_id) {
-    // group annotations specified -- colour by group
-    if (curVizObj.view.groupsSpecified) {
-        var found_sc_with_group = _.findWhere(curVizObj.userConfig.sc_groups, {single_cell_id: sc_id});
-        return (found_sc_with_group) ? // if this sc has a group
-            curVizObj.view.colour_assignment[found_sc_with_group.group] : 
+    // genotype annotations specified -- colour by genotype
+    if (curVizObj.view.gtypesSpecified) {
+        var found_sc_with_gtype = _.findWhere(curVizObj.userConfig.sc_annot, {single_cell_id: sc_id});
+        return (found_sc_with_gtype) ? // if this sc has a genotype
+            curVizObj.view.colour_assignment[found_sc_with_gtype.genotype] : 
             "white";
     }
-    // no group annotations -- default colour
+    // no genotype annotations -- default colour
     return curVizObj.generalConfig.defaultNodeColour;
 }
 
@@ -326,7 +326,7 @@ function _getXCoordinates(curVizObj) {
     curVizObj.data.xCoordinatesDist = {}; // x coordinates with distances taken into account
 
     // for each single cell in the tree
-    curVizObj.userConfig.tree_nodes.forEach(function(node, sc_id_i) {
+    curVizObj.userConfig.sc_tree_nodes.forEach(function(node, sc_id_i) {
 
         // width of tree 
         var treeWidth = config.treeWidth - 4*r; // spacing of one radius before and after
@@ -439,7 +439,7 @@ function _linkClick(curVizObj, link_id) {
             d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id).remove(); // remove node in tree
             d3.select("#" + curVizObj.view_id).selectAll(".nodeLabel_" + sc_id).remove(); // remove node labels
             d3.select("#" + curVizObj.view_id).select(".gridCellG.sc_" + sc_id).remove(); // remove copy number profile
-            d3.select("#" + curVizObj.view_id).select(".groupAnnot.sc_" + sc_id).remove(); // remove group annotation
+            d3.select("#" + curVizObj.view_id).select(".gtypeAnnot.sc_" + sc_id).remove(); // remove genotype annotation
             d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id).remove(); // remove indicator
 
             // remove single cell from list of single cells
@@ -700,7 +700,7 @@ function _getAncestorIds(curVizObj) {
     var ancestors = {},
         curDescendants,
         descendants_arr = curVizObj.data.treeDescendantsArr,
-        treeNodes = curVizObj.userConfig.tree_nodes;
+        treeNodes = curVizObj.userConfig.sc_tree_nodes;
 
     // set up each node as originally containing an empty list of ancestors
     treeNodes.forEach(function(node, idx) {
@@ -752,7 +752,7 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
     // for each descendant
     curVizObj.data.direct_descendants[cur_sc_id].forEach(function(desc) {
         // get link distance for the link connecting this descendant to its ancestor
-        var cur_link = _.findWhere(curVizObj.userConfig.tree_edges, 
+        var cur_link = _.findWhere(curVizObj.userConfig.sc_tree_edges, 
             {source_sc_id: cur_sc_id, target_sc_id: desc});
         var cur_dist = cur_link.dist;
 
@@ -798,8 +798,8 @@ function _plotForceDirectedGraph(curVizObj) {
         .linkDistance(20)
         .gravity(.09)
         .charge(-20)
-        .nodes(userConfig.tree_nodes)
-        .links(userConfig.tree_edges)
+        .nodes(userConfig.sc_tree_nodes)
+        .links(userConfig.sc_tree_edges)
         .start();        
 
     // plot links
@@ -807,7 +807,7 @@ function _plotForceDirectedGraph(curVizObj) {
         .append("g")
         .classed("graphLinks", true)
         .selectAll(".link")
-        .data(userConfig.tree_edges)
+        .data(userConfig.sc_tree_edges)
         .enter().append("line")
         .classed("link", true)
         .attr("class", function(d) {
@@ -834,7 +834,7 @@ function _plotForceDirectedGraph(curVizObj) {
     var nodeG = curVizObj.view.treeSVG.append("g")
         .classed("graphNodes", true)
         .selectAll(".graphNodesG")
-        .data(userConfig.tree_nodes)
+        .data(userConfig.sc_tree_nodes)
         .enter()
         .append("g")
         .attr("class", "graphNodesG");
@@ -917,8 +917,8 @@ function _rePlotForceLayout(curVizObj) {
             })
             .gravity(.09)
             .charge(-100)
-            .nodes(userConfig.tree_nodes)
-            .links(userConfig.tree_edges)
+            .nodes(userConfig.sc_tree_nodes)
+            .links(userConfig.sc_tree_edges)
             .start();     
     }
     // UNSCALE
@@ -929,8 +929,8 @@ function _rePlotForceLayout(curVizObj) {
             .linkDistance(20)
             .gravity(.09)
             .charge(-20)
-            .nodes(userConfig.tree_nodes)
-            .links(userConfig.tree_edges)
+            .nodes(userConfig.sc_tree_nodes)
+            .links(userConfig.sc_tree_edges)
             .start();        
     }
 
@@ -992,7 +992,7 @@ function _plotNodeLabels(curVizObj, tree_type) {
         .attr("x", function(d) { return d.x})
         .attr("y", function(d) { return d.y})
         .attr("font-size", 
-            _getLabelFontSize(_.pluck(curVizObj.userConfig.tree_nodes, "sc_id"), 
+            _getLabelFontSize(_.pluck(curVizObj.userConfig.sc_tree_nodes, "sc_id"), 
                 curVizObj.generalConfig.tree_w_labels_r * 2))
         .attr("text-anchor", "middle")
         .attr("pointer-events", "none")
@@ -1047,7 +1047,7 @@ function _plotAlignedPhylogeny(curVizObj) {
     var link = curVizObj.view.treeSVG.append("g")
         .classed("treeLinks", true)
         .selectAll(".tree.link")                  
-        .data(curVizObj.userConfig.tree_edges)                   
+        .data(curVizObj.userConfig.sc_tree_edges)                   
         .enter().append("path")  
         .attr("class", function(d) {
             d.link_id = "link_source_" + d.source_sc_id + "_target_" + d.target_sc_id;
@@ -1083,7 +1083,7 @@ function _plotAlignedPhylogeny(curVizObj) {
     // create nodes
     var nodeG = curVizObj.view.treeSVG
         .selectAll(".treeNodesG")
-        .data(curVizObj.userConfig.tree_nodes)
+        .data(curVizObj.userConfig.sc_tree_nodes)
         .enter()
         .append("g")
         .attr("class", "treeNodesG");;
@@ -1222,20 +1222,20 @@ function _scaleTree(curVizObj) {
 
 // GROUP ANNOTATION FUNCTIONS
 
-/* function to get group annotations as object w/properties group : [array of single cells]
+/* function to get genotype annotations as object w/properties genotype : [array of single cells]
 * @param {Object} curVizObj
 */
 function _reformatGroupAnnots(curVizObj) {
-    var groups = {};
+    var gtypes = {};
 
-    curVizObj.userConfig.sc_groups.forEach(function(sc) {
-        if (!groups[sc.group]) {
-            groups[sc.group] = [];
+    curVizObj.userConfig.sc_annot.forEach(function(sc) {
+        if (!gtypes[sc.genotype]) {
+            gtypes[sc.genotype] = [];
         }
-        groups[sc.group].push(sc.single_cell_id);
+        gtypes[sc.genotype].push(sc.single_cell_id);
     });
 
-    curVizObj.data.groups = groups;
+    curVizObj.data.gtypes = gtypes;
 }
 
 // CNV FUNCTIONS
@@ -1267,9 +1267,9 @@ function _updateTrimmedMatrix(curVizObj) {
                 return "translate(0," + (-1*diff_y) + ")";
             });
         
-        // translate group annotation
-        if (curVizObj.view.groupsSpecified) {
-            d3.select("#" + curVizObj.view_id).select(".groupAnnot.sc_" + sc_id)
+        // translate genotype annotation
+        if (curVizObj.view.gtypesSpecified) {
+            d3.select("#" + curVizObj.view_id).select(".gtypeAnnot.sc_" + sc_id)
                 .transition()
                 .duration(1000)
                 .attr("transform", function() {
@@ -1325,34 +1325,34 @@ function _updateTrimmedMatrix(curVizObj) {
         .duration(1000)
         .attr("y", matrix_height + (config.chromLegendHeight / 2));
 
-    // check for groups no longer in the view
-    if (curVizObj.view.groupsSpecified) {
-        // for each group
-        Object.keys(curVizObj.data.groups).forEach(function(group_id) {
-            // check that the group has members in the view
-            var group_members_in_view = 
-                _getIntersection(curVizObj.data.groups[group_id], 
+    // check for gtypes no longer in the view
+    if (curVizObj.view.gtypesSpecified) {
+        // for each genotype
+        Object.keys(curVizObj.data.gtypes).forEach(function(gtype_id) {
+            // check that the genotype has members in the view
+            var gtype_members_in_view = 
+                _getIntersection(curVizObj.data.gtypes[gtype_id], 
                     curVizObj.data.hm_sc_ids);
 
-            // if no members left in view, delete the group from the legend
-            if (group_members_in_view.length == 0) {
-                d3.select("#" + curVizObj.view_id).select(".legendGroupRect.group_" + group_id).remove();
-                d3.select("#" + curVizObj.view_id).select(".legendGroupText.group_" + group_id).remove();
+            // if no members left in view, delete the genotype from the legend
+            if (gtype_members_in_view.length == 0) {
+                d3.select("#" + curVizObj.view_id).select(".legendGroupRect.gtype_" + gtype_id).remove();
+                d3.select("#" + curVizObj.view_id).select(".legendGroupText.gtype_" + gtype_id).remove();
             }
         })
 
-        // adjust position of groups in legend
+        // adjust position of gtypes in legend
         d3.select("#" + curVizObj.view_id).selectAll(".legendGroupRect")
             .transition()
             .duration(1000)
             .attr("y", function(d,i) {
-                return config.groupAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
+                return config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
             });
         d3.select("#" + curVizObj.view_id).selectAll(".legendGroupText")
             .transition()
             .duration(1000)
             .attr("y", function(d,i) {
-                return config.groupAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
+                return config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
             })
     }
 }
@@ -1385,10 +1385,10 @@ function _getChromBounds(curVizObj) {
 // COLOUR FUNCTIONS
 
 
-/* function to calculate colours for group annotations
-* @param {Array} groups -- groups in dataset, for which we need colours
+/* function to calculate colours for genotype annotations
+* @param {Array} gtypes -- gtypes in dataset, for which we need colours
 */
-function _getColours(groups) {
+function _getColours(gtypes) {
 
     var colour_assignment = {};
 
@@ -1396,14 +1396,14 @@ function _getColours(groups) {
         l = 0.76; // lightness
 
     // number of nodes
-    var n_nodes = groups.length;
+    var n_nodes = gtypes.length;
 
     for (var i = 0; i < n_nodes; i++) {
         var h = i/n_nodes;
         var rgb = _hslToRgb(h, s, l); // hsl to rgb
         var col = _rgb2hex("rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")"); // rgb to hex
 
-        colour_assignment[groups[i]] = col;
+        colour_assignment[gtypes[i]] = col;
     }
 
     return colour_assignment;  

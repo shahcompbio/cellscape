@@ -1,6 +1,6 @@
 Package: cnvTree
 Title: Explores single cell copy number profiles in the context of a single cell tree.
-Version: 0.0.0.9117
+Version: 0.0.1.9000
 Authors@R: person("Maia", "Smith", email = "maiaannesmith@gmail.com", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
 Depends:
@@ -11,6 +11,7 @@ Imports:
     reshape2 (>= 1.4.1),
     stringr (>= 1.0.0),
     gtools (>= 3.5.0),
+    plyr (>= 1.8.3),
     dplyr (>= 0.4.3),
     reshape2 (>= 1.4.1)
 License: What license is it under?
