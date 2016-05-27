@@ -318,6 +318,7 @@ cnvTree <- function(cnv_data = NULL,
 
     # GET INFORMATION FOR TIMESWEEP
     if (sample_type == "time") {
+      time_space_view_provided <- "time"
       mutations <- "NA"
       clone_colours <- "NA"
       xaxis_title <- "Time Point"
@@ -342,9 +343,19 @@ cnvTree <- function(cnv_data = NULL,
                                               width, 
                                               height)
     }
+    # GET INFORMATION FOR SPACESWEEP
+    else if (sample_type == "space") {
+      time_space_view_provided <- "space"
+
+    }
+    else {
+      stop(paste("User has provided all the necessary information for a TimeSweep/SpaceSweep view,",
+        " but not specified the sample_type (must be 'space' or 'time')", sep=""))
+    }
   }
   else {
     timesweep_userParams <- list()
+    time_space_view_provided <- NULL
   }
 
 
@@ -363,7 +374,8 @@ cnvTree <- function(cnv_data = NULL,
     root=root, # name of root
     display_node_ids=display_node_ids, # whether or not to display the node id labels on each node
     scs_missing_from_hm=scs_missing_from_hm, # single cells in tree but not heatmap
-    continuous_cnv=continuous_cnv # whether copy number data should be continuous or discrete
+    continuous_cnv=continuous_cnv, # whether copy number data should be continuous or discrete
+    time_space_view_provided=time_space_view_provided # type of time/space view provided (NULL, "time", or "space")
   )
   x = append(cnvTree_userParams, timesweep_userParams)
 

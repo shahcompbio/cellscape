@@ -6,6 +6,17 @@ HTMLWidgets.widget({
 
     initialize: function(el, width, height) {
 
+        vizObj = {};
+        vizObj.width = width;
+        vizObj.height = height;
+
+        return {}
+
+    },
+
+    renderValue: function(el, x, instance) {
+        var view_id = el.id;
+
         // defaults
         var defaults = {
             // tree
@@ -47,21 +58,19 @@ HTMLWidgets.widget({
             topBarHighlight: "#C6C6C6",
 
             // switch between graph/tree
-            switchView: true,
-
-            // general 
-            width: width-15,
-            height: height-15
+            switchView: true
         };
 
         // global variable curVizObj
-        vizObj = {};
-        var view_id = el.id;
-        vizObj[view_id] = {};
-        curVizObj = vizObj[view_id];
+        curVizObj = {};
         curVizObj.data = {};
         curVizObj.view = {};
         curVizObj.view_id = view_id;
+
+
+        // get params from R
+        curVizObj.userConfig = x;
+        curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot != null); // (T/F) genotype annotation is specified
 
         // selected single cells list & selected links list
         curVizObj.view.selectedSCs = [];
@@ -71,33 +80,37 @@ HTMLWidgets.widget({
         curVizObj.generalConfig = $.extend(true, {}, defaults);
         var config = curVizObj.generalConfig;
 
+        // width and height of view
+        config.width = vizObj.width - 15;    
+        config.cnvTreeViewHeight;
+        // user wants timesweep 
+        if (curVizObj.userConfig.time_space_view_provided == "time") {
+            config.cnvTreeViewHeight = (vizObj.height) * 2/3;
+            config.tsViewHeight = (vizObj.height) * 1/3;
+        } 
+        // user wants spacesweep
+        else if (curVizObj.userConfig.time_space_view_provided == "time") {
+            // TODO
+            config.cnvTreeViewHeight = (vizObj.height);
+        }
+        // user only wants cnvTree
+        else {
+            config.cnvTreeViewHeight = (vizObj.height);
+        }
+
         // view container configurations
-        config.containerHeight = config.height - config.topBarHeight;
+        config.containerHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView;
         config.containerWidth = config.width;
 
         // heatmap configurations
-        config.hmHeight = config.height - config.topBarHeight - config.paddingAboveMainView;
+        config.hmHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView;
 
         // tree configurations
-        config.treeHeight = config.height - config.topBarHeight - config.paddingAboveMainView;
+        config.treeHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView;
 
         // legend starts
         config.gtypeAnnotStartY = 140 + config.paddingAboveMainView; // starting y-pixel for genotype annotation legend
         config.heatmapLegendStartY = 1 + config.paddingAboveMainView; // starting y-pixel for heatmap legend
-        return {}
-
-    },
-
-    renderValue: function(el, x, instance) {
-
-        var view_id = el.id;
-        var curVizObj = vizObj[view_id]; 
-        var config = curVizObj.generalConfig;
-
-        // GET PARAMS FROM R
-
-        curVizObj.userConfig = x;
-        curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot != null); // (T/F) genotype annotation is specified
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
@@ -1170,6 +1183,11 @@ HTMLWidgets.widget({
                     }
                 });
         }
+
+
+        // RUN TIMESWEEP
+        _run_timesweep(el.id, config.width, config.tsViewHeight, x, curVizObj);
+
 
     },
 
