@@ -26,8 +26,8 @@ HTMLWidgets.widget({
             treeOpacity: 1, // tree starts with opacity 1 
             graphOpacity: 0, // graph starts with opacity 0
 
-            // main view padding above
-            paddingAboveMainView: 15,
+            // general padding (above main view, between views)
+            paddingGeneral: 15,
 
             // indicator
             indicatorWidth: 7, // width of the selected single cell indicator
@@ -45,11 +45,10 @@ HTMLWidgets.widget({
             chromLegendHeight: 15, // height of chromosome legend
 
             // heatmap and genotype legends
-            heatmapLegendWidth: 50,
+            heatmapLegendWidth: 110,
             legendTitleHeight: 14, // height of legend titles
             rectHeight: 12, // rectangle in legend
             rectSpacing: 2, // spacing between legend rectangles
-            legendLeftPadding: 5, // space between legend and heatmap
             legendFontHeight: 12,
 
             // top bar
@@ -103,19 +102,19 @@ HTMLWidgets.widget({
         config.containerWidth = config.width;
 
         // heatmap configurations
-        config.hmHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView*2;
+        config.hmHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingGeneral*2;
 
         // tree configurations
-        config.treeHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView*2;
+        config.treeHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingGeneral*2;
 
         // legend starts
-        config.gtypeAnnotStartY = 140 + config.paddingAboveMainView; // starting y-pixel for genotype annotation legend
-        config.heatmapLegendStartY = 1 + config.paddingAboveMainView; // starting y-pixel for heatmap legend
+        config.gtypeAnnotStartY = 140 + config.paddingGeneral; // starting y-pixel for genotype annotation legend
+        config.heatmapLegendStartY = 1 + config.paddingGeneral; // starting y-pixel for heatmap legend
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
         // tree configurations
-        config.treeWidth = config.width - config.indicatorWidth - config.heatmapLegendWidth - curVizObj.userConfig.heatmapWidth;
+        config.treeWidth = config.width - config.indicatorWidth - config.heatmapLegendWidth - curVizObj.userConfig.heatmapWidth - config.paddingGeneral*2;
 
         // smallest tree dimension on the view (width or height)
         config.smallest_tree_dim = (config.treeWidth < config.treeHeight) ? config.treeWidth : config.treeHeight;
@@ -292,14 +291,14 @@ HTMLWidgets.widget({
 
         curVizObj.view.indicatorSVG = containerSVG.append("g")
             .attr("class", "indicatorSVG")
-            .attr("transform", "translate(" + config.treeWidth + "," + 0 + ")");
+            .attr("transform", "translate(" + (config.treeWidth + config.paddingGeneral) + "," + 0 + ")");
 
         // GROUP ANNOTATION SVG
 
         if (curVizObj.view.gtypesSpecified) {
             curVizObj.view.gtypeAnnotSVG = containerSVG.append("g")
                 .attr("class", "gtypeAnnotSVG")
-                .attr("transform", "translate(" + (config.treeWidth + config.indicatorWidth) + "," + 0 + ")");
+                .attr("transform", "translate(" + (config.treeWidth + config.indicatorWidth + config.paddingGeneral) + "," + 0 + ")");
         }
 
         // CNV SVG
@@ -308,8 +307,8 @@ HTMLWidgets.widget({
             .attr("class", "cnvSVG")
             .attr("transform", function() {
                 var t_x = (curVizObj.view.gtypesSpecified) ? 
-                    (config.treeWidth + config.indicatorWidth + config.gtypeAnnotWidth) :
-                    (config.treeWidth + config.indicatorWidth);
+                    (config.treeWidth + config.indicatorWidth + config.gtypeAnnotWidth + config.paddingGeneral) :
+                    (config.treeWidth + config.indicatorWidth + config.paddingGeneral);
                 return "translate(" + t_x + "," + 0 + ")"
             });
 
@@ -319,8 +318,8 @@ HTMLWidgets.widget({
             .attr("class", "cnvLegendSVG")
             .attr("transform", function() {
                 var t_x = (curVizObj.view.gtypesSpecified) ? 
-                    (config.treeWidth + config.indicatorWidth + config.gtypeAnnotWidth + curVizObj.userConfig.heatmapWidth) :
-                    (config.treeWidth + config.indicatorWidth + curVizObj.userConfig.heatmapWidth);
+                    (config.treeWidth + config.indicatorWidth + config.gtypeAnnotWidth + curVizObj.userConfig.heatmapWidth + config.paddingGeneral) :
+                    (config.treeWidth + config.indicatorWidth + curVizObj.userConfig.heatmapWidth + config.paddingGeneral);
                 return "translate(" + t_x + "," + 0 + ")"
             });
 
@@ -850,7 +849,7 @@ HTMLWidgets.widget({
         chromBoxes.append("rect")
             .attr("class", function(d) { return "chromBox chr" + d.chr; })
             .attr("x", function(d) { return d.x; })
-            .attr("y", config.paddingAboveMainView + config.hmHeight - config.chromLegendHeight)
+            .attr("y", config.paddingGeneral + config.hmHeight - config.chromLegendHeight)
             .attr("height", config.chromLegendHeight)
             .attr("width", function(d) { return d.width; })
             .style("fill", function(d) { 
@@ -864,7 +863,7 @@ HTMLWidgets.widget({
         chromBoxes.append("text")
             .attr("class", function(d) { return "chromBoxText chr" + d.chr; })
             .attr("x", function(d) { return d.x + (d.width / 2); })
-            .attr("y", config.paddingAboveMainView + config.hmHeight - (config.chromLegendHeight / 2))
+            .attr("y", config.paddingGeneral + config.hmHeight - (config.chromLegendHeight / 2))
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .attr("font-family", "Arial")
@@ -941,7 +940,7 @@ HTMLWidgets.widget({
 
         // heatmap legend title
         curVizObj.view.cnvLegendSVG.append("text")
-            .attr("x", config.legendLeftPadding)
+            .attr("x", config.paddingGeneral)
             .attr("y", config.heatmapLegendStartY) 
             .attr("dy", "+0.71em")
             .attr("font-family", "Arial")
@@ -991,7 +990,7 @@ HTMLWidgets.widget({
                 // legend rectangle with gradient
                 heatmapLegendG
                     .append("rect")
-                    .attr("x", config.legendLeftPadding)
+                    .attr("x", config.paddingGeneral)
                     .attr("y", legendRectStart)
                     .attr("width", config.rectHeight)
                     .attr("height", legendRectHeight)
@@ -1000,7 +999,7 @@ HTMLWidgets.widget({
                 // legend text
                 heatmapLegendG
                     .append("text")
-                    .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                    .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                     .attr("y", legendRectStart)
                     .attr("dy", "+0.71em")
                     .text(">=" + maxCNV)
@@ -1009,7 +1008,7 @@ HTMLWidgets.widget({
                     .style("fill", "black");
                 heatmapLegendG
                     .append("text")
-                    .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                    .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                     .attr("y", legendRectStart + (1-normal_relative)*legendRectHeight)
                     .attr("dy", "+0.35em")
                     .text("2")
@@ -1018,7 +1017,7 @@ HTMLWidgets.widget({
                     .style("fill", "black");
                 heatmapLegendG
                     .append("text")
-                    .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                    .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                     .attr("y", legendRectStart + legendRectHeight)
                     .text("0")
                     .attr("font-family", "Arial")
@@ -1031,7 +1030,7 @@ HTMLWidgets.widget({
                 // CNV legend rectangles
                 heatmapLegendG
                     .append("rect")
-                    .attr("x", config.legendLeftPadding)
+                    .attr("x", config.paddingGeneral)
                     .attr("y", function(d,i) {
                         return legendRectStart + i*(config.rectHeight + config.rectSpacing);
                     })
@@ -1044,7 +1043,7 @@ HTMLWidgets.widget({
                 // CNV legend text
                 heatmapLegendG
                     .append("text")
-                    .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                    .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                     .attr("y", function(d,i) {
                         return config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2 + 
                             i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
@@ -1083,7 +1082,7 @@ HTMLWidgets.widget({
             // VAF legend rectangle with gradient
             heatmapLegendG
                 .append("rect")
-                .attr("x", config.legendLeftPadding)
+                .attr("x", config.paddingGeneral)
                 .attr("y", legendRectStart)
                 .attr("width", config.rectHeight)
                 .attr("height", legendRectHeight)
@@ -1092,7 +1091,7 @@ HTMLWidgets.widget({
             // VAF legend text
             heatmapLegendG
                 .append("text")
-                .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                 .attr("y", legendRectStart)
                 .attr("dy", "+0.71em")
                 .text("1")
@@ -1101,7 +1100,7 @@ HTMLWidgets.widget({
                 .style("fill", "black");
             heatmapLegendG
                 .append("text")
-                .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                 .attr("y", legendRectStart + legendRectHeight)
                 .text("0")
                 .attr("font-family", "Arial")
@@ -1114,7 +1113,7 @@ HTMLWidgets.widget({
 
             // genotype annotation legend title
             curVizObj.view.cnvLegendSVG.append("text")
-                .attr("x", config.legendLeftPadding)
+                .attr("x", config.paddingGeneral)
                 .attr("y", config.gtypeAnnotStartY)
                 .attr("dy", "+0.71em")
                 .attr("font-family", "Arial")
@@ -1133,7 +1132,7 @@ HTMLWidgets.widget({
             gtypeAnnotLegendG
                 .append("rect")
                 .attr("class", function(d) { return "legendGroupRect gtype_" + d; })
-                .attr("x", config.legendLeftPadding)
+                .attr("x", config.paddingGeneral)
                 .attr("y", function(d,i) {
                     return config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
                 })
@@ -1160,7 +1159,7 @@ HTMLWidgets.widget({
             gtypeAnnotLegendG
                 .append("text")
                 .attr("class", function(d) { return "legendGroupText gtype_" + d; })
-                .attr("x", config.legendLeftPadding + config.rectHeight + config.rectSpacing)
+                .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                 .attr("y", function(d,i) {
                     return config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
                 })

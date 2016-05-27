@@ -253,7 +253,7 @@ function _getYCoordinates(curVizObj) {
 
         // starting y-coordinate for this id
         curVizObj.data.yCoordinates[sc_id] = 
-            config.paddingAboveMainView + (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
+            config.paddingGeneral + (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
     });
 
     // sort single cells without heatmap data by the number of ancestors they have
@@ -302,7 +302,7 @@ function _getYCoordinates(curVizObj) {
 
         // the cell must be a latent root node
         else {
-            curVizObj.data.yCoordinates[sc.sc_id] = config.paddingAboveMainView + (hmHeight/2);
+            curVizObj.data.yCoordinates[sc.sc_id] = config.paddingGeneral + (hmHeight/2);
         }
 
         // mark this cell as assigned to a y-coordinate
