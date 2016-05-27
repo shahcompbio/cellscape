@@ -27,7 +27,7 @@ HTMLWidgets.widget({
             graphOpacity: 0, // graph starts with opacity 0
 
             // main view padding above
-            paddingAboveMainView: 7,
+            paddingAboveMainView: 15,
 
             // indicator
             indicatorWidth: 7, // width of the selected single cell indicator
@@ -99,14 +99,14 @@ HTMLWidgets.widget({
         }
 
         // view container configurations
-        config.containerHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView;
+        config.containerHeight = config.cnvTreeViewHeight - config.topBarHeight;
         config.containerWidth = config.width;
 
         // heatmap configurations
-        config.hmHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView;
+        config.hmHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView*2;
 
         // tree configurations
-        config.treeHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView;
+        config.treeHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingAboveMainView*2;
 
         // legend starts
         config.gtypeAnnotStartY = 140 + config.paddingAboveMainView; // starting y-pixel for genotype annotation legend
@@ -270,7 +270,7 @@ HTMLWidgets.widget({
             .append("div")
             .attr("class", "containerDIV")
             .style("width", config.width + "px")
-            .style("height", config.hmHeight + "px")
+            .style("height", config.containerHeight + "px")
             .style("float", "left")
             .attr("id", view_id);
 
