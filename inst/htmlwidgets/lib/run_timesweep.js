@@ -465,6 +465,9 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	var colour_assignment = curVizObj.view.colour_assignment,
 	    alpha_colour_assignment = curVizObj.view.alpha_colour_assignment;
 
+	// colour paths
+	_colourPaths(curVizObj);
+
 	// plot light grey timesweep background
 	curVizObj.view.tsSVG
 	    .append("rect")
@@ -484,13 +487,9 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	    .attr('class', function(d) { return 'tsPlot gtype_' + d.gtype; })
 	    .attr('d', function(d) { return d.path; })
 	    .attr('fill', function(d) { 
-	    	d.fill = (d.gtype == dim.phantomRoot) ? "none" : alpha_colour_assignment[d.gtype];
-	    	d.fill_grey = (d.gtype == dim.phantomRoot) ? "none" : _getGreyscaleEquivalent(d.fill);
 	        return d.fill;
 	    }) 
 	    .attr('stroke', function(d) { 
-	    	d.stroke = (d.gtype == dim.phantomRoot) ? "none" : colour_assignment[d.gtype];
-	    	d.stroke_grey = (d.gtype == dim.phantomRoot) ? "none" : _getGreyscaleEquivalent(d.stroke);
 	        return d.stroke;
 	    })
 	    .on('mouseover', function(d) {
@@ -894,10 +893,10 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	        d3.select("#" + view_id)
 	            .select(".legendTreeNode.gtype_" + node)
 	            .attr("fill", function(d) {
-	            return (d.id == dim.phantomRoot) ? "none" : alpha_colour_assignment[d.id];
+	            	return d.fill;
 	            })
 	            .attr('stroke', function(d) {
-	                return (d.id == dim.phantomRoot) ? "none" : colour_assignment[d.id];
+	                return d.stroke;
 	            });
 	    });
 
@@ -1016,8 +1015,6 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	            .attr('class', function(d) { return 'tsPlot gtype_' + d.gtype; })
 	            .attr("d", _centreLine(curVizObj))
 	            .attr('fill', function(d) { 
-	            	d.fill = (d.gtype == dim.phantomRoot) ? "none" : alpha_colour_assignment[d.gtype];
-	    			d.fill_grey = (d.gtype == dim.phantomRoot) ? "none" : _getGreyscaleEquivalent(d.fill);
 	                // if we're selecting nodes, but we haven't clicked this one yet
 	                if ((dim.nClickedNodes > 0) && (_.uniq(dim.curCloneIDs).indexOf(d.id) == -1)) {
 	                        // greyscale
@@ -1027,8 +1024,6 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	                return d.fill;
 	            }) 
 	            .attr('stroke', function(d) { 
-	            	d.stroke = (d.gtype == dim.phantomRoot) ? "none" : colour_assignment[d.gtype];
-	    			d.stroke_grey = (d.gtype == dim.phantomRoot) ? "none" : _getGreyscaleEquivalent(d.stroke);
 	                // if we're selecting nodes, but we haven't clicked this one yet
 	                if ((dim.nClickedNodes > 0) && (_.uniq(dim.curCloneIDs).indexOf(d.id) == -1)) {
 	                        // greyscale
@@ -1079,10 +1074,10 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	    // reset node colours in legend
 	    d3.select("#" + curVizObj.view_id).selectAll('.legendTreeNode')
 	        .attr('fill', function(d) { 
-	            return (d.id == dim.phantomRoot) ? "none" : alpha_colour_assignment[d.id];
+	            return d.fill;
 	        })
 	        .attr('stroke', function(d) { 
-	            return (d.id == dim.phantomRoot) ? "none" : colour_assignment[d.id];
+	            return d.stroke;
 	        });
 
 	    // reset links in legend
@@ -2390,6 +2385,27 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 
 	}
 
+	/* function to colour paths
+	*/
+	function _colourPaths(curVizObj) {
+		var phantomRoot = curVizObj.generalConfig.phantomRoot,
+			colour_assignment = curVizObj.view.colour_assignment,
+			alpha_colour_assignment = curVizObj.view.alpha_colour_assignment;
+
+		curVizObj.data.bezier_paths.forEach(function(cur_path) {
+		    cur_path.fill = (cur_path['gtype'] == phantomRoot) ? "none" : alpha_colour_assignment[cur_path['gtype']];
+	        cur_path.fill_grey = (cur_path['gtype'] == phantomRoot) ? "none" : _getGreyscaleEquivalent(cur_path.fill);
+	        cur_path.stroke = (cur_path['gtype'] == phantomRoot) ? "none" : colour_assignment[cur_path['gtype']];
+	        cur_path.stroke_grey = (cur_path['gtype'] == phantomRoot) ? "none" : _getGreyscaleEquivalent(cur_path.stroke);	
+		})
+		curVizObj.data.tracks_bezier_paths.forEach(function(cur_path) {
+		    cur_path.fill = (cur_path['gtype'] == phantomRoot) ? "none" : alpha_colour_assignment[cur_path['gtype']];
+	        cur_path.fill_grey = (cur_path['gtype'] == phantomRoot) ? "none" : _getGreyscaleEquivalent(cur_path.fill);
+	        cur_path.stroke = (cur_path['gtype'] == phantomRoot) ? "none" : colour_assignment[cur_path['gtype']];
+	        cur_path.stroke_grey = (cur_path['gtype'] == phantomRoot) ? "none" : _getGreyscaleEquivalent(cur_path.stroke);	
+		})
+	}
+
 	/* function to convert genotype stacks at each time point into a list of moves for each genotype's d3 path object 
 	* (traditional timesweep view)
 	* Note: the appearance timepoint is the time at which the genotype appears in the dataset
@@ -3340,6 +3356,10 @@ function _tsPlotGtypeMouseover(gtype, view_id, colour_assignment, alpha_colour_a
     _shadeLegend(view_id, colour_assignment, alpha_colour_assignment);
     _gtypeHighlight(gtype, view_id, colour_assignment, alpha_colour_assignment);
     _showLabels(gtype, view_id, switchView);
+    // if this view is linked to single cell data view, highlight the genotype in that view
+    if (typeof _mouseoverGroupAnnot == 'function') {
+    	_mouseoverGroupAnnot(gtype, "black", view_id);
+    }
 }
 
 
@@ -3368,11 +3388,6 @@ function _gtypeHighlight(gtype, view_id, colour_assignment, alpha_colour_assignm
         .attr('stroke', function(d) { 
             return d.stroke;
         });
-
-    // if this view is linked to single cell data view
-    if (typeof _mouseoverGroupAnnot == 'function') {
-    	_mouseoverGroupAnnot(gtype, "black", view_id);
-    }
 }
 
 /* function to shade the timesweep view
@@ -3413,12 +3428,10 @@ function _shadeLegend(view_id, colour_assignment, alpha_colour_assignment) {
     // dim nodes in the legend
     d3.select("#" + curVizObj.view_id).selectAll('.legendTreeNode')
         .attr('fill', function(d) { 
-            return (d.id == dim.phantomRoot) ? 
-                "none" : d.fill_grey;
+            return d.fill_grey;
         })
         .attr('stroke', function(d) { 
-            return (d.id == dim.phantomRoot) ? 
-                "none" : d.stroke_grey;
+            return d.stroke_grey;
         });
 }
 

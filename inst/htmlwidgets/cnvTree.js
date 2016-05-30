@@ -972,7 +972,12 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         // highlight indicator & node for all sc's with this genotype annotation id,
                         // highlight genotype annotation rectangle in legend
-                        _mouseoverGroupAnnot(d.genotype, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
+                        _mouseoverGroupAnnot(d.genotype, 
+                                            curVizObj.generalConfig.highlightColour, 
+                                            curVizObj.view_id,
+                                            curVizObj.view.colour_assignment,
+                                            curVizObj.view.alpha_colour_assignment,
+                                            curVizObj.userConfig.time_space_view_provided);
                     }
                 })
                 .on("mouseout", function(d) {
@@ -1202,7 +1207,12 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         // highlight indicator & node for all sc's with this genotype annotation id,
                         // highlight genotype annotation rectangle in legend
-                        _mouseoverGroupAnnot(d, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
+                        _mouseoverGroupAnnot(d, 
+                                            curVizObj.generalConfig.highlightColour, 
+                                            curVizObj.view_id,
+                                            curVizObj.view.colour_assignment,
+                                            curVizObj.view.alpha_colour_assignment,
+                                            curVizObj.userConfig.time_space_view_provided);
                     }
                 })
                 .on("mouseout", function(d) {
@@ -1229,7 +1239,12 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         // highlight indicator & node for all sc's with this genotype annotation id,
                         // highlight genotype annotation rectangle in legend
-                        _mouseoverGroupAnnot(d, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
+                        _mouseoverGroupAnnot(d, 
+                                            curVizObj.generalConfig.highlightColour, 
+                                            curVizObj.view_id,
+                                            curVizObj.view.colour_assignment,
+                                            curVizObj.view.alpha_colour_assignment,
+                                            curVizObj.userConfig.time_space_view_provided);
                     }
                 })
                 .on("mouseout", function(d) {
