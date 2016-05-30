@@ -123,7 +123,7 @@ function _highlightIndicator(sc_id, curVizObj) {
 function _resetNode(sc_id, curVizObj) {
     d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id)
         .style("fill", function(d) {
-            return _getNodeColour(curVizObj, d.sc_id);
+            return _getNodeFill(curVizObj, d.sc_id);
         });
 }
 
@@ -141,21 +141,37 @@ function _resetIndicator(curVizObj, sc_id) {
 function _resetNodes(curVizObj) {
     d3.select("#" + curVizObj.view_id).selectAll(".node")
         .style("fill", function(d) {
-            return _getNodeColour(curVizObj, d.sc_id);
+            return _getNodeFill(curVizObj, d.sc_id);
         });
 }
 
-/* function to get the colour of a node
+/* function to get the fill colour of a node
 * @param {Object} curVizObj
 * @param {String} sc_id -- single cell id
 */
-function _getNodeColour(curVizObj, sc_id) {
+function _getNodeFill(curVizObj, sc_id) {
+    // genotype annotations specified -- colour by genotype
+    if (curVizObj.view.gtypesSpecified) {
+        var found_sc_with_gtype = _.findWhere(curVizObj.userConfig.sc_annot, {single_cell_id: sc_id});
+        return (found_sc_with_gtype) ? // if this sc has a genotype
+            curVizObj.view.alpha_colour_assignment[found_sc_with_gtype.genotype] : 
+            "white";
+    }
+    // no genotype annotations -- default colour
+    return curVizObj.generalConfig.defaultNodeColour;
+}
+
+/* function to get the stroke colour of a node
+* @param {Object} curVizObj
+* @param {String} sc_id -- single cell id
+*/
+function _getNodeStroke(curVizObj, sc_id) {
     // genotype annotations specified -- colour by genotype
     if (curVizObj.view.gtypesSpecified) {
         var found_sc_with_gtype = _.findWhere(curVizObj.userConfig.sc_annot, {single_cell_id: sc_id});
         return (found_sc_with_gtype) ? // if this sc has a genotype
             curVizObj.view.colour_assignment[found_sc_with_gtype.genotype] : 
-            "white";
+            curVizObj.generalConfig.defaultNodeColour;
     }
     // no genotype annotations -- default colour
     return curVizObj.generalConfig.defaultNodeColour;
@@ -416,7 +432,7 @@ function _linkMouseout(curVizObj, resetSelectedSCList) {
         // reset nodes
         d3.select("#" + curVizObj.view_id).selectAll(".node")
             .style("fill", function(d) {
-                return _getNodeColour(curVizObj, d.sc_id);
+                return _getNodeFill(curVizObj, d.sc_id);
             });
 
         // reset indicators
@@ -905,9 +921,11 @@ function _plotForceDirectedGraph(curVizObj) {
             return config.tree_r;
         })
         .attr("fill", function(d) {
-             return _getNodeColour(curVizObj, d.sc_id);
+             return _getNodeFill(curVizObj, d.sc_id);
         })
-        .attr("stroke", "#838181")
+        .attr("stroke", function(d) {
+            return _getNodeStroke(curVizObj, d.sc_id);
+        })
         .attr("fill-opacity", config.graphOpacity)
         .attr("stroke-opacity", config.graphOpacity)
         .attr("pointer-events", function() {
@@ -1152,9 +1170,11 @@ function _plotAlignedPhylogeny(curVizObj) {
             d.y = curVizObj.data.yCoordinates[d.sc_id] + half_rowHeight;
             return d.y;
         })   
-        .attr("stroke",curVizObj.generalConfig.defaultLinkColour)           
+        .attr("stroke", function(d) {
+            return _getNodeStroke(curVizObj, d.sc_id);
+        })           
         .attr("fill", function(d) {
-            return _getNodeColour(curVizObj, d.sc_id);
+            return _getNodeFill(curVizObj, d.sc_id);
         })
         .attr("r", r)
         .attr("fill-opacity", config.treeOpacity)
@@ -1512,7 +1532,13 @@ function _getGtypeColours(gtypes) {
         colour_assignment[gtypes[i]] = col;
     }
 
-    return colour_assignment;  
+    // get the alpha colour assignment
+    Object.keys(colour_assignment).forEach(function(key, key_idx) {
+        alpha_colour_assignment[key] = 
+            _increase_brightness(colour_assignment[key], curVizObj.userConfig.alpha);
+    });
+
+    return {"colour_assignment": colour_assignment, "alpha_colour_assignment": alpha_colour_assignment}; 
 }
 
 /**

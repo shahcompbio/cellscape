@@ -276,14 +276,17 @@ HTMLWidgets.widget({
         // genotype annotation colours
         if (curVizObj.view.gtypesSpecified) {
 
+            // both alpha and regular colour assignments
             // if the genotype tree is provided, colour nodes by its phylogeny
             if (curVizObj.userConfig.gtype_tree_edges) {
-                curVizObj.view.colour_assignment = _getPhyloColours(curVizObj).colour_assignment;
+                var colour_assignments = _getPhyloColours(curVizObj);
             }
             // genotype tree not provided - random colours
             else {
-                curVizObj.view.colour_assignment = _getGtypeColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));             
+                var colour_assignments = _getGtypeColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));             
             }
+            curVizObj.view.colour_assignment = colour_assignments.colour_assignment;
+            curVizObj.view.alpha_colour_assignment = colour_assignments.alpha_colour_assignment;
         }
 
         // BRUSH SELECTION FUNCTION
@@ -961,7 +964,7 @@ HTMLWidgets.widget({
                 .attr("height", curVizObj.view.hm.rowHeight)
                 .attr("width", config.gtypeAnnotWidth-3)
                 .attr("fill", function(d) {
-                    return curVizObj.view.colour_assignment[d.genotype];
+                    return curVizObj.view.alpha_colour_assignment[d.genotype];
                 })
                 .attr("stroke", "none")
                 .on("mouseover", function(d) {
@@ -1189,6 +1192,9 @@ HTMLWidgets.widget({
                 .attr("height", config.rectHeight)
                 .attr("width", config.rectHeight)
                 .attr("fill", function(d) {
+                    return curVizObj.view.alpha_colour_assignment[d];
+                })
+                .attr("stroke", function(d) {
                     return curVizObj.view.colour_assignment[d];
                 })
                 .on("mouseover", function(d) {
