@@ -43,8 +43,8 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	curVizObj.view = {};
 
 	// set configurations
-	curVizObj.tsGeneralConfig = $.extend(true, {}, defaults);
-	var dim = curVizObj.tsGeneralConfig;
+	curVizObj.generalConfig = $.extend(true, {}, defaults);
+	var dim = curVizObj.generalConfig;
 
 	// get params from R
 	curVizObj.userConfig = userConfig;
@@ -491,17 +491,11 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	    })
 	    .on('mouseover', function(d) {
 	        if (!dim.selectOn && !dim.mutSelectOn) {
-	            _shadeTimeSweep(curVizObj.view_id, 
-                				curVizObj.view.colour_assignment, 
-                				curVizObj.view.alpha_colour_assignment);
-	            _shadeLegend(curVizObj.view_id, 
-            				curVizObj.view.colour_assignment, 
-            				curVizObj.view.alpha_colour_assignment);
-	            _gtypeHighlight(d.gtype, 
-                				curVizObj.view_id, 
-                				curVizObj.view.colour_assignment, 
-                				curVizObj.view.alpha_colour_assignment);
-	            _showLabels(d.gtype, curVizObj);
+	            _tsPlotGtypeMouseover(d.gtype, 
+	            						curVizObj.view_id, 
+	            						curVizObj.view.colour_assignment, 
+	            						curVizObj.view.alpha_colour_assignment,
+	            						curVizObj.generalConfig.switchView);
 	        }
 	    })
 	    .on('mouseout', function(d) {
@@ -748,17 +742,11 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	        }
 	        // we're not selecting nodes or mutations - highlight genotype
 	        if (!dim.selectOn && !dim.mutSelectOn) {
-	            _shadeTimeSweep(curVizObj.view_id, 
-                				curVizObj.view.colour_assignment, 
-                				curVizObj.view.alpha_colour_assignment);
-	            _shadeLegend(curVizObj.view_id, 
-		                    				curVizObj.view.colour_assignment, 
-		                    				curVizObj.view.alpha_colour_assignment);
-	            _gtypeHighlight(d.id,
-	            				curVizObj.view_id, 
-                				curVizObj.view.colour_assignment, 
-                				curVizObj.view.alpha_colour_assignment);
-	            _showLabels(d.id, curVizObj);
+	            _tsPlotGtypeMouseover(d.id, 
+	            						curVizObj.view_id, 
+	            						curVizObj.view.colour_assignment, 
+	            						curVizObj.view.alpha_colour_assignment,
+	            						curVizObj.generalConfig.switchView);
 	        }
 	    })
 	    .on('mouseout', function(d) {
@@ -868,6 +856,21 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 
 	// d3 EFFECTS FUNCTIONS
 
+	/* function for mouseover of genotype in timesweep
+	* @param {String} gtype -- the current genotype being moused over
+	* @param {String} view_id -- id for current view
+	* @param {Object} colour_assignment -- colour assignment for each genotype
+	* @param {Object} alpha_colour_assignment -- alpha colour assignment for each genotype
+	* @param {Boolean} switchView -- true/false for which view is currently on (traditional or tracks)
+	*/
+	function _tsPlotGtypeMouseover(gtype, view_id, colour_assignment, alpha_colour_assignment, switchView) {
+
+        _shadeTimeSweep(view_id, colour_assignment, alpha_colour_assignment);
+        _shadeLegend(view_id, colour_assignment, alpha_colour_assignment);
+        _gtypeHighlight(gtype, view_id, colour_assignment, alpha_colour_assignment);
+        _showLabels(gtype, view_id, switchView);
+	}
+
 	/* recursive function to perform downstream or upstream effects on legend tree link
 	* @param {Object} curVizObj -- vizObj for the current view
 	* @param {String} link_id -- id for the link that's currently highlighted
@@ -876,7 +879,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	*/
 	function _propagatedEffects(curVizObj, link_id, link_ids, stream_direction) {
 	    var view_id = curVizObj.view_id,
-	        dim = curVizObj.tsGeneralConfig,
+	        dim = curVizObj.generalConfig,
 	        colour_assignment = curVizObj.view.colour_assignment,
 	        alpha_colour_assignment = curVizObj.view.alpha_colour_assignment;
 
@@ -968,7 +971,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 
 
 	function _sweepClick(curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig,
+	    var dim = curVizObj.generalConfig,
 	        colour_assignment = curVizObj.view.colour_assignment,
 	        alpha_colour_assignment = curVizObj.view.alpha_colour_assignment,
 	        x = curVizObj.userConfig;
@@ -1039,17 +1042,11 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	            })
 	            .on('mouseover', function(d) {
 	                if (!dim.selectOn && !dim.mutSelectOn) {
-	                    _shadeTimeSweep(curVizObj.view_id, 
-		                    				curVizObj.view.colour_assignment, 
-		                    				curVizObj.view.alpha_colour_assignment);
-	                    _shadeLegend(curVizObj.view_id, 
-		                    				curVizObj.view.colour_assignment, 
-		                    				curVizObj.view.alpha_colour_assignment);
-	                    _gtypeHighlight(d.gtype, 
-	                    				curVizObj.view_id, 
-	                    				curVizObj.view.colour_assignment, 
-	                    				curVizObj.view.alpha_colour_assignment);
-	                    _showLabels(d.gtype, curVizObj);
+	                    _tsPlotGtypeMouseover(d.gtype, 
+	            						curVizObj.view_id, 
+	            						curVizObj.view.colour_assignment, 
+	            						curVizObj.view.alpha_colour_assignment,
+	            						curVizObj.generalConfig.switchView);
 	                }
 	            })
 	            .on('mouseout', function(d) {
@@ -1123,7 +1120,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	function _shadeLegend(view_id, colour_assignment, alpha_colour_assignment) {
 	    var brightness,
 	        col,
-	        dim = curVizObj.tsGeneralConfig,
+	        dim = curVizObj.generalConfig,
 	        colour_assignment = curVizObj.view.colour_assignment,
 	        alpha_colour_assignment = curVizObj.view.alpha_colour_assignment;
 
@@ -1147,7 +1144,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Object} curVizObj -- vizObj for the current view
 	*/
 	function _resetView(curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig,
+	    var dim = curVizObj.generalConfig,
 	        colour_assignment = curVizObj.view.colour_assignment,
 	        alpha_colour_assignment = curVizObj.view.alpha_colour_assignment,
 	        x = curVizObj.userConfig;
@@ -1189,7 +1186,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Array} label_data -- array of objects containing label data, one label per object
 	*/
 	function _createLabels(curVizObj, label_data) {
-	    var dim = curVizObj.tsGeneralConfig;
+	    var dim = curVizObj.generalConfig;
 
 	    // for each cellular prevalence label for this genotype
         curVizObj.view.tsSVG
@@ -1310,14 +1307,14 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 
 	/* function to show labels for a particular genotype
 	* @param {String} gtype -- the current genotype being moused over
-	* @param {Object} curVizObj -- vizObj for the current view
+	* @param {String} view_id -- id for the current view
+	* @param {Boolean} switchView -- true/false for which view is currently on (traditional or tracks)
 	*/
-	function _showLabels(gtype, curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig;
-	    var curView = d3.select("#" + curVizObj.view_id);
+	function _showLabels(gtype, view_id, switchView) {
+	    var curView = d3.select("#" + view_id);
 
 	    // traditional view
-	    if (dim.switchView) { 
+	    if (switchView) { 
 	    	curView.selectAll(".label.gtype_" + gtype).attr("fill-opacity", 1)
 	    		.text(function(d) { return d.label_text; });
 	    	curView.selectAll(".labelCirc.gtype_" + gtype).attr("fill-opacity", 1);
@@ -1335,7 +1332,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Object} curVizObj -- vizObj for the current view
 	*/
 	function _hideLabels(curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig;
+	    var dim = curVizObj.generalConfig;
 	    var curView = d3.select("#" + curVizObj.view_id);
 
 	    // traditional view
@@ -1357,7 +1354,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Object} curVizObj -- vizObj for the current view
 	*/
 	function _backgroundClick(curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig;
+	    var dim = curVizObj.generalConfig;
 
 	    // if there was just a link selection, refresh the mutations table
 	    if (dim.selectOn) {
@@ -1396,7 +1393,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	function _getTreeInfo(curVizObj) {
 	    var userConfig = curVizObj.userConfig,
 	        cur_edges = userConfig.gtype_tree_edges,
-	        phantomRoot = curVizObj.tsGeneralConfig.phantomRoot; // root so we have a lead-in link to the real root
+	        phantomRoot = curVizObj.generalConfig.phantomRoot; // root so we have a lead-in link to the real root
 
 	    // get tree nodes
 	    curVizObj.data.treeNodes = _.uniq(_.pluck(cur_edges, "source").concat(_.pluck(cur_edges, "target")));
@@ -1775,7 +1772,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 
 
 	    // traverse the tree to sort the genotypes into a final vertical stacking order (incorporating hierarchy)
-	    curVizObj.data.layoutOrder = _getLayoutOrder(curVizObj.tsGeneralConfig, 
+	    curVizObj.data.layoutOrder = _getLayoutOrder(curVizObj.generalConfig, 
 	                                                        curVizObj.data.treeStructure, 
 	                                                        curVizObj.data.emergence_values,
 	                                                        curVizObj.data.emergence_tps, 
@@ -1893,7 +1890,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	        sorted_children, // children sorted by the layout order
 	        cur_cp = cp_data[tp][gtype],
 	        prev_cp = (cp_data[prev_tp]) ? cp_data[prev_tp][gtype] : undefined, // CP for this genotype, prev tp
-	        threshold = curVizObj.tsGeneralConfig.threshold, // cellular prevalence threshold for visibility of a genotype
+	        threshold = curVizObj.generalConfig.threshold, // cellular prevalence threshold for visibility of a genotype
 	        // the width of this genotype, including descendants
 	        width = _calculateWidth(curVizObj, tp, gtype, threshold).width, 
 	        emerged, // whether or not the genotype emerged at this time point
@@ -1979,7 +1976,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	        effective_cp, // effective cp for this genotype at this timepoint
 	        width, // width to add for this genotype at this timepoint (includes descendants widths)
 	        midpoint, // midpoint for emergence
-	        threshold = curVizObj.tsGeneralConfig.threshold; // cellular prevalence threshold for visibility of a genotype
+	        threshold = curVizObj.generalConfig.threshold; // cellular prevalence threshold for visibility of a genotype
 
 	    // for each timepoint (in order)...
 	    $.each(timepoints, function(tp_idx, tp) { 
@@ -2073,7 +2070,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	        ancestor_midpoint, // ancestor's midpoint for emergence
 	        direct_ancestors = curVizObj.data.direct_ancestors, // direct ancestor for each genotype
 	        direct_descendants = curVizObj.data.direct_descendants, // direct descendant for each genotype
-	        space = 8/curVizObj.tsGeneralConfig.height; // space between genotypes (in pixels) 
+	        space = 8/curVizObj.generalConfig.height; // space between genotypes (in pixels) 
 
 	    // GET STACKED LAYOUT
 
@@ -2280,7 +2277,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Object} curVizObj
 	*/
 	function _shiftEmergence(curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig,
+	    var dim = curVizObj.generalConfig,
 	        layout = curVizObj.data.layout,
 	        layoutOrder = curVizObj.data.layoutOrder,
 	        timepoints = curVizObj.data.timepoints,
@@ -2365,7 +2362,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Object} curVizObj
 	*/
 	function _getTraditionalCPLabels(curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig,
+	    var dim = curVizObj.generalConfig,
 	        layout = curVizObj.data.layout,
 	        labels = [], // array of labels
 	        data, // data for a genotype at a time point
@@ -2482,7 +2479,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* Then gets paths (scale of the plot pixel count) with bezier edges
 	*/
 	function _getPaths(curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig;
+	    var dim = curVizObj.generalConfig;
 
 	    // GET PROPORTIONATE, STRAIGHT EDGED PATHS
 
@@ -2505,7 +2502,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Object} curVizObj
 	*/
 	function _getTraditionalPaths(curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig,
+	    var dim = curVizObj.generalConfig,
 	        layout = curVizObj.data.layout,
 	        timepoints = curVizObj.data.timepoints,
 	        timepoints_rev = ($.extend([], timepoints)).reverse(),
@@ -2696,7 +2693,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Object} curVizObj
 	*/
 	function _getSeparatePaths(curVizObj) {
-	    var dim = curVizObj.tsGeneralConfig,
+	    var dim = curVizObj.generalConfig,
 	        timepoints = curVizObj.data.timepoints,
 	        timepoints_rev = ($.extend([], timepoints)).reverse(),
 	        layoutOrder = curVizObj.data.layoutOrder,
@@ -2802,8 +2799,8 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Object} curVizObj
 	*/
 	function _centreLine(curVizObj) {
-	    var tsSVGWidth = curVizObj.tsGeneralConfig.tsSVGWidth, // timesweep svg width
-	        tsSVGHeight = curVizObj.tsGeneralConfig.tsSVGHeight; // timesweep svg height
+	    var tsSVGWidth = curVizObj.generalConfig.tsSVGWidth, // timesweep svg width
+	        tsSVGHeight = curVizObj.generalConfig.tsSVGHeight; // timesweep svg height
 
 	    return "M 0 " + tsSVGHeight/2 + " L " + tsSVGWidth + " " + tsSVGHeight/2 + " L 0 " + tsSVGHeight/2;
 	}
@@ -2952,7 +2949,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	            var prev_colour = col;
 	            curVizObj.data.treeChains[cur_node].forEach(function(desc, desc_i) {
 	                // if we're on the phantom root's branch and it's the first descendant
-	                if (cur_node == curVizObj.tsGeneralConfig.phantomRoot && desc_i == 0) {
+	                if (cur_node == curVizObj.generalConfig.phantomRoot && desc_i == 0) {
 
 	                    // do not decrease the brightness
 	                    colour_assignment[desc] = prev_colour;
@@ -3243,7 +3240,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	* @param {Number} table_height -- height of the table (in px)
 	*/
 	function _makeMutationTable(curVizObj, mutationTableDIV, data, table_height) {
-		var dim = curVizObj.tsGeneralConfig,
+		var dim = curVizObj.generalConfig,
 			view_id = curVizObj.view_id,
 			table;
 
@@ -3399,7 +3396,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 		d3.select("#" + curVizObj.view_id).selectAll(".svgCloneCircle").remove();
 
 		// get clone column number
-		var mut_columns = _.pluck(curVizObj.tsGeneralConfig.mutationColumns, "data");
+		var mut_columns = _.pluck(curVizObj.generalConfig.mutationColumns, "data");
 		var clone_column_no = mut_columns.indexOf("empty") + 1;
 
 		// add clone SVGs
