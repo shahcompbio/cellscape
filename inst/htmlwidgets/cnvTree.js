@@ -133,8 +133,8 @@ HTMLWidgets.widget({
         // GET TREE CONTENT
 
         // get genotype tree structure
-        if (curVizObj.userConfig.time_space_view_provided) {
-            var gtype_tree_edges = curVizObj.userConfig.gtype_tree_edges;
+        if (curVizObj.userConfig.gtype_tree_edges) {
+            var gtype_tree_edges = $.extend([], curVizObj.userConfig.gtype_tree_edges);
 
             // find tree root
             var cur_source = gtype_tree_edges[0].source;
@@ -146,21 +146,21 @@ HTMLWidgets.widget({
             }
             var rootName = cur_source;
 
-            // // add the phantomRoot to the tree edges array
-            // gtype_tree_edges.push({
-            //     "source": curVizObj.generalConfig.phantomRoot,
-            //     "target": rootName
-            // })
+            // add the phantomRoot to the tree edges array
+            gtype_tree_edges.push({
+                "source": curVizObj.generalConfig.phantomRoot,
+                "target": rootName
+            })
 
-            // // get tree structure
-            // var nodesByName = []; // array of trees rooted at each node 
-            // for (var i = 0; i < gtype_tree_edges.length; i++) {
-            //     var parent = _gt_findNodeByName(nodesByName, gtype_tree_edges[i].source);
-            //     var child = _gt_findNodeByName(nodesByName, gtype_tree_edges[i].target);
-            //     parent["children"].push(child);
-            // }
-            // var root_tree = _gt_findNodeByName(nodesByName, curVizObj.generalConfig.phantomRoot); 
-            // curVizObj.data.gtypeTreeStructure = root_tree; 
+            // get tree structure
+            var nodesByName = []; // array of trees rooted at each node 
+            for (var i = 0; i < gtype_tree_edges.length; i++) {
+                var parent = _gt_findNodeByName(nodesByName, gtype_tree_edges[i].source);
+                var child = _gt_findNodeByName(nodesByName, gtype_tree_edges[i].target);
+                parent["children"].push(child);
+            }
+            var root_tree = _gt_findNodeByName(nodesByName, curVizObj.generalConfig.phantomRoot); 
+            curVizObj.data.gtypeTreeStructure = root_tree; 
         }
 
         // get tree structures for each node
@@ -187,11 +187,11 @@ HTMLWidgets.widget({
         // get direct ancestors for each ndoe
         curVizObj.data.direct_ancestors = _getDirectAncestors(curVizObj.data.treeStructure, {});
 
-        // // get linear chains in genotype tree TODO
-        // if (curVizObj.userConfig.time_space_view_provided) {
-        //     curVizObj.data.treeChainRoots = []; // keep track of linear chain segment roots
-        //     curVizObj.data.treeChains = _gt_getLinearTreeSegments(curVizObj, curVizObj.data.treeStructure, {}, "");
-        // }
+        // get linear chains in genotype tree 
+        if (curVizObj.userConfig.gtype_tree_edges) {
+            curVizObj.data.gtypeTreeChainRoots = []; // keep track of linear chain segment roots
+            curVizObj.data.gtypeTreeChains = _gt_getLinearTreeSegments(curVizObj, curVizObj.data.gtypeTreeStructure, {}, "");
+        }
 
         // get the height of the tree (# nodes)
         curVizObj.data.tree_height = 0;
@@ -273,10 +273,15 @@ HTMLWidgets.widget({
 
         // genotype annotation colours
         if (curVizObj.view.gtypesSpecified) {
-            // tmp = _getPhyloColours(curVizObj);
-            // console.log("colours");
-            // console.log(tmp);
-            curVizObj.view.colour_assignment = _getColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));
+
+            // if the genotype tree is provided, colour nodes by its phylogeny
+            if (curVizObj.userConfig.gtype_tree_edges) {
+                curVizObj.view.colour_assignment = _getPhyloColours(curVizObj).colour_assignment;
+            }
+            // genotype tree not provided - random colours
+            else {
+               curVizObj.view.colour_assignment = _getGtypeColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));             
+            }
         }
 
         // BRUSH SELECTION FUNCTION

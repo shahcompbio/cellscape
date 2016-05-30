@@ -263,7 +263,7 @@ function _gt_getLinearTreeSegments(curVizObj, curNode, chains, base) {
     if (base == "") {
         base = curNode.id;
         chains[base] = [];
-        curVizObj.data.treeChainRoots.push(curNode.id);
+        curVizObj.data.gtypeTreeChainRoots.push(curNode.id);
     }
     // if it's a linear descendant, append the current key to the chain
     else {
@@ -284,62 +284,6 @@ function _gt_getLinearTreeSegments(curVizObj, curNode, chains, base) {
 
     return chains;
 }
-
-
-/* function to calculate colours based on phylogeny 
-* @param {Object} curVizObj -- vizObj for the current view
-*/
-function _getPhyloColours(curVizObj) {
-
-    var colour_assignment = {}, // standard colour assignment
-        alpha_colour_assignment = {}; // alpha colour assignment
-
-    var s = 0.88, // saturation
-        l = 0.77; // lightness
-
-    // number of nodes
-    var n_nodes = curVizObj.data.treeChainRoots.length;
-
-    // colour each tree chain root a sequential colour from the spectrum
-    for (var i = 0; i < n_nodes; i++) {
-        var cur_node = curVizObj.data.treeChainRoots[i];
-        var h = (i/n_nodes + 0.96) % 1;
-        var rgb = _hslToRgb(h, s, l); // hsl to rgb
-        var col = _rgb2hex("rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")"); // rgb to hex
-
-        colour_assignment[cur_node] = col;
-
-        // for each of the chain's descendants
-        var prev_colour = col;
-        curVizObj.data.treeChains[cur_node].forEach(function(desc, desc_i) {
-            // if we're on the phantom root's branch and it's the first descendant
-            if (cur_node == curVizObj.generalConfig.phantomRoot && desc_i == 0) {
-
-                // do not decrease the brightness
-                colour_assignment[desc] = prev_colour;
-            }
-            // we're not on the phantom root branch's first descendant
-            else {
-                // colour the descendant a lighter version of the previous colour in the chain
-                colour_assignment[desc] = 
-                    _decrease_brightness(prev_colour, 20);
-
-                // set the previous colour to the lightened colour
-                prev_colour = colour_assignment[desc]; 
-            }
-        })
-    }
-
-
-    // get the alpha colour assignment
-    Object.keys(colour_assignment).forEach(function(key, key_idx) {
-        alpha_colour_assignment[key] = 
-            _increase_brightness(colour_assignment[key], curVizObj.userConfig.alpha);
-    });
-
-    return {"colour_assignment": colour_assignment, "alpha_colour_assignment": alpha_colour_assignment};
-}
-
 
 /* function to get the y-coordinate for each single cell
 * @param {Object} curVizObj
@@ -1493,10 +1437,64 @@ function _getChromBounds(curVizObj) {
 // COLOUR FUNCTIONS
 
 
-/* function to calculate colours for genotype annotations
+/* function to calculate genotype colours based on phylogeny 
+* @param {Object} curVizObj -- vizObj for the current view
+*/
+function _getPhyloColours(curVizObj) {
+
+    var colour_assignment = {}, // standard colour assignment
+        alpha_colour_assignment = {}; // alpha colour assignment
+
+    var s = 0.88, // saturation
+        l = 0.77; // lightness
+
+    // number of nodes
+    var n_nodes = curVizObj.data.gtypeTreeChainRoots.length;
+
+    // colour each tree chain root a sequential colour from the spectrum
+    for (var i = 0; i < n_nodes; i++) {
+        var cur_node = curVizObj.data.gtypeTreeChainRoots[i];
+        var h = (i/n_nodes + 0.96) % 1;
+        var rgb = _hslToRgb(h, s, l); // hsl to rgb
+        var col = _rgb2hex("rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")"); // rgb to hex
+
+        colour_assignment[cur_node] = col;
+
+        // for each of the chain's descendants
+        var prev_colour = col;
+        curVizObj.data.gtypeTreeChains[cur_node].forEach(function(desc, desc_i) {
+            // if we're on the phantom root's branch and it's the first descendant
+            if (cur_node == curVizObj.generalConfig.phantomRoot && desc_i == 0) {
+
+                // do not decrease the brightness
+                colour_assignment[desc] = prev_colour;
+            }
+            // we're not on the phantom root branch's first descendant
+            else {
+                // colour the descendant a lighter version of the previous colour in the chain
+                colour_assignment[desc] = 
+                    _decrease_brightness(prev_colour, 20);
+
+                // set the previous colour to the lightened colour
+                prev_colour = colour_assignment[desc]; 
+            }
+        })
+    }
+
+
+    // get the alpha colour assignment
+    Object.keys(colour_assignment).forEach(function(key, key_idx) {
+        alpha_colour_assignment[key] = 
+            _increase_brightness(colour_assignment[key], curVizObj.userConfig.alpha);
+    });
+
+    return {"colour_assignment": colour_assignment, "alpha_colour_assignment": alpha_colour_assignment};
+}
+
+/* function to calculate colours for genotypes (not based on phylogeny)
 * @param {Array} gtypes -- gtypes in dataset, for which we need colours
 */
-function _getColours(gtypes) {
+function _getGtypeColours(gtypes) {
 
     var colour_assignment = {};
 
