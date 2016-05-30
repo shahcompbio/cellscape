@@ -134,6 +134,7 @@ HTMLWidgets.widget({
 
         // get genotype tree structure
         if (curVizObj.userConfig.gtype_tree_edges) {
+            // genotype tree edges from user
             var gtype_tree_edges = $.extend([], curVizObj.userConfig.gtype_tree_edges);
 
             // find tree root
@@ -153,13 +154,13 @@ HTMLWidgets.widget({
             })
 
             // get tree structure
-            var nodesByName = []; // array of trees rooted at each node 
+            var rootedTrees = []; // array of trees rooted at each node 
             for (var i = 0; i < gtype_tree_edges.length; i++) {
-                var parent = _gt_findNodeByName(nodesByName, gtype_tree_edges[i].source);
-                var child = _gt_findNodeByName(nodesByName, gtype_tree_edges[i].target);
+                var parent = _gt_findTreeByRoot(rootedTrees, gtype_tree_edges[i].source);
+                var child = _gt_findTreeByRoot(rootedTrees, gtype_tree_edges[i].target);
                 parent["children"].push(child);
             }
-            var root_tree = _gt_findNodeByName(nodesByName, curVizObj.generalConfig.phantomRoot); 
+            var root_tree = _gt_findTreeByRoot(rootedTrees, curVizObj.generalConfig.phantomRoot); // phantom root tree
             curVizObj.data.gtypeTreeStructure = root_tree; 
         }
 
@@ -167,8 +168,7 @@ HTMLWidgets.widget({
         curVizObj.data.treeStructures = _getTreeStructures(curVizObj.userConfig.sc_tree_edges);
         
         // the root tree structure
-        curVizObj.data.treeStructure = 
-            _.findWhere(curVizObj.data.treeStructures, {sc_id: curVizObj.userConfig.root});
+        curVizObj.data.treeStructure = _.findWhere(curVizObj.data.treeStructures, {sc_id: curVizObj.userConfig.root});
 
         // get descendants for each node
         curVizObj.data.treeDescendantsArr = {};
@@ -208,8 +208,10 @@ HTMLWidgets.widget({
         }
 
         // order single cells by tree
-        curVizObj.data.hm_sc_ids = 
-            _getNodeOrder(curVizObj.data.treeDescendantsArr, curVizObj.userConfig.link_ids, curVizObj.userConfig.root, []);
+        curVizObj.data.hm_sc_ids = _getNodeOrder(curVizObj.data.treeDescendantsArr, 
+                                                 curVizObj.userConfig.link_ids, 
+                                                 curVizObj.userConfig.root, 
+                                                 []);
 
         // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
         for (var i = 0; i < curVizObj.userConfig.scs_missing_from_hm.length; i++) {
@@ -280,7 +282,7 @@ HTMLWidgets.widget({
             }
             // genotype tree not provided - random colours
             else {
-               curVizObj.view.colour_assignment = _getGtypeColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));             
+                curVizObj.view.colour_assignment = _getGtypeColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));             
             }
         }
 

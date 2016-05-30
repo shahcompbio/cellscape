@@ -237,7 +237,7 @@ function _pushScissorsButton(curVizObj) {
 * @param {Array} list - list of nodes
 * @param {String} name - name of key to find
 */
-function _gt_findNodeByName(list, name) {
+function _gt_findTreeByRoot(list, name) {
     var foundNode = _.findWhere(list, {id: name}),
         curNode;
 
