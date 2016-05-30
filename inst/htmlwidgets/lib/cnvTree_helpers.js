@@ -60,10 +60,9 @@ function _clearBrush(curVizObj) {
 */
 function _mouseoverGroupAnnot(genotype, curVizObj) {
     // highlight indicator & node for all sc's with this genotype annotation id
-    curVizObj.data.gtypes[genotype].forEach(function(sc) {
-        _highlightIndicator(sc, curVizObj);
-        _highlightNode(sc, curVizObj);
-    })
+    d3.select("#" + curVizObj.view_id).selectAll(".indic.gtype_" + genotype).style("fill-opacity", 1);
+    d3.select("#" + curVizObj.view_id).selectAll(".node.gtype_" + genotype)
+        .style("fill", curVizObj.generalConfig.highlightColour);
 
     // highlight genotype annotation rectangle in legend
     _highlightGroupAnnotLegendRect(genotype, curVizObj);
@@ -910,7 +909,9 @@ function _plotForceDirectedGraph(curVizObj) {
     // node circles
     var nodeCircle = nodeG.append("circle")
         .attr("class", function(d) {
-            return "graph node node_" + d.sc_id;
+            // get genotype
+            var gtype = _getGenotype(curVizObj, d.sc_id);
+            return "graph node node_" + d.sc_id + " gtype_" + gtype;
         })
         .attr("r", function() {
             // if user wants to display node ids 
@@ -1160,7 +1161,9 @@ function _plotAlignedPhylogeny(curVizObj) {
 
     nodeG.append("circle")   
         .attr("class", function(d) {
-            return "tree node node_" + d.sc_id;
+            // get genotype
+            var gtype = _getGenotype(curVizObj, d.sc_id);
+            return "tree node node_" + d.sc_id + " gtype_" + gtype;
         })  
         .attr("cx", function(d) { 
             d.x = curVizObj.data.xCoordinates[d.sc_id];
@@ -1288,8 +1291,22 @@ function _scaleTree(curVizObj) {
     
     // scale or unscale graph
     _rePlotForceLayout(curVizObj);
+}
 
-       
+/* function to get a genotype for a given single cell id
+* @param {Object} curVizObj
+* @param {String} sc_id -- single cell id
+*/
+function _getGenotype(curVizObj, sc_id) {
+    // there are single cell annotations provided by user
+    if (curVizObj.userConfig.sc_annot) {
+        var sc_w_gtype = _.findWhere(curVizObj.userConfig.sc_annot, {"single_cell_id": sc_id});
+        // if there's an annotation for this single cell, return it, otherwise return "none"
+        return (sc_w_gtype) ? sc_w_gtype.genotype : "none";
+    }
+    else {
+        return "none";
+    }
 }
 
 // GROUP ANNOTATION FUNCTIONS
