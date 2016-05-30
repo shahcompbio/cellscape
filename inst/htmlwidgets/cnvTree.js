@@ -972,13 +972,13 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         // highlight indicator & node for all sc's with this genotype annotation id,
                         // highlight genotype annotation rectangle in legend
-                        _mouseoverGroupAnnot(d.genotype, curVizObj);
+                        _mouseoverGroupAnnot(d.genotype, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, genotype annotation rectangles in legend
-                        _mouseoutGroupAnnot(curVizObj);
+                        _mouseoutGroupAnnot(curVizObj.view_id);
                     }
                 });
         }
@@ -1202,13 +1202,13 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         // highlight indicator & node for all sc's with this genotype annotation id,
                         // highlight genotype annotation rectangle in legend
-                        _mouseoverGroupAnnot(d, curVizObj);
+                        _mouseoverGroupAnnot(d, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, genotype annotation rectangles in legend
-                        _mouseoutGroupAnnot(curVizObj);
+                        _mouseoutGroupAnnot(curVizObj.view_id);
                     }
                 });
 
@@ -1229,20 +1229,20 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         // highlight indicator & node for all sc's with this genotype annotation id,
                         // highlight genotype annotation rectangle in legend
-                        _mouseoverGroupAnnot(d, curVizObj);
+                        _mouseoverGroupAnnot(d, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, genotype annotation rectangles in legend
-                        _mouseoutGroupAnnot(curVizObj);
+                        _mouseoutGroupAnnot(curVizObj.view_id);
                     }
                 });
         }
 
 
         // RUN TIMESWEEP
-        _run_timesweep(el.id, config.width, config.tsViewHeight, x);
+        _run_timesweep(el.id, config.width, config.tsViewHeight, x, true);
 
 
     },

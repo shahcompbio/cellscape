@@ -26,7 +26,7 @@ function _brushEnd(curVizObj, brush) {
             _highlightNode(sc_id, curVizObj);    
         });
     } else {
-        _clearBrush(curVizObj);
+        _clearBrush(curVizObj.view_id);
     }
 
     // clear brush
@@ -44,41 +44,42 @@ function _checkForSelections(curVizObj) {
 
 /* function to clear any brush selection
 */
-function _clearBrush(curVizObj) {
-    d3.select("#" + curVizObj.view_id).select(".cnvSVG").classed("brushed", false)
-    d3.select("#" + curVizObj.view_id).selectAll(".gridCell").classed("active", false)
+function _clearBrush(view_id) {
+    d3.select("#" + view_id).select(".cnvSVG").classed("brushed", false)
+    d3.select("#" + view_id).selectAll(".gridCell").classed("active", false)
 
     // reset nodes and indicators
-    _resetNodes(curVizObj);
-    _resetIndicators(curVizObj);
+    _resetNodes(view_id);
+    _resetIndicators(view_id);
 }
 
 /* mouseover function for genotype annotations
 * highlights indicator & node for all sc's with this genotype annotation id, highlights genotype annotation rectangle in legend
 * @param {String} genotype -- genotype to highlight
-* @param {Object} curVizObj
+* @param {String} highlightColour -- colour to highlight indicators/nodes
+* @param {String} view_id -- id of current view
 */
-function _mouseoverGroupAnnot(genotype, curVizObj) {
+function _mouseoverGroupAnnot(genotype, highlightColour, view_id) {
     // highlight indicator & node for all sc's with this genotype annotation id
-    d3.select("#" + curVizObj.view_id).selectAll(".indic.gtype_" + genotype).style("fill-opacity", 1);
-    d3.select("#" + curVizObj.view_id).selectAll(".node.gtype_" + genotype)
-        .style("fill", curVizObj.generalConfig.highlightColour);
+    d3.select("#" + view_id).selectAll(".indic.gtype_" + genotype).style("fill-opacity", 1);
+    d3.select("#" + view_id).selectAll(".node.gtype_" + genotype)
+        .style("fill", highlightColour);
 
     // highlight genotype annotation rectangle in legend
-    _highlightGroupAnnotLegendRect(genotype, curVizObj);
+    _highlightGroupAnnotLegendRect(genotype, highlightColour, view_id);
 }
 
 /* mouseover function for genotype annotations
 * reset indicators, nodes, genotype annotation rectangles in legend
-* @param {Object} curVizObj
+* @param {String} view_id -- id of current view
 */
-function _mouseoutGroupAnnot(curVizObj) {
+function _mouseoutGroupAnnot(view_id) {
     // reset indicators & nodes
-    _resetIndicators(curVizObj);
-    _resetNodes(curVizObj);
+    _resetIndicators(view_id);
+    _resetNodes(view_id);
 
     // reset genotype annotation rectangles in legend
-    _resetGroupAnnotLegendRects(curVizObj);
+    _resetGroupAnnotLegendRects(view_id);
 }
 
 /* function to highlight a node in the tree
@@ -92,17 +93,18 @@ function _highlightNode(sc_id, curVizObj) {
 
 /* function to highlight a genotype annotation rectangle in the legend
 * @param {String} gtype_id -- genotype id
-* @param {Object} curVizObj
+* @param {String} highlightColour -- colour to highlight indicators/nodes
 */
-function _highlightGroupAnnotLegendRect(gtype_id, curVizObj) {
-    d3.select("#" + curVizObj.view_id).select(".legendGroupRect.gtype_" + gtype_id)
-        .attr("stroke", curVizObj.generalConfig.highlightColour);
+function _highlightGroupAnnotLegendRect(gtype_id, highlightColour, view_id) {
+    d3.select("#" + view_id).select(".legendGroupRect.gtype_" + gtype_id)
+        .attr("stroke", highlightColour);
 }
 
 /* function to unhighlight genotype annotation rectangles in the legend
+* @param {String} view_id -- id of current view
 */
-function _resetGroupAnnotLegendRects(curVizObj) {
-    d3.select("#" + curVizObj.view_id).selectAll(".legendGroupRect")
+function _resetGroupAnnotLegendRects(view_id) {
+    d3.select("#" + view_id).selectAll(".legendGroupRect")
         .attr("stroke", "none");
 }
 
@@ -135,13 +137,11 @@ function _resetIndicator(curVizObj, sc_id) {
 }
 
 /* function to reset all nodes in the tree
-* @param {Object} curVizObj
+* @param {String} view_id -- id for current view
 */
-function _resetNodes(curVizObj) {
-    d3.select("#" + curVizObj.view_id).selectAll(".node")
-        .style("fill", function(d) {
-            return _getNodeFill(curVizObj, d.sc_id);
-        });
+function _resetNodes(view_id) {
+    d3.select("#" + view_id).selectAll(".node")
+        .style("fill", function(d) { return d.fill; });
 }
 
 /* function to get the fill colour of a node
@@ -177,10 +177,10 @@ function _getNodeStroke(curVizObj, sc_id) {
 }
 
 /* function to reset all indicators for a single cell
-* @param {String} sc_id -- single cell id
+* @param {String} view_id -- id for the current view
 */
-function _resetIndicators(curVizObj) {
-    d3.select("#" + curVizObj.view_id).selectAll(".indic")
+function _resetIndicators(view_id) {
+    d3.select("#" + view_id).selectAll(".indic")
         .style("fill-opacity", 0);
 }
 
@@ -201,7 +201,7 @@ function _pushBrushSelectionButton(brush, curVizObj) {
     // deselect brush tool
     if (d3.select("#" + curVizObj.view_id).select(".selectionButton").classed("brushButtonSelected")) {
         // deselect any nodes and indicators
-        _clearBrush(curVizObj);
+        _clearBrush(curVizObj.view_id);
 
         // remove brush tool
         d3.select("#" + curVizObj.view_id).select(".brush").remove();
@@ -922,7 +922,7 @@ function _plotForceDirectedGraph(curVizObj) {
             return config.tree_r;
         })
         .attr("fill", function(d) {
-             return _getNodeFill(curVizObj, d.sc_id);
+            return d.fill = _getNodeFill(curVizObj, d.sc_id);
         })
         .attr("stroke", function(d) {
             return _getNodeStroke(curVizObj, d.sc_id);
@@ -1177,7 +1177,7 @@ function _plotAlignedPhylogeny(curVizObj) {
             return _getNodeStroke(curVizObj, d.sc_id);
         })           
         .attr("fill", function(d) {
-            return _getNodeFill(curVizObj, d.sc_id);
+            return d.fill = _getNodeFill(curVizObj, d.sc_id);
         })
         .attr("r", r)
         .attr("fill-opacity", config.treeOpacity)
