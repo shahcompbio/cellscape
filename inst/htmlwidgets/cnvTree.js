@@ -1257,7 +1257,7 @@ HTMLWidgets.widget({
 
 
         // RUN TIMESWEEP
-        _run_timesweep(el.id, config.width, config.tsViewHeight, x, true);
+        _run_timesweep(el.id, config.width, config.tsViewHeight, x);
 
 
     },

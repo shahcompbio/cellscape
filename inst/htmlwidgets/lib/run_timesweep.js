@@ -4,7 +4,7 @@
 * @param {Number} height -- height of the view
 * @param {Object} userConfig -- user configurations
 */
-function _run_timesweep(view_id, width, height, userConfig, linked) {
+function _run_timesweep(view_id, width, height, userConfig) {
 
 	// defaults
 	var defaults = {
@@ -913,7 +913,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	    });
 
 	    // if linked to single cell data
-	    if (linked && (typeof _mouseoverGroupAnnot == 'function')) {
+	    if (typeof _mouseoverGroupAnnot == 'function') {
 	    	curVizObj.view.propagation.node_ids.forEach(function(node) {
 		    	// highlight this genotype in the single cell view
 		    	_mouseoverGroupAnnot(node, "black", curVizObj.view_id);
