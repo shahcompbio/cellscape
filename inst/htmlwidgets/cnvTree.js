@@ -47,7 +47,7 @@ HTMLWidgets.widget({
 
             // heatmap and genotype legends
             heatmapLegendWidth: 110,
-            legendTitleHeight: 14, // height of legend titles
+            legendTitleHeight: 15, // height of legend titles
             rectHeight: 12, // rectangle in legend
             rectSpacing: 2, // spacing between legend rectangles
             legendFontHeight: 12,
@@ -992,6 +992,7 @@ HTMLWidgets.widget({
             .attr("y", config.heatmapLegendStartY) 
             .attr("dy", "+0.71em")
             .attr("font-family", "Arial")
+            .attr("font-weight", "bold")
             .attr("font-size", config.legendTitleHeight)
             .text(function() {
                 return (curVizObj.userConfig.heatmap_type == "cnv") ? "CNV" : "VAF";
@@ -1165,8 +1166,9 @@ HTMLWidgets.widget({
                 .attr("y", config.gtypeAnnotStartY)
                 .attr("dy", "+0.71em")
                 .attr("font-family", "Arial")
+                .attr("font-weight", "bold")
                 .attr("font-size", config.legendTitleHeight)
-                .text("Group");
+                .text("Genotype");
 
             // genotype annotation legend rectangle / text genotype
             var gtypeAnnotLegendG = curVizObj.view.cnvLegendSVG
