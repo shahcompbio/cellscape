@@ -983,7 +983,7 @@ HTMLWidgets.widget({
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, genotype annotation rectangles in legend
-                        _mouseoutGroupAnnot(curVizObj.view_id);
+                        _mouseoutGroupAnnot(curVizObj.view_id, curVizObj.userConfig.time_space_view_provided);
                     }
                 });
         }
@@ -1218,7 +1218,7 @@ HTMLWidgets.widget({
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, genotype annotation rectangles in legend
-                        _mouseoutGroupAnnot(curVizObj.view_id);
+                        _mouseoutGroupAnnot(curVizObj.view_id, curVizObj.userConfig.time_space_view_provided);
                     }
                 });
 
@@ -1250,7 +1250,7 @@ HTMLWidgets.widget({
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, genotype annotation rectangles in legend
-                        _mouseoutGroupAnnot(curVizObj.view_id);
+                        _mouseoutGroupAnnot(curVizObj.view_id, curVizObj.userConfig.time_space_view_provided);
                     }
                 });
         }

@@ -503,7 +503,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	    })
 	    .on('mouseout', function(d) {
 	        if (!dim.selectOn && !dim.mutSelectOn) {
-	            _resetView(curVizObj);
+	            _resetView(dim.switchView, curVizObj.view_id);
 	        }
 	    });
 
@@ -778,7 +778,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	        }
 	        // we're not selecting nodes or mutations - mouseout as normal
 	        if (!dim.selectOn && !dim.mutSelectOn) {
-	            return _resetView(curVizObj);
+	            return _resetView(dim.switchView, curVizObj.view_id);
 	        }
 	    })
 	    .on("click", function(d) {
@@ -789,7 +789,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	            dim.nClickedNodes++; // increment the number of clicked nodes
 
 	            // reset view (get rid of any labels, etc.)
-	            _hideLabels(curVizObj);
+	            _hideLabels(dim.switchView, curVizObj.view_id);
 
 	            // get data for this clone
 	            var filtered_muts = 
@@ -1043,7 +1043,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	            })
 	            .on('mouseout', function(d) {
 	                if (!dim.selectOn && !dim.mutSelectOn) {
-	                    _resetView(curVizObj);
+	                    _resetView(dim.switchView, curVizObj.view_id);
 	                }
 	            })
 	            .transition()
@@ -1051,47 +1051,6 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	            .attrTween("d", _pathTween(curVizObj, "move"));
 	    }
 	    dim.switchView = !dim.switchView;
-	}
-
-	/* function to reset the main timesweep view and legend
-	* @param {Object} curVizObj -- vizObj for the current view
-	*/
-	function _resetView(curVizObj) {
-	    var dim = curVizObj.generalConfig,
-	        colour_assignment = curVizObj.view.colour_assignment,
-	        alpha_colour_assignment = curVizObj.view.alpha_colour_assignment,
-	        x = curVizObj.userConfig;
-
-	    // reset colours in timesweep
-	    d3.select("#" + curVizObj.view_id).selectAll('.tsPlot')
-	        .attr('fill', function(d) { 
-	            return d.fill;
-	        })
-	        .attr('stroke', function(d) { 
-	            return d.stroke;
-	        });
-
-	    // reset node colours in legend
-	    d3.select("#" + curVizObj.view_id).selectAll('.legendTreeNode')
-	        .attr('fill', function(d) { 
-	            return d.fill;
-	        })
-	        .attr('stroke', function(d) { 
-	            return d.stroke;
-	        });
-
-	    // reset links in legend
-	    d3.select("#" + curVizObj.view_id).selectAll('.legendTreeLink')
-	        .attr("stroke-opacity", 1);
-
-	    // hide labels
-	    _hideLabels(curVizObj);
-
-	    // if linked to single cell data view
-	    if (linked && (typeof _mouseoutGroupAnnot == 'function')) {
-	    	_mouseoutGroupAnnot(curVizObj.view_id);
-	    }
-
 	}
 
 	/* Create clonal prevalence labels with fill opacity 0
@@ -1218,28 +1177,6 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
             .style('pointer-events', 'none');
 	}
 
-	/* function to hide labels and label circles
-	* @param {Object} curVizObj -- vizObj for the current view
-	*/
-	function _hideLabels(curVizObj) {
-	    var dim = curVizObj.generalConfig;
-	    var curView = d3.select("#" + curVizObj.view_id);
-
-	    // traditional view
-	    if (dim.switchView) { 
-	    	curView.selectAll(".label").attr("fill-opacity", 0)
-	    		.text(function() { return ""; }); // text removed for purposes of svg download (otherwise will show up)
-	    	curView.selectAll(".labelCirc").attr("fill-opacity", 0);
-	    }
-
-	    // tracks view
-	    else { 
-	    	curView.selectAll(".sepLabel").attr("fill-opacity", 0)
-	    		.text(function() { return ""; }); // text removed for purposes of svg download (otherwise will show up)
-	    	curView.selectAll(".sepLabelCirc").attr("fill-opacity", 0);
-	    }
-	}
-
 	/* background click function (turns off selections, resets view)
 	* @param {Object} curVizObj -- vizObj for the current view
 	*/
@@ -1272,7 +1209,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	        curTip.hide();
 	    })
 
-	    _resetView(curVizObj);
+	    _resetView(dim.switchView, curVizObj.view_id);
 	}
 
 	// TREE FUNCTIONS
@@ -3457,5 +3394,64 @@ function _showLabels(gtype, view_id, switchView) {
     		.text(function(d) { return d.label_text; });
     	curView.selectAll(".sepLabelCirc.gtype_" + gtype).attr("fill-opacity", 1);
     }
+}
+
+/* function to hide labels and label circles
+* @param {Boolean} switchView -- whether the view is on traditional or tracks
+* @param {String} view_id -- id for current view
+*/
+function _hideLabels(switchView, view_id) {
+    var curView = d3.select("#" + view_id);
+
+    // traditional view
+    if (switchView) { 
+    	curView.selectAll(".label").attr("fill-opacity", 0)
+    		.text(function() { return ""; }); // text removed for purposes of svg download (otherwise will show up)
+    	curView.selectAll(".labelCirc").attr("fill-opacity", 0);
+    }
+
+    // tracks view
+    else { 
+    	curView.selectAll(".sepLabel").attr("fill-opacity", 0)
+    		.text(function() { return ""; }); // text removed for purposes of svg download (otherwise will show up)
+    	curView.selectAll(".sepLabelCirc").attr("fill-opacity", 0);
+    }
+}
+
+/* function to reset the main timesweep view and legend
+* @param {Boolean} switchView -- whether the view is on traditional or tracks
+* @param {String} view_id -- id for current view
+*/
+function _resetView(switchView, view_id) {
+    // reset colours in timesweep
+    d3.select("#" + view_id).selectAll('.tsPlot')
+        .attr('fill', function(d) { 
+            return d.fill;
+        })
+        .attr('stroke', function(d) { 
+            return d.stroke;
+        });
+
+    // reset node colours in legend
+    d3.select("#" + view_id).selectAll('.legendTreeNode')
+        .attr('fill', function(d) { 
+            return d.fill;
+        })
+        .attr('stroke', function(d) { 
+            return d.stroke;
+        });
+
+    // reset links in legend
+    d3.select("#" + view_id).selectAll('.legendTreeLink')
+        .attr("stroke-opacity", 1);
+
+    // hide labels
+    _hideLabels(switchView, view_id);
+
+    // if linked to single cell data view
+    if (typeof _mouseoutGroupAnnot == 'function') {
+    	_mouseoutGroupAnnot(view_id);
+    }
+
 }
 

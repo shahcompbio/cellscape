@@ -82,14 +82,20 @@ function _mouseoverGroupAnnot(genotype, highlightColour, view_id, colour_assignm
 /* mouseover function for genotype annotations
 * reset indicators, nodes, genotype annotation rectangles in legend
 * @param {String} view_id -- id of current view
+* @param {String} time_space -- if time or space view provided, this string should be "time" or "space", respectively
 */
-function _mouseoutGroupAnnot(view_id) {
+function _mouseoutGroupAnnot(view_id, time_space) {
     // reset indicators & nodes
     _resetIndicators(view_id);
     _resetNodes(view_id);
 
     // reset genotype annotation rectangles in legend
     _resetGroupAnnotLegendRects(view_id);
+
+    // highlight genotype in timesweep
+    if (time_space == "time") {
+        _resetView(true, view_id); // TODO switchView
+    }
 }
 
 /* function to highlight a node in the tree
