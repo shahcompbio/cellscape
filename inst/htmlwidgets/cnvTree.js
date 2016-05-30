@@ -133,7 +133,7 @@ HTMLWidgets.widget({
         // GET TREE CONTENT
 
         // get genotype tree structure
-        // if (time_space_view_provided) {
+        // if (curVizObj.userConfig.time_space_view_provided) {
         //     var nodesByName = [];
         //     for (var i = 0; i < curVizObj.userConfig.tree_edges.length; i++) {
         //         var parent = _ts_findNodeByName(nodesByName, curVizObj.userConfig.tree_edges[i].source);
@@ -169,7 +169,7 @@ HTMLWidgets.widget({
         curVizObj.data.direct_ancestors = _getDirectAncestors(curVizObj.data.treeStructure, {});
 
         // get linear chains in genotype tree
-        if (time_space_view_provided) {
+        if (curVizObj.userConfig.time_space_view_provided) {
             curVizObj.data.treeChainRoots = []; // keep track of linear chain segment roots
             curVizObj.data.treeChains = _getLinearTreeSegments(curVizObj, curVizObj.data.treeStructure, {}, "");
         }
@@ -1207,7 +1207,7 @@ HTMLWidgets.widget({
 
 
         // RUN TIMESWEEP
-        _run_timesweep(el.id, config.width, config.tsViewHeight, x, curVizObj);
+        _run_timesweep(el.id, config.width, config.tsViewHeight, x);
 
 
     },
