@@ -886,6 +886,14 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	                return colour_assignment[d.gtype]; 
 	            });
 	    });
+
+	    // if linked to single cell data
+	    if (linked && (typeof _mouseoverGroupAnnot == 'function')) {
+	    	curVizObj.view.propagation.node_ids.forEach(function(node) {
+		    	// highlight this genotype in the single cell view
+		    	_mouseoverGroupAnnot(node, "black", curVizObj.view_id);
+		    });
+	    }
 	};
 
 
@@ -1046,7 +1054,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	        });
 
 	    // if this view is linked to single cell data view
-	    if (linked) {
+	    if (linked && (typeof _mouseoverGroupAnnot == 'function')) {
 	    	_mouseoverGroupAnnot(gtype, "black", curVizObj.view_id);
 	    }
 	}
@@ -1129,7 +1137,7 @@ function _run_timesweep(view_id, width, height, userConfig, linked) {
 	    _removeLabels(curVizObj);
 
 	    // if linked to single cell data view
-	    if (linked) {
+	    if (linked && (typeof _mouseoutGroupAnnot == 'function')) {
 	    	_mouseoutGroupAnnot(curVizObj.view_id);
 	    }
 
