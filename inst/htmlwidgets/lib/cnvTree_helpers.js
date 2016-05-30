@@ -233,6 +233,22 @@ function _pushScissorsButton(curVizObj) {
 
 // TREE FUNCTIONS
 
+/* function to find a key by its name - if the key doesn't exist, it will be created and added to the list of nodes
+* @param {Array} list - list of nodes
+* @param {String} name - name of key to find
+*/
+function _gt_findNodeByName(list, name) {
+    var foundNode = _.findWhere(list, {id: name}),
+        curNode;
+
+    if (!foundNode) {
+        curNode = {'id': name, 'children': []};
+        list.push(curNode);
+        return curNode;
+    }
+
+    return foundNode;
+}
 
 /*
 * function to, using the tree hierarchy, get the linear segments' starting key and length (including starting key)
@@ -241,7 +257,7 @@ function _pushScissorsButton(curVizObj) {
 *                           (key is segment start key, value is array of descendants in this chain)
 * @param {Object} base -- the base key of this chain (originally "")
 */
-function _getLinearTreeSegments(curVizObj, curNode, chains, base) {
+function _gt_getLinearTreeSegments(curVizObj, curNode, chains, base) {
 
     // if it's a new base, create the base, with no descendants in its array yet
     if (base == "") {
@@ -256,13 +272,13 @@ function _getLinearTreeSegments(curVizObj, curNode, chains, base) {
 
     // if the current key has 1 child to search through
     if (curNode.children.length == 1) { 
-        _getLinearTreeSegments(curVizObj, curNode.children[0], chains, base);
+        _gt_getLinearTreeSegments(curVizObj, curNode.children[0], chains, base);
     }
 
     // otherwise for each child, create a blank base (will become that child)
     else {
         for (var i = 0; i < curNode.children.length; i++) {
-            _getLinearTreeSegments(curVizObj, curNode.children[i], chains, "");
+            _gt_getLinearTreeSegments(curVizObj, curNode.children[i], chains, "");
         }
     }
 
