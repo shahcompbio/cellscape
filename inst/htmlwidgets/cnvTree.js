@@ -110,8 +110,7 @@ HTMLWidgets.widget({
         // tree configurations
         config.treeHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingGeneral*2;
 
-        // legend starts
-        config.gtypeAnnotStartY = 140 + config.paddingGeneral; // starting y-pixel for genotype annotation legend
+        // heatmap legend start
         config.heatmapLegendStartY = 1 + config.paddingGeneral; // starting y-pixel for heatmap legend
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
@@ -300,7 +299,7 @@ HTMLWidgets.widget({
         if (curVizObj.view.gtypesSpecified) {
 
             // sorted timepoints
-            var tps = _.uniq(_.pluck(curVizObj.userConfig.sc_annot, "sample_id")).sort(function(a, b) {
+            curVizObj.data.tps = _.uniq(_.pluck(curVizObj.userConfig.sc_annot, "sample_id")).sort(function(a, b) {
                                                                                           var regex = /(^[a-zA-Z]*)(\d*)$/;
                                                                                           matchA = regex.exec(a);
                                                                                           matchB = regex.exec(b); 
@@ -312,8 +311,8 @@ HTMLWidgets.widget({
                                                                                         });
 
             curVizObj.view.tp_colourScale = d3.scale.ordinal()
-                .domain(tps)
-                .range(colorbrewer["Greys"][tps.length]);
+                .domain(curVizObj.data.tps)
+                .range(colorbrewer["Greys"][curVizObj.data.tps.length]);
         }
 
         // BRUSH SELECTION FUNCTION
@@ -1237,8 +1236,9 @@ HTMLWidgets.widget({
                 .attr("font-size", config.legendFontHeight)
                 .style("fill", "black");
         }
+        config.gtypeAnnotStartY = legendRectStart + legendRectHeight + config.paddingGeneral; // starting y-pixel for genotype annotation legend
 
-        // GROUP ANNOTATION LEGEND
+        // GENOTYPE ANNOTATION LEGEND
         if (curVizObj.view.gtypesSpecified) {
 
             // genotype annotation legend title
@@ -1323,6 +1323,101 @@ HTMLWidgets.widget({
                         if (typeof _hideLabels == 'function') {
                             _hideLabels(view_id);
                         }
+                    }
+                });
+
+            // note end of genotype annotation legend
+            config.gtypeAnnotEndY = config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 
+                + Object.keys(curVizObj.data.gtypes).length*(config.rectHeight + config.rectSpacing) 
+                + config.legendFontHeight;
+        }
+
+
+        // TIMEPOINT ANNOTATION LEGEND
+        if (curVizObj.view.tpsSpecified) {
+
+            // genotype annotation legend title
+            curVizObj.view.cnvLegendSVG.append("text")
+                .attr("x", config.paddingGeneral)
+                .attr("y", config.gtypeAnnotEndY)
+                .attr("dy", "+0.71em")
+                .attr("font-family", "Arial")
+                .attr("font-weight", "bold")
+                .attr("font-size", config.legendTitleHeight)
+                .text("Timepoint");
+
+            // genotype annotation legend rectangle / text genotype
+            var tpAnnotLegendG = curVizObj.view.cnvLegendSVG
+                .selectAll(".tpAnnotLegendG")
+                .data(curVizObj.data.tps)
+                .enter()
+                .append("g")
+                .classed("tpAnnotLegendG", true);
+
+            // genotype annotation legend rectangles
+            tpAnnotLegendG
+                .append("rect")
+                .attr("class", function(d) { return "legendTpRect gtype_" + d; })
+                .attr("x", config.paddingGeneral)
+                .attr("y", function(d,i) {
+                    return config.gtypeAnnotEndY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
+                })
+                .attr("height", config.rectHeight)
+                .attr("width", config.rectHeight)
+                .attr("fill", function(d) {
+                    return curVizObj.view.tp_colourScale(d);
+                })
+                .attr("stroke", function(d) {
+                    return curVizObj.view.tp_colourScale(d);
+                })
+                .on("mouseover", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                        // _mouseoverGenotype(d, view_id);
+                        // // show labels in timesweep
+                        // if (typeof _showLabels == 'function') {
+                        //     _showLabels(d, view_id);
+                        // }
+                    }
+                })
+                .on("mouseout", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                    //     _mouseoutGenotype(view_id);
+                    //     // hide labels in timesweep
+                    //     if (typeof _hideLabels == 'function') {
+                    //         _hideLabels(view_id);
+                    //     }
+                    }
+                });
+
+            // genotype annotation legend text
+            tpAnnotLegendG
+                .append("text")
+                .attr("class", function(d) { return "legendTpText gtype_" + d; })
+                .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
+                .attr("y", function(d,i) {
+                    return config.gtypeAnnotEndY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
+                })
+                .attr("dy", "+0.35em")
+                .text(function(d) { return d; })
+                .attr("font-family", "Arial")
+                .attr("font-size", config.legendFontHeight)
+                .attr("fill", "black")
+                .on("mouseover", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                        // _mouseoverGenotype(d, view_id);
+                        // // show labels in timesweep
+                        // if (typeof _showLabels == 'function') {
+                        //     _showLabels(d, view_id);
+                        // }
+                    }
+                })
+                .on("mouseout", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                        // _mouseoutGenotype(view_id);
+                        // // hide labels in timesweep
+                        // if (typeof _hideLabels == 'function') {
+                        //     _hideLabels(view_id);
+                        // }
                     }
                 });
         }
