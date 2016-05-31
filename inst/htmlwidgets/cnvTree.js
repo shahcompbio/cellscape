@@ -1049,12 +1049,12 @@ HTMLWidgets.widget({
                 .attr("stroke", "none")
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-
+                        _mouseoverTp(d.sample_id, view_id);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-
+                        _mouseoutTp(view_id);
                     }
                 });
         }
@@ -1357,7 +1357,7 @@ HTMLWidgets.widget({
             // genotype annotation legend rectangles
             tpAnnotLegendG
                 .append("rect")
-                .attr("class", function(d) { return "legendTpRect gtype_" + d; })
+                .attr("class", function(d) { return "legendTpRect tp_" + d; })
                 .attr("x", config.paddingGeneral)
                 .attr("y", function(d,i) {
                     return config.gtypeAnnotEndY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
@@ -1372,27 +1372,19 @@ HTMLWidgets.widget({
                 })
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // _mouseoverGenotype(d, view_id);
-                        // // show labels in timesweep
-                        // if (typeof _showLabels == 'function') {
-                        //     _showLabels(d, view_id);
-                        // }
+                        _mouseoverTp(d, view_id);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                    //     _mouseoutGenotype(view_id);
-                    //     // hide labels in timesweep
-                    //     if (typeof _hideLabels == 'function') {
-                    //         _hideLabels(view_id);
-                    //     }
+                        _mouseoutTp(view_id);
                     }
                 });
 
             // genotype annotation legend text
             tpAnnotLegendG
                 .append("text")
-                .attr("class", function(d) { return "legendTpText gtype_" + d; })
+                .attr("class", function(d) { return "legendTpText tp_" + d; })
                 .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                 .attr("y", function(d,i) {
                     return config.gtypeAnnotEndY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
@@ -1404,20 +1396,12 @@ HTMLWidgets.widget({
                 .attr("fill", "black")
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // _mouseoverGenotype(d, view_id);
-                        // // show labels in timesweep
-                        // if (typeof _showLabels == 'function') {
-                        //     _showLabels(d, view_id);
-                        // }
+                        _mouseoverTp(d, view_id);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // _mouseoutGenotype(view_id);
-                        // // hide labels in timesweep
-                        // if (typeof _hideLabels == 'function') {
-                        //     _hideLabels(view_id);
-                        // }
+                        _mouseoutTp(view_id);
                     }
                 });
         }

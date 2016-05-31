@@ -83,7 +83,8 @@ function _mouseoverNode(sc_id, view_id, nodeTip, switchView, sc_annot) {
     var tp = _getTP(sc_annot, sc_id);
     d3.select("#" + view_id).selectAll(".legendGroupRect").classed("inactive", true);
     d3.select("#" + view_id).selectAll(".legendGroupRect.gtype_" + gtype).classed("inactive", false);
-    // _mouseoverTP(tp, view_id); TODO
+    d3.select("#" + view_id).selectAll(".legendTpRect").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".legendTpRect.tp_" + tp).classed("inactive", false);
 }
 
 /* function for node mouseout
@@ -98,8 +99,11 @@ function _mouseoutNode(sc_id, view_id, nodeTip) {
     //unhighlight indicator TODO
     // _resetIndicator(curVizObj, sc_id);
 
-    // reset nodes, etc
+    // reset genotypes
     _mouseoutGenotype(view_id);
+
+    // reset timepoints
+    _mouseoutTp(view_id);
 }
 
 /* function for genotype mouseover
@@ -112,18 +116,37 @@ function _mouseoverGenotype(gtype, view_id) {
     _highlightGenotype(gtype, view_id);
 }
 
+/* function for timepoint mouseover
+* @param {String} tp -- timepoint to highlight
+* @param {String} view_id -- id of current view
+*/
+function _mouseoverTp(tp, view_id) {
+
+    _inactivateTps(view_id);
+    _highlightTp(tp, view_id);
+}
+
 /* function for genotype mouseover
 * @param {String} view_id -- id of current view
 */
 function _mouseoutGenotype(view_id) {
-
-    // activate all
     d3.select("#" + view_id).selectAll(".gtypeAnnot").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendGroupRect").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tsPlot").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendTreeNode").classed("inactive", false);
+}
+
+/* function for timepoint mouseover
+* @param {String} view_id -- id of current view
+*/
+function _mouseoutTp(view_id) {
+    d3.select("#" + view_id).selectAll(".tpAnnot").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".legendTpRect").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tpGuide").attr("stroke-opacity", 0);
 }
 
 /* function to inactivate all genotypes
@@ -138,19 +161,40 @@ function _inactivateGenotypes(view_id) {
     d3.select("#" + view_id).selectAll(".legendTreeNode").classed("inactive", true);
 }
 
+/* function to inactivate all timepoints
+* @param {String} view_id -- id of current view
+*/
+function _inactivateTps(view_id) {
+    d3.select("#" + view_id).selectAll(".tpAnnot").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".legendTpRect").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".tpGuide").attr("stroke-opacity", 0);
+}
+
 /* function to highlight a particular genotype
 * @param {String} gtype -- genotype to highlight
 * @param {String} view_id -- id of current view
 */
 function _highlightGenotype(gtype, view_id) {
-
-    // activate all with this genotype
     d3.select("#" + view_id).selectAll(".gtypeAnnot.gtype_" + gtype).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".graph.node.gtype_" + gtype).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tree.node.gtype_" + gtype).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendGroupRect.gtype_" + gtype).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tsPlot.gtype_" + gtype).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendTreeNode.gtype_" + gtype).classed("inactive", false);
+}
+
+/* function to highlight a particular timepoint
+* @param {String} tp -- timepoint to highlight
+* @param {String} view_id -- id of current view
+*/
+function _highlightTp(tp, view_id) {
+    d3.select("#" + view_id).selectAll(".tpAnnot.tp_" + tp).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".graph.node.tp_" + tp).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tree.node.tp_" + tp).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".legendTpRect.tp_" + tp).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tpGuide.tp_" + tp).attr("stroke-opacity", 1);
 }
 
 

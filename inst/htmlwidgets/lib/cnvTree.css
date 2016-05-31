@@ -48,6 +48,10 @@ ul {
     fill: #ffffff;
 }
 
+.tpAnnot.inactive {
+    fill: #ffffff;
+}
+
 .graph.node.inactive {
     fill: #ffffff;
     stroke: #B7B7B7;
@@ -59,6 +63,11 @@ ul {
 }
 
 .legendGroupRect.inactive {
+    fill: #ffffff;
+    stroke: #B7B7B7;
+}
+
+.legendTpRect.inactive {
     fill: #ffffff;
     stroke: #B7B7B7;
 }
