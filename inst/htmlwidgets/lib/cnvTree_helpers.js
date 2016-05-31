@@ -75,7 +75,8 @@ function _mouseoverGroupAnnot(genotype, highlightColour, view_id, colour_assignm
     if (time_space == "time") {
         _shadeTimeSweep(view_id, colour_assignment, alpha_colour_assignment);
         _shadeLegend(view_id, colour_assignment, alpha_colour_assignment);
-        _gtypeHighlight(genotype, view_id, colour_assignment, alpha_colour_assignment);        
+        _gtypeHighlight(genotype, view_id, colour_assignment, alpha_colour_assignment);  
+        _showLabels(genotype, view_id); 
     }
 }
 
@@ -94,7 +95,7 @@ function _mouseoutGroupAnnot(view_id, time_space) {
 
     // highlight genotype in timesweep
     if (time_space == "time") {
-        _resetView(true, view_id); // TODO switchView
+        _resetView(view_id);
     }
 }
 
