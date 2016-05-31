@@ -982,7 +982,8 @@ HTMLWidgets.widget({
             .append("rect")
             .attr("class", function(d) {
                 var gtype = _getGenotype(curVizObj, d);
-                return "indic sc_" + d + " gtype_" + gtype;
+                var tp = _getTP(curVizObj, d);
+                return "indic sc_" + d + " gtype_" + gtype + " tp_" + tp;
             })
             .attr("x", 0)
             .attr("y", function(d) { 

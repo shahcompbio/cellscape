@@ -916,7 +916,8 @@ function _plotForceDirectedGraph(curVizObj) {
         .attr("class", function(d) {
             // get genotype
             var gtype = _getGenotype(curVizObj, d.sc_id);
-            return "graph node node_" + d.sc_id + " gtype_" + gtype;
+            var tp = _getTP(curVizObj, d.sc_id);
+            return "graph node node_" + d.sc_id + " gtype_" + gtype + " tp_" + tp;
         })
         .attr("r", function() {
             // if user wants to display node ids 
@@ -1166,9 +1167,10 @@ function _plotAlignedPhylogeny(curVizObj) {
 
     nodeG.append("circle")   
         .attr("class", function(d) {
-            // get genotype
+            // get genotype & timepoint
             var gtype = _getGenotype(curVizObj, d.sc_id);
-            return "tree node node_" + d.sc_id + " gtype_" + gtype;
+            var tp = _getTP(curVizObj, d.sc_id);
+            return "tree node node_" + d.sc_id + " gtype_" + gtype + " tp_" + tp;
         })  
         .attr("cx", function(d) { 
             d.x = curVizObj.data.xCoordinates[d.sc_id];
@@ -1298,7 +1300,9 @@ function _scaleTree(curVizObj) {
     _rePlotForceLayout(curVizObj);
 }
 
-/* function to get a genotype for a given single cell id
+// GROUP ANNOTATION FUNCTIONS
+
+/* function to get a genotype annotation for a given single cell id
 * @param {Object} curVizObj
 * @param {String} sc_id -- single cell id
 */
@@ -1314,7 +1318,21 @@ function _getGenotype(curVizObj, sc_id) {
     }
 }
 
-// GROUP ANNOTATION FUNCTIONS
+/* function to get a timepoint annotation for a given single cell id
+* @param {Object} curVizObj
+* @param {String} sc_id -- single cell id
+*/
+function _getTP(curVizObj, sc_id) {
+    // there are single cell annotations provided by user
+    if (curVizObj.userConfig.sc_annot) {
+        var sc_w_gtype = _.findWhere(curVizObj.userConfig.sc_annot, {"single_cell_id": sc_id});
+        // if there's an annotation for this single cell, return it, otherwise return "none"
+        return (sc_w_gtype && sc_w_gtype.sample_id) ? sc_w_gtype.sample_id : "none";
+    }
+    else {
+        return "none";
+    }
+}
 
 /* function to get genotype annotations as object w/properties genotype : [array of single cells]
 * @param {Object} curVizObj
