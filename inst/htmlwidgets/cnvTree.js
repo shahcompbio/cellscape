@@ -823,19 +823,11 @@ HTMLWidgets.widget({
 
         // TOOLTIP FUNCTIONS
 
-        var indicatorTip = d3.tip()
-            .attr('class', 'd3-tip')
-            .offset([-10, 0])
-            .html(function(d) {
-                return "<strong>Cell:</strong> <span style='color:white'>" + d + "</span>";
-            });
-        curVizObj.view.indicatorSVG.call(indicatorTip);
-
         curVizObj.nodeTip = d3.tip()
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function(d) {
-                return "<strong>Cell:</strong> <span style='color:white'>" + d + "</span>";
+                return "<span style='color:white'>" + d + "</span>";
             });
         curVizObj.view.treeSVG.call(curVizObj.nodeTip);
 
@@ -905,22 +897,12 @@ HTMLWidgets.widget({
                     })
                     .on("mouseover", function(d) {
                         if (_checkForSelections(curVizObj)) {
-                            // show indicator tooltip & highlight indicator
-                            indicatorTip.show(d.sc_id, d3.select("#" + view_id).select(".indic.sc_" + d.sc_id).node());
-                            _highlightIndicator(d.sc_id, curVizObj);
-
-                            // highlight node
-                            _highlightNode(d.sc_id, curVizObj);
+                            _mouseoverNode(d.sc_id, view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
                         }
                     })
                     .on("mouseout", function(d) {
                         if (_checkForSelections(curVizObj)) {
-                            // hide indicator tooltip & unhighlight indicator
-                            indicatorTip.hide(d.sc_id);
-                            _resetIndicator(curVizObj, d.sc_id);
-
-                            // reset node
-                            _resetNode(d.sc_id, curVizObj);
+                            _mouseoutNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip);
                         }
                     })
                     .append("title")
@@ -981,8 +963,8 @@ HTMLWidgets.widget({
             .enter()
             .append("rect")
             .attr("class", function(d) {
-                var gtype = _getGenotype(curVizObj, d);
-                var tp = _getTP(curVizObj, d);
+                var gtype = _getGenotype(curVizObj.userConfig.sc_annot, d);
+                var tp = _getTP(curVizObj.userConfig.sc_annot, d);
                 return "indic sc_" + d + " gtype_" + gtype + " tp_" + tp;
             })
             .attr("x", 0)

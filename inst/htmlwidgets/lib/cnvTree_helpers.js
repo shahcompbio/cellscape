@@ -53,6 +53,55 @@ function _clearBrush(view_id) {
     _resetIndicators(view_id);
 }
 
+/* function for node mouseover
+* @param {String} sc_id -- single cell id
+* @param {String} view_id -- id of current view
+* @param {Object} nodeTip -- tooltip for node
+* @param {Boolean} switchView -- which view is on, tree (T) or graph (F)
+* @param {Array} sc_annot -- annotations for single cells (provided by user)
+*/
+function _mouseoverNode(sc_id, view_id, nodeTip, switchView, sc_annot) {
+    // show single cell tooltip
+    if (switchView) {
+        nodeTip.show(sc_id, 
+                          d3.select("#" + view_id).select(".tree.node.node_" + sc_id).node());
+    }
+    else {
+        nodeTip.show(sc_id, 
+                          d3.select("#" + view_id).select(".graph.node.node_" + sc_id).node());
+    }
+
+    // highlight indicator TODO
+    // _highlightIndicator(sc_id, curVizObj);
+
+    // highlight node
+    _inactivateSingleCells(view_id);
+    _highlightSingleCell(sc_id, view_id);
+
+    // highlight node's genotype and timepoint
+    var gtype = _getGenotype(sc_annot, sc_id);
+    var tp = _getTP(sc_annot, sc_id);
+    d3.select("#" + view_id).selectAll(".legendGroupRect").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".legendGroupRect.gtype_" + gtype).classed("inactive", false);
+    // _mouseoverTP(tp, view_id); TODO
+}
+
+/* function for node mouseout
+* @param {String} sc_id -- single cell id
+* @param {String} view_id -- id of current view
+* @param {Object} nodeTip -- tooltip for node
+*/
+function _mouseoutNode(sc_id, view_id, nodeTip) {
+    // hide tooltip
+    nodeTip.hide(sc_id);
+
+    //unhighlight indicator TODO
+    // _resetIndicator(curVizObj, sc_id);
+
+    // reset nodes, etc
+    _mouseoutGenotype(view_id);
+}
+
 /* function for genotype mouseover
 * @param {String} gtype -- genotype to highlight
 * @param {String} view_id -- id of current view
@@ -102,6 +151,24 @@ function _highlightGenotype(gtype, view_id) {
     d3.select("#" + view_id).selectAll(".legendGroupRect.gtype_" + gtype).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tsPlot.gtype_" + gtype).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendTreeNode.gtype_" + gtype).classed("inactive", false);
+}
+
+
+/* function to inactivate all single cells
+* @param {String} view_id -- id of current view
+*/
+function _inactivateSingleCells(view_id) {
+    d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", true);
+}
+
+/* function to highlight a single cell
+* @param {String} sc_id -- single cell id
+* @param {String} view_id -- id of current view
+*/
+function _highlightSingleCell(sc_id, view_id) {
+    d3.select("#" + view_id).selectAll(".graph.node.node_" + sc_id).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tree.node.node_" + sc_id).classed("inactive", false);
 }
 
 /* mouseover function for genotype annotations
@@ -577,42 +644,6 @@ function _linkClick(curVizObj, link_id) {
     }
 }
 
-/* function for tree node mouseover
-* @param {Object} curVizObj
-* @param {String} sc_id -- single cell id of mousedover node
-*/
-function _nodeMouseover(curVizObj, sc_id) {
-    // if there's no node or link selection taking place
-    if (_checkForSelections(curVizObj)) {
-        // show tooltip
-        curVizObj.nodeTip.show(sc_id);
-
-        // highlight node
-        _highlightNode(sc_id, curVizObj);
-
-        // highlight indicator
-        _highlightIndicator(sc_id, curVizObj);
-    }
-}
-
-/* function for tree node mouseout
-* @param {Object} curVizObj
-* @param {String} sc_id -- single cell id of mousedover node
-*/
-function _nodeMouseout(curVizObj, sc_id) {
-    // if there's no node or link selection taking place
-    if (_checkForSelections(curVizObj)) {
-        // hide tooltip
-        curVizObj.nodeTip.hide(sc_id);
-
-        // reset node
-        _resetNode(sc_id, curVizObj);
-
-        // reset indicator
-        _resetIndicator(curVizObj, sc_id);
-    }
-}
-
 /* recursive function to perform downstream effects upon tree link highlighting
 * @param {Object} curVizObj
 * @param link_id -- id for the link that's currently highlighted
@@ -966,8 +997,8 @@ function _plotForceDirectedGraph(curVizObj) {
     var nodeCircle = nodeG.append("circle")
         .attr("class", function(d) {
             // get genotype
-            var gtype = _getGenotype(curVizObj, d.sc_id);
-            var tp = _getTP(curVizObj, d.sc_id);
+            var gtype = _getGenotype(curVizObj.userConfig.sc_annot, d.sc_id);
+            var tp = _getTP(curVizObj.userConfig.sc_annot, d.sc_id);
             return "graph node node_" + d.sc_id + " gtype_" + gtype + " tp_" + tp;
         })
         .attr("r", function() {
@@ -990,10 +1021,14 @@ function _plotForceDirectedGraph(curVizObj) {
             return (config.graphOpacity == 1) ? "auto" : "none";
         })
         .on('mouseover', function(d) {
-            _nodeMouseover(curVizObj, d.sc_id);
+            if (_checkForSelections(curVizObj)) {
+                _mouseoverNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
+            }
         })
         .on('mouseout', function(d) {
-            _nodeMouseout(curVizObj, d.sc_id);
+            if (_checkForSelections(curVizObj)) {
+                _mouseoutNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip);
+            }
         })
         .call(force_layout.drag);
 
@@ -1219,8 +1254,8 @@ function _plotAlignedPhylogeny(curVizObj) {
     nodeG.append("circle")   
         .attr("class", function(d) {
             // get genotype & timepoint
-            var gtype = _getGenotype(curVizObj, d.sc_id);
-            var tp = _getTP(curVizObj, d.sc_id);
+            var gtype = _getGenotype(curVizObj.userConfig.sc_annot, d.sc_id);
+            var tp = _getTP(curVizObj.userConfig.sc_annot, d.sc_id);
             return "tree node node_" + d.sc_id + " gtype_" + gtype + " tp_" + tp;
         })  
         .attr("cx", function(d) { 
@@ -1244,10 +1279,14 @@ function _plotAlignedPhylogeny(curVizObj) {
             return (config.treeOpacity == 1) ? "auto" : "none";
         })
         .on('mouseover', function(d) {
-            _nodeMouseover(curVizObj, d.sc_id);
+            if (_checkForSelections(curVizObj)) {
+                _mouseoverNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
+            }
         })
         .on('mouseout', function(d) {
-            _nodeMouseout(curVizObj, d.sc_id);
+            if (_checkForSelections(curVizObj)) {
+                _mouseoutNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip);
+            }
         });
 
     // node single cell labels (if user wants to display them)
@@ -1354,13 +1393,13 @@ function _scaleTree(curVizObj) {
 // GROUP ANNOTATION FUNCTIONS
 
 /* function to get a genotype annotation for a given single cell id
-* @param {Object} curVizObj
+* @param {Array} sc_annot -- single cell annotations provided by user
 * @param {String} sc_id -- single cell id
 */
-function _getGenotype(curVizObj, sc_id) {
+function _getGenotype(sc_annot, sc_id) {
     // there are single cell annotations provided by user
-    if (curVizObj.userConfig.sc_annot) {
-        var sc_w_gtype = _.findWhere(curVizObj.userConfig.sc_annot, {"single_cell_id": sc_id});
+    if (sc_annot) {
+        var sc_w_gtype = _.findWhere(sc_annot, {"single_cell_id": sc_id});
         // if there's an annotation for this single cell, return it, otherwise return "none"
         return (sc_w_gtype) ? sc_w_gtype.genotype : "none";
     }
@@ -1370,13 +1409,13 @@ function _getGenotype(curVizObj, sc_id) {
 }
 
 /* function to get a timepoint annotation for a given single cell id
-* @param {Object} curVizObj
+* @param {Array} sc_annot -- single cell annotations provided by user
 * @param {String} sc_id -- single cell id
 */
-function _getTP(curVizObj, sc_id) {
+function _getTP(sc_annot, sc_id) {
     // there are single cell annotations provided by user
-    if (curVizObj.userConfig.sc_annot) {
-        var sc_w_gtype = _.findWhere(curVizObj.userConfig.sc_annot, {"single_cell_id": sc_id});
+    if (sc_annot) {
+        var sc_w_gtype = _.findWhere(sc_annot, {"single_cell_id": sc_id});
         // if there's an annotation for this single cell, return it, otherwise return "none"
         return (sc_w_gtype && sc_w_gtype.sample_id) ? sc_w_gtype.sample_id : "none";
     }
