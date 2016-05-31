@@ -30,11 +30,11 @@ HTMLWidgets.widget({
             // general padding (above main view, between views)
             paddingGeneral: 15,
 
-            // indicator
-            indicatorWidth: 7, // width of the selected single cell indicator
+            // annotations & indicator width
+            annotColWidth: 7, // width of the selected single cell indicator and annotations columns
 
-            // genotype annotations
-            gtypeAnnotWidth: 10, // width of the selected single cell genotype annotation
+            // space between annotations and heatmap
+            annotHmSpace: 3,
 
             // colours
             defaultNodeColour: "#B7B7B7",
@@ -71,6 +71,8 @@ HTMLWidgets.widget({
         // get params from R
         curVizObj.userConfig = x;
         curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot != null); // (T/F) genotype annotation is specified
+        curVizObj.view.tpsSpecified = // (T/F) timepoint annotation is specified
+            (curVizObj.view.gtypesSpecified) ? curVizObj.userConfig.sc_annot[0]["sample_id"] : false;
 
         // selected single cells list & selected links list
         curVizObj.view.selectedSCs = [];
@@ -115,20 +117,25 @@ HTMLWidgets.widget({
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
         // tree configurations
-        config.treeWidth = config.width - config.indicatorWidth - config.heatmapLegendWidth - curVizObj.userConfig.heatmapWidth - config.paddingGeneral*2;
-
-        // smallest tree dimension on the view (width or height)
-        config.smallest_tree_dim = (config.treeWidth < config.treeHeight) ? config.treeWidth : config.treeHeight;
+        config.treeWidth = config.width - config.annotColWidth - config.heatmapLegendWidth - curVizObj.userConfig.heatmapWidth - config.paddingGeneral*2;
 
         // if genotype annotation specified, reduce the width of the tree
         if (curVizObj.view.gtypesSpecified) {
-            config.treeWidth -= config.gtypeAnnotWidth;
+            config.treeWidth -= (config.annotColWidth + config.annotHmSpace); 
+        }
+
+        // if the timepoint annotation is specified, reduce the width of the tree further
+        if (curVizObj.view.tpsSpecified) {
+            config.treeWidth -= config.annotColWidth;
         }
 
         // if the type of data is cnv, reduce tree height to account for chromosome legend
         if (curVizObj.userConfig.heatmap_type == "cnv") {
             config.treeHeight -= config.chromLegendHeight;
         }
+
+        // smallest tree dimension on the view (width or height)
+        config.smallest_tree_dim = (config.treeWidth < config.treeHeight) ? config.treeWidth : config.treeHeight;
 
         // GET TREE CONTENT
 
@@ -289,6 +296,26 @@ HTMLWidgets.widget({
             curVizObj.view.alpha_colour_assignment = colour_assignments.alpha_colour_assignment;
         }
 
+        // timepoint annotation colours
+        if (curVizObj.view.gtypesSpecified) {
+
+            // sorted timepoints
+            var tps = _.uniq(_.pluck(curVizObj.userConfig.sc_annot, "sample_id")).sort(function(a, b) {
+                                                                                          var regex = /(^[a-zA-Z]*)(\d*)$/;
+                                                                                          matchA = regex.exec(a);
+                                                                                          matchB = regex.exec(b); 
+
+                                                                                          if(matchA[1] === matchB[1]) {
+                                                                                            return matchA[2] > matchB[2];
+                                                                                          }
+                                                                                          return matchA[1] > matchB[1];
+                                                                                        });
+
+            curVizObj.view.tp_colourScale = d3.scale.ordinal()
+                .domain(tps)
+                .range(colorbrewer["Greys"][tps.length]);
+        }
+
         // BRUSH SELECTION FUNCTION
 
         var brush = d3.svg.brush()
@@ -349,7 +376,14 @@ HTMLWidgets.widget({
         if (curVizObj.view.gtypesSpecified) {
             curVizObj.view.gtypeAnnotSVG = containerSVG.append("g")
                 .attr("class", "gtypeAnnotSVG")
-                .attr("transform", "translate(" + (config.treeWidth + config.indicatorWidth + config.paddingGeneral) + "," + 0 + ")");
+                .attr("transform", "translate(" + (config.treeWidth + config.paddingGeneral + config.annotColWidth) + "," + 0 + ")");
+        }
+
+        // TIME POINT ANNOTATION SVG
+        if (curVizObj.view.tpsSpecified) {
+            curVizObj.view.tpAnnotSVG = containerSVG.append("g")
+                .attr("class", "tpAnnotSVG")
+                .attr("transform", "translate(" + (config.treeWidth + config.paddingGeneral + config.annotColWidth*2) + "," + 0 + ")");
         }
 
         // CNV SVG
@@ -357,9 +391,17 @@ HTMLWidgets.widget({
         curVizObj.view.cnvSVG = containerSVG.append("g")
             .attr("class", "cnvSVG")
             .attr("transform", function() {
-                var t_x = (curVizObj.view.gtypesSpecified) ? 
-                    (config.treeWidth + config.indicatorWidth + config.gtypeAnnotWidth + config.paddingGeneral) :
-                    (config.treeWidth + config.indicatorWidth + config.paddingGeneral);
+                var t_x; 
+                if (curVizObj.view.gtypesSpecified && curVizObj.view.tpsSpecified) { // gtype and tp annots
+                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*3 + config.annotHmSpace);
+                }
+                else if (curVizObj.view.gtypesSpecified) { // gtype annot only
+                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*2 + config.annotHmSpace);
+                }
+                else { // no annots
+                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth);
+                }
+                
                 return "translate(" + t_x + "," + 0 + ")"
             });
 
@@ -368,9 +410,17 @@ HTMLWidgets.widget({
         curVizObj.view.cnvLegendSVG = containerSVG.append("g")
             .attr("class", "cnvLegendSVG")
             .attr("transform", function() {
-                var t_x = (curVizObj.view.gtypesSpecified) ? 
-                    (config.treeWidth + config.indicatorWidth + config.gtypeAnnotWidth + curVizObj.userConfig.heatmapWidth + config.paddingGeneral) :
-                    (config.treeWidth + config.indicatorWidth + curVizObj.userConfig.heatmapWidth + config.paddingGeneral);
+                var t_x; 
+                if (curVizObj.view.gtypesSpecified && curVizObj.view.tpsSpecified) { // gtype and tp annots
+                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*3 + config.annotHmSpace + curVizObj.userConfig.heatmapWidth);
+                }
+                else if (curVizObj.view.gtypesSpecified) { // gtype annot only
+                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*2 + config.annotHmSpace + curVizObj.userConfig.heatmapWidth);
+                }
+                else { // no annots
+                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth + curVizObj.userConfig.heatmapWidth);
+                }
+
                 return "translate(" + t_x + "," + 0 + ")"
             });
 
@@ -939,14 +989,16 @@ HTMLWidgets.widget({
                 return curVizObj.data.yCoordinates[d]; 
             })
             .attr("height", curVizObj.view.hm.rowHeight)
-            .attr("width", config.indicatorWidth)
+            .attr("width", config.annotColWidth)
             .attr("fill", config.highlightColour)
             .attr("fill-opacity", 0)
             .attr("stroke", "none");
         
+        
         // PLOT GROUP ANNOTATION COLUMN
 
         if (curVizObj.view.gtypesSpecified) {
+
             var gtypeAnnot = curVizObj.view.gtypeAnnotSVG
                 .append("g")
                 .classed("gtypeAnnotG", true)
@@ -963,7 +1015,7 @@ HTMLWidgets.widget({
                     return d.y; 
                 })
                 .attr("height", curVizObj.view.hm.rowHeight)
-                .attr("width", config.gtypeAnnotWidth-3)
+                .attr("width", config.annotColWidth)
                 .attr("fill", function(d) {
                     return curVizObj.view.alpha_colour_assignment[d.genotype];
                 })
@@ -976,7 +1028,7 @@ HTMLWidgets.widget({
 
                         // highlight genotype in timesweep
                         if (curVizObj.userConfig.time_space_view_provided == "time") {
-                            _tsPlotGtypeMouseover(genotype, view_id, colour_assignment, alpha_colour_assignment)
+                            _tsPlotGtypeMouseover(d.genotype, view_id, curVizObj.view.colour_assignment, curVizObj.view.alpha_colour_assignment)
                         }
                     }
                 })
@@ -984,6 +1036,51 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         // reset indicators, nodes, genotype annotation rectangles in legend
                         _mouseoutGroupAnnot(curVizObj.view_id, curVizObj.userConfig.time_space_view_provided);
+                    }
+                });
+        }
+
+        // PLOT TIMEPOINT ANNOTATION COLUMN
+
+        if (curVizObj.view.tpsSpecified) {
+
+            var tpAnnot = curVizObj.view.tpAnnotSVG
+                .append("g")
+                .classed("tpAnnotG", true)
+                .selectAll(".tpAnnot")
+                .data(curVizObj.userConfig.sc_annot)
+                .enter()
+                .append("rect")
+                .attr("class", function(d) {
+                    return "tpAnnot tp_" + d.sample_id + " sc_" + d.single_cell_id;
+                })
+                .attr("x", 0)
+                .attr("y", function(d) { 
+                    d.y = curVizObj.data.yCoordinates[d.single_cell_id];
+                    return d.y; 
+                })
+                .attr("height", curVizObj.view.hm.rowHeight)
+                .attr("width", config.annotColWidth)
+                .attr("fill", function(d) {
+                    return curVizObj.view.tp_colourScale(d.sample_id);
+                })
+                .attr("stroke", "none")
+                .on("mouseover", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                        // // highlight indicator & node for all sc's with this genotype annotation id,
+                        // // highlight genotype annotation rectangle in legend
+                        // _mouseoverGroupAnnot(d.genotype, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
+
+                        // // highlight genotype in timesweep
+                        // if (curVizObj.userConfig.time_space_view_provided == "time") {
+                        //     _tsPlotGtypeMouseover(d.genotype, view_id, curVizObj.view.colour_assignment, curVizObj.view.alpha_colour_assignment)
+                        // }
+                    }
+                })
+                .on("mouseout", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                        // // reset indicators, nodes, genotype annotation rectangles in legend
+                        // _mouseoutGroupAnnot(curVizObj.view_id, curVizObj.userConfig.time_space_view_provided);
                     }
                 });
         }
@@ -1210,7 +1307,7 @@ HTMLWidgets.widget({
                         _mouseoverGroupAnnot(d, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
                         // highlight genotype in timesweep
                         if (curVizObj.userConfig.time_space_view_provided == "time") {
-                            _tsPlotGtypeMouseover(genotype, view_id, colour_assignment, alpha_colour_assignment)
+                            _tsPlotGtypeMouseover(d, view_id, curVizObj.view.colour_assignment, curVizObj.view.alpha_colour_assignment)
                         }
                     }
                 })
@@ -1241,7 +1338,7 @@ HTMLWidgets.widget({
                         _mouseoverGroupAnnot(d, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
                         // highlight genotype in timesweep
                         if (curVizObj.userConfig.time_space_view_provided == "time") {
-                            _tsPlotGtypeMouseover(genotype, view_id, colour_assignment, alpha_colour_assignment)
+                            _tsPlotGtypeMouseover(d, view_id, curVizObj.view.colour_assignment, curVizObj.view.alpha_colour_assignment)
                         }
                     }
                 })

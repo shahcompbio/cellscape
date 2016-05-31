@@ -62,8 +62,7 @@ function _clearBrush(view_id) {
 function _mouseoverGroupAnnot(genotype, highlightColour, view_id) {
     // highlight indicator & node for all sc's with this genotype annotation id
     d3.select("#" + view_id).selectAll(".indic.gtype_" + genotype).style("fill-opacity", 1);
-    d3.select("#" + view_id).selectAll(".node.gtype_" + genotype)
-        .style("fill", highlightColour);
+    d3.select("#" + view_id).selectAll(".node.gtype_" + genotype).style("fill", highlightColour);
 
     // highlight genotype annotation rectangle in legend
     _highlightGroupAnnotLegendRect(genotype, highlightColour, view_id);
