@@ -499,6 +499,10 @@ function _run_timesweep(view_id, width, height, userConfig) {
 	            						curVizObj.view_id, 
 	            						curVizObj.view.colour_assignment, 
 	            						curVizObj.view.alpha_colour_assignment);
+               	// if this view is linked to single cell data view, highlight the genotype in that view
+			    if (typeof _mouseoverGroupAnnot == 'function') {
+			    	_mouseoverGroupAnnot(d.gtype, "black", view_id);
+			    }
 	        }
 	    })
 	    .on('mouseout', function(d) {
@@ -753,6 +757,10 @@ function _run_timesweep(view_id, width, height, userConfig) {
 	            						curVizObj.view_id, 
 	            						curVizObj.view.colour_assignment, 
 	            						curVizObj.view.alpha_colour_assignment);
+               	// if this view is linked to single cell data view, highlight the genotype in that view
+			    if (typeof _mouseoverGroupAnnot == 'function') {
+			    	_mouseoverGroupAnnot(d.id, "black", view_id);
+			    }
 	        }
 	    })
 	    .on('mouseout', function(d) {
@@ -1041,6 +1049,10 @@ function _run_timesweep(view_id, width, height, userConfig) {
 	            						curVizObj.view_id, 
 	            						curVizObj.view.colour_assignment, 
 	            						curVizObj.view.alpha_colour_assignment);
+	                   	// if this view is linked to single cell data view, highlight the genotype in that view
+					    if (typeof _mouseoverGroupAnnot == 'function') {
+					    	_mouseoverGroupAnnot(d.gtype, "black", view_id);
+					    }
 	                }
 	            })
 	            .on('mouseout', function(d) {
@@ -3296,10 +3308,6 @@ function _tsPlotGtypeMouseover(gtype, view_id, colour_assignment, alpha_colour_a
     _shadeLegend(view_id, colour_assignment, alpha_colour_assignment);
     _gtypeHighlight(gtype, view_id, colour_assignment, alpha_colour_assignment);
     _showLabels(gtype, view_id);
-    // if this view is linked to single cell data view, highlight the genotype in that view
-    if (typeof _mouseoverGroupAnnot == 'function') {
-    	_mouseoverGroupAnnot(gtype, "black", view_id);
-    }
 }
 
 

@@ -58,11 +58,8 @@ function _clearBrush(view_id) {
 * @param {String} genotype -- genotype to highlight
 * @param {String} highlightColour -- colour to highlight indicators/nodes
 * @param {String} view_id -- id of current view
-* @param {Object} colour_assignment -- colour assignment for each genotype
-* @param {Object} alpha_colour_assignment -- alpha colour assignment for each genotype
-* @param {String} time_space -- if time or space view provided, this string should be "time" or "space", respectively
 */
-function _mouseoverGroupAnnot(genotype, highlightColour, view_id, colour_assignment, alpha_colour_assignment, time_space) {
+function _mouseoverGroupAnnot(genotype, highlightColour, view_id) {
     // highlight indicator & node for all sc's with this genotype annotation id
     d3.select("#" + view_id).selectAll(".indic.gtype_" + genotype).style("fill-opacity", 1);
     d3.select("#" + view_id).selectAll(".node.gtype_" + genotype)
@@ -70,14 +67,6 @@ function _mouseoverGroupAnnot(genotype, highlightColour, view_id, colour_assignm
 
     // highlight genotype annotation rectangle in legend
     _highlightGroupAnnotLegendRect(genotype, highlightColour, view_id);
-
-    // highlight genotype in timesweep
-    if (time_space == "time") {
-        _shadeTimeSweep(view_id, colour_assignment, alpha_colour_assignment);
-        _shadeLegend(view_id, colour_assignment, alpha_colour_assignment);
-        _gtypeHighlight(genotype, view_id, colour_assignment, alpha_colour_assignment);  
-        _showLabels(genotype, view_id); 
-    }
 }
 
 /* mouseover function for genotype annotations
