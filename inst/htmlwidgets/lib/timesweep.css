@@ -9,6 +9,12 @@
   stroke: #D3D3D3;
 }
 
+.legendTreeNode.gtype_phantomRoot {
+  pointer-events: none;
+  fill-opacity: 0;
+  stroke-opacity: 0;
+}
+
 .geneTableDIV {
     overflow: scroll;
 }

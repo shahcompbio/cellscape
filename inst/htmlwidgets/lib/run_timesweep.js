@@ -496,11 +496,13 @@ function _run_timesweep(view_id, width, height, userConfig) {
 	    .on('mouseover', function(d) {
 	        if (!dim.selectOn && !dim.mutSelectOn) {
 	        	_tsMouseoverGenotype(d.gtype, curVizObj.view_id);
+	        	_showLabels(d.gtype, curVizObj.view_id);
 	        }
 	    })
 	    .on('mouseout', function(d) {
 	        if (!dim.selectOn && !dim.mutSelectOn) {
 	        	_tsMouseoutGenotype(curVizObj.view_id);
+	        	_hideLabels(curVizObj.view_id);
 	        }
 	    });
 
@@ -737,6 +739,7 @@ function _run_timesweep(view_id, width, height, userConfig) {
 	        // we're not selecting nodes or mutations - highlight genotype
 	        if (!dim.selectOn && !dim.mutSelectOn) {
 	            _tsMouseoverGenotype(d.id, curVizObj.view_id);
+	            _showLabels(d.id, curVizObj.view_id);
 	        }
 	    })
 	    .on('mouseout', function(d) {
@@ -1049,6 +1052,7 @@ function _run_timesweep(view_id, width, height, userConfig) {
 	            .on('mouseover', function(d) {
 	                if (!dim.selectOn && !dim.mutSelectOn) {
 	                	_tsMouseoverGenotype(d.gtype, curVizObj.view_id);
+	                	_showLabels(d.gtype, curVizObj.view_id);
 	                }
 	            })
 	            .on('mouseout', function(d) {

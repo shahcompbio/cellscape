@@ -1024,11 +1024,19 @@ HTMLWidgets.widget({
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         _mouseoverGenotype(d.genotype, view_id);
+                        // show labels in timesweep
+                        if (typeof _showLabels == 'function') {
+                            _showLabels(d.genotype, view_id);
+                        }
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         _mouseoutGenotype(view_id);
+                        // hide labels in timesweep
+                        if (typeof _hideLabels == 'function') {
+                            _hideLabels(view_id);
+                        }
                     }
                 });
         }
@@ -1288,11 +1296,19 @@ HTMLWidgets.widget({
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         _mouseoverGenotype(d, view_id);
+                        // show labels in timesweep
+                        if (typeof _showLabels == 'function') {
+                            _showLabels(d, view_id);
+                        }
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         _mouseoutGenotype(view_id);
+                        // hide labels in timesweep
+                        if (typeof _hideLabels == 'function') {
+                            _hideLabels(view_id);
+                        }
                     }
                 });
 
@@ -1312,11 +1328,19 @@ HTMLWidgets.widget({
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         _mouseoverGenotype(d, view_id);
+                        // show labels in timesweep
+                        if (typeof _showLabels == 'function') {
+                            _showLabels(d, view_id);
+                        }
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
                         _mouseoutGenotype(view_id);
+                        // hide labels in timesweep
+                        if (typeof _hideLabels == 'function') {
+                            _hideLabels(view_id);
+                        }
                     }
                 });
         }
