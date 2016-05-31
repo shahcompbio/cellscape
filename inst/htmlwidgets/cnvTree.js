@@ -934,18 +934,7 @@ HTMLWidgets.widget({
                             curVizObj.mutTip.hide();
                             curVizObj.valTip.hide();
                         }
-                    })
-                    .append("title")
-                    .text(function(d) {
-                        // for targeted mutations
-                        if (curVizObj.userConfig.heatmap_type == "targeted") {
-                            return "Mutation Site: " + d.site;
-                        }
-                        // for cnv 
-                        else {
-                            return "CNV: " + d.gridCell_value;
-                        }
-                    })
+                    });
             }
         }
 
