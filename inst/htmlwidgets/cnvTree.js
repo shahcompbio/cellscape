@@ -1023,20 +1023,12 @@ HTMLWidgets.widget({
                 .attr("stroke", "none")
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // highlight indicator & node for all sc's with this genotype annotation id,
-                        // highlight genotype annotation rectangle in legend
-                        _mouseoverGroupAnnot(d.genotype, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
-
-                        // highlight genotype in timesweep
-                        if (curVizObj.userConfig.time_space_view_provided == "time") {
-                            _tsPlotGtypeMouseover(d.genotype, view_id, curVizObj.view.colour_assignment, curVizObj.view.alpha_colour_assignment)
-                        }
+                        _mouseoverGenotype(d.genotype, view_id);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // reset indicators, nodes, genotype annotation rectangles in legend
-                        _mouseoutGroupAnnot(curVizObj.view_id, curVizObj.userConfig.time_space_view_provided);
+                        _mouseoutGenotype(view_id);
                     }
                 });
         }
@@ -1068,20 +1060,12 @@ HTMLWidgets.widget({
                 .attr("stroke", "none")
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // // highlight indicator & node for all sc's with this genotype annotation id,
-                        // // highlight genotype annotation rectangle in legend
-                        // _mouseoverGroupAnnot(d.genotype, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
 
-                        // // highlight genotype in timesweep
-                        // if (curVizObj.userConfig.time_space_view_provided == "time") {
-                        //     _tsPlotGtypeMouseover(d.genotype, view_id, curVizObj.view.colour_assignment, curVizObj.view.alpha_colour_assignment)
-                        // }
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // // reset indicators, nodes, genotype annotation rectangles in legend
-                        // _mouseoutGroupAnnot(curVizObj.view_id, curVizObj.userConfig.time_space_view_provided);
+
                     }
                 });
         }
@@ -1303,19 +1287,12 @@ HTMLWidgets.widget({
                 })
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // highlight indicator & node for all sc's with this genotype annotation id,
-                        // highlight genotype annotation rectangle in legend
-                        _mouseoverGroupAnnot(d, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
-                        // highlight genotype in timesweep
-                        if (curVizObj.userConfig.time_space_view_provided == "time") {
-                            _tsPlotGtypeMouseover(d, view_id, curVizObj.view.colour_assignment, curVizObj.view.alpha_colour_assignment)
-                        }
+                        _mouseoverGenotype(d, view_id);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // reset indicators, nodes, genotype annotation rectangles in legend
-                        _mouseoutGroupAnnot(curVizObj.view_id, curVizObj.userConfig.time_space_view_provided);
+                        _mouseoutGenotype(view_id);
                     }
                 });
 
@@ -1334,19 +1311,12 @@ HTMLWidgets.widget({
                 .attr("fill", "black")
                 .on("mouseover", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // highlight indicator & node for all sc's with this genotype annotation id,
-                        // highlight genotype annotation rectangle in legend
-                        _mouseoverGroupAnnot(d, curVizObj.generalConfig.highlightColour, curVizObj.view_id);
-                        // highlight genotype in timesweep
-                        if (curVizObj.userConfig.time_space_view_provided == "time") {
-                            _tsPlotGtypeMouseover(d, view_id, curVizObj.view.colour_assignment, curVizObj.view.alpha_colour_assignment)
-                        }
+                        _mouseoverGenotype(d, view_id);
                     }
                 })
                 .on("mouseout", function(d) {
                     if (_checkForSelections(curVizObj)) {
-                        // reset indicators, nodes, genotype annotation rectangles in legend
-                        _mouseoutGroupAnnot(curVizObj.view_id, curVizObj.userConfig.time_space_view_provided);
+                        _mouseoutGenotype(view_id);
                     }
                 });
         }

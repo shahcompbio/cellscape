@@ -43,3 +43,22 @@ ul {
   fill-opacity: .4;
   shape-rendering: crispEdges;
 }
+
+.gtypeAnnot.inactive {
+    fill: #ffffff;
+}
+
+.graph.node.inactive {
+    fill: #ffffff;
+    stroke: #B7B7B7;
+}
+
+.tree.node.inactive {
+    fill: #ffffff;
+    stroke: #B7B7B7;
+}
+
+.legendGroupRect.inactive {
+    fill: #ffffff;
+    stroke: #B7B7B7;
+}

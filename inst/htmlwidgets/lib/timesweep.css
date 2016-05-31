@@ -1,4 +1,14 @@
 
+.tsPlot.inactive {
+  fill: #E4E4E4;
+  stroke: #B7B7B7;
+}
+
+.legendTreeNode.inactive {
+  fill: #FFFFFF;
+  stroke: #D3D3D3;
+}
+
 .geneTableDIV {
     overflow: scroll;
 }

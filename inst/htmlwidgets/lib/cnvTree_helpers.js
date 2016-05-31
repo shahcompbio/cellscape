@@ -53,6 +53,57 @@ function _clearBrush(view_id) {
     _resetIndicators(view_id);
 }
 
+/* function for genotype mouseover
+* @param {String} gtype -- genotype to highlight
+* @param {String} view_id -- id of current view
+*/
+function _mouseoverGenotype(gtype, view_id) {
+
+    _inactivateGenotypes(view_id);
+    _highlightGenotype(gtype, view_id);
+}
+
+/* function for genotype mouseover
+* @param {String} view_id -- id of current view
+*/
+function _mouseoutGenotype(view_id) {
+
+    // activate all
+    d3.select("#" + view_id).selectAll(".gtypeAnnot").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".legendGroupRect").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tsPlot").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".legendTreeNode").classed("inactive", false);
+}
+
+/* function to inactivate all genotypes
+* @param {String} view_id -- id of current view
+*/
+function _inactivateGenotypes(view_id) {
+    d3.select("#" + view_id).selectAll(".gtypeAnnot").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".legendGroupRect").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".tsPlot").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".legendTreeNode").classed("inactive", true);
+}
+
+/* function to highlight a particular genotype
+* @param {String} gtype -- genotype to highlight
+* @param {String} view_id -- id of current view
+*/
+function _highlightGenotype(gtype, view_id) {
+
+    // activate all with this genotype
+    d3.select("#" + view_id).selectAll(".gtypeAnnot.gtype_" + gtype).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".graph.node.gtype_" + gtype).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tree.node.gtype_" + gtype).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".legendGroupRect.gtype_" + gtype).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tsPlot.gtype_" + gtype).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".legendTreeNode.gtype_" + gtype).classed("inactive", false);
+}
+
 /* mouseover function for genotype annotations
 * highlights indicator & node for all sc's with this genotype annotation id, highlights genotype annotation rectangle in legend
 * @param {String} genotype -- genotype to highlight
@@ -61,8 +112,8 @@ function _clearBrush(view_id) {
 */
 function _mouseoverGroupAnnot(genotype, highlightColour, view_id) {
     // highlight indicator & node for all sc's with this genotype annotation id
-    d3.select("#" + view_id).selectAll(".indic.gtype_" + genotype).style("fill-opacity", 1);
-    d3.select("#" + view_id).selectAll(".node.gtype_" + genotype).style("fill", highlightColour);
+    d3.select("#" + view_id).selectAll(".indic.gtype_" + genotype).attr("fill-opacity", 1);
+    d3.select("#" + view_id).selectAll(".node.gtype_" + genotype).attr("fill", highlightColour);
 
     // highlight genotype annotation rectangle in legend
     _highlightGroupAnnotLegendRect(genotype, highlightColour, view_id);
@@ -83,7 +134,7 @@ function _mouseoutGroupAnnot(view_id, time_space) {
 
     // highlight genotype in timesweep
     if (time_space == "time") {
-        _resetView(view_id);
+        // _resetView(view_id);
     }
 }
 
@@ -93,7 +144,7 @@ function _mouseoutGroupAnnot(view_id, time_space) {
 */
 function _highlightNode(sc_id, curVizObj) {
     d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id)
-        .style("fill", curVizObj.generalConfig.highlightColour);
+        .attr("fill", curVizObj.generalConfig.highlightColour);
 }
 
 /* function to highlight a genotype annotation rectangle in the legend
@@ -119,7 +170,7 @@ function _resetGroupAnnotLegendRects(view_id) {
 */
 function _highlightIndicator(sc_id, curVizObj) {
     d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id)
-        .style("fill-opacity", 1);
+        .attr("fill-opacity", 1);
 }
 
 /* function to reset a node in the tree
@@ -128,7 +179,7 @@ function _highlightIndicator(sc_id, curVizObj) {
 */
 function _resetNode(sc_id, curVizObj) {
     d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id)
-        .style("fill", function(d) {
+        .attr("fill", function(d) {
             return _getNodeFill(curVizObj, d.sc_id);
         });
 }
@@ -138,7 +189,7 @@ function _resetNode(sc_id, curVizObj) {
 */
 function _resetIndicator(curVizObj, sc_id) {
     d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id)
-        .style("fill-opacity", 0);
+        .attr("fill-opacity", 0);
 }
 
 /* function to reset all nodes in the tree
@@ -146,7 +197,7 @@ function _resetIndicator(curVizObj, sc_id) {
 */
 function _resetNodes(view_id) {
     d3.select("#" + view_id).selectAll(".node")
-        .style("fill", function(d) { return d.fill; });
+        .attr("fill", function(d) { return d.fill; });
 }
 
 /* function to get the fill colour of a node
@@ -186,7 +237,7 @@ function _getNodeStroke(curVizObj, sc_id) {
 */
 function _resetIndicators(view_id) {
     d3.select("#" + view_id).selectAll(".indic")
-        .style("fill-opacity", 0);
+        .attr("fill-opacity", 0);
 }
 
 /* function to reset all links in the tree
@@ -194,7 +245,7 @@ function _resetIndicators(view_id) {
 */
 function _resetLinks(curVizObj) {
     d3.select("#" + curVizObj.view_id).selectAll(".link")
-        .style("stroke", curVizObj.generalConfig.defaultLinkColour);
+        .attr("stroke", curVizObj.generalConfig.defaultLinkColour);
 }
 
 /* brush selection button push function
@@ -435,17 +486,17 @@ function _linkMouseout(curVizObj, resetSelectedSCList) {
     if (_checkForSelections(curVizObj) || d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
         // reset nodes
         d3.select("#" + curVizObj.view_id).selectAll(".node")
-            .style("fill", function(d) {
+            .attr("fill", function(d) {
                 return _getNodeFill(curVizObj, d.sc_id);
             });
 
         // reset indicators
         d3.select("#" + curVizObj.view_id).selectAll(".indic")
-            .style("fill-opacity", 0);
+            .attr("fill-opacity", 0);
 
         // reset links
         d3.select("#" + curVizObj.view_id).selectAll(".link")
-            .style("stroke", curVizObj.generalConfig.defaultLinkColour);
+            .attr("stroke", curVizObj.generalConfig.defaultLinkColour);
 
         // reset list of selected cells & links
         if (resetSelectedSCList) {
@@ -478,11 +529,11 @@ function _linkMouseover(curVizObj, link_id) {
         // highlight the potentially-cut link red
         if (curVizObj.generalConfig.switchView) { // tree view is on
             d3.select("#" + curVizObj.view_id).select(".tree."+link_id)
-                .style("stroke", "red");
+                .attr("stroke", "red");
         }
         else { // graph view is on
             d3.select("#" + curVizObj.view_id).select(".graph."+link_id)
-                .style("stroke", "red");
+                .attr("stroke", "red");
         }
     }
 }
@@ -579,25 +630,25 @@ function _downstreamEffects(curVizObj, link_id) {
     // highlight node
     if (curVizObj.generalConfig.switchView) { // tree view is on
         d3.select("#" + curVizObj.view_id).select(".tree.node_" + target_id)
-            .style("fill", curVizObj.generalConfig.highlightColour);
+            .attr("fill", curVizObj.generalConfig.highlightColour);
     }
     else { // graph view is on
         d3.select("#" + curVizObj.view_id).select(".graph.node_" + target_id)
-            .style("fill", curVizObj.generalConfig.highlightColour);
+            .attr("fill", curVizObj.generalConfig.highlightColour);
     }
 
     // highlight indicator for target
     d3.select("#" + curVizObj.view_id).select(".indic.sc_" + target_id)
-        .style("fill-opacity", 1);
+        .attr("fill-opacity", 1);
 
     // highlight link
     if (curVizObj.generalConfig.switchView) { // tree view is on
         d3.select("#" + curVizObj.view_id).select(".tree."+link_id)
-            .style("stroke", curVizObj.generalConfig.linkHighlightColour);
+            .attr("stroke", curVizObj.generalConfig.linkHighlightColour);
     }
     else { // graph view is on
         d3.select("#" + curVizObj.view_id).select(".graph."+link_id)
-            .style("stroke", curVizObj.generalConfig.linkHighlightColour);
+            .attr("stroke", curVizObj.generalConfig.linkHighlightColour);
     }
 
     // get the targets of this target
