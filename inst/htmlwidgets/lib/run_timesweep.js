@@ -3379,7 +3379,7 @@ function _showLabels(gtype, view_id) {
     var curView = d3.select("#" + view_id);
 
     // traditional view
-    if (d3.select("#" + curVizObj.view_id).select(".tsPlotG").classed("traditional")) { 
+    if (d3.select("#" + view_id).select(".tsPlotG").classed("traditional")) { 
     	curView.selectAll(".label.gtype_" + gtype).attr("fill-opacity", 1)
     		.text(function(d) { return d.label_text; });
     	curView.selectAll(".labelCirc.gtype_" + gtype).attr("fill-opacity", 1);
@@ -3400,7 +3400,7 @@ function _hideLabels(view_id) {
     var curView = d3.select("#" + view_id);
 
     // traditional view
-    if (d3.select("#" + curVizObj.view_id).select(".tsPlotG").classed("traditional")) { 
+    if (d3.select("#" + view_id).select(".tsPlotG").classed("traditional")) { 
     	curView.selectAll(".label").attr("fill-opacity", 0)
     		.text(function() { return ""; }); // text removed for purposes of svg download (otherwise will show up)
     	curView.selectAll(".labelCirc").attr("fill-opacity", 0);
