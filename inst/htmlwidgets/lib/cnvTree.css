@@ -62,12 +62,10 @@ ul {
     stroke: #B7B7B7;
 }
 
-.legendGroupRect.inactive {
-    fill: #ffffff;
-    stroke: #B7B7B7;
+.legendGroupRect.active {
+    stroke: #000000;
 }
 
-.legendTpRect.inactive {
-    fill: #ffffff;
-    stroke: #B7B7B7;
+.legendTpRect.active {
+    stroke: #000000;
 }
