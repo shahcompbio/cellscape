@@ -1001,25 +1001,7 @@ HTMLWidgets.widget({
                 .attr("fill", function(d) {
                     return curVizObj.view.alpha_colour_assignment[d.genotype];
                 })
-                .attr("stroke", "none")
-                .on("mouseover", function(d) {
-                    if (_checkForSelections(curVizObj)) {
-                        _mouseoverGenotype(d.genotype, view_id);
-                        // show labels in timesweep
-                        if (typeof _showLabels == 'function') {
-                            _showLabels(d.genotype, view_id);
-                        }
-                    }
-                })
-                .on("mouseout", function(d) {
-                    if (_checkForSelections(curVizObj)) {
-                        _mouseoutGenotype(view_id);
-                        // hide labels in timesweep
-                        if (typeof _hideLabels == 'function') {
-                            _hideLabels(view_id);
-                        }
-                    }
-                });
+                .attr("stroke", "none");
         }
 
         // PLOT TIMEPOINT ANNOTATION COLUMN
@@ -1046,17 +1028,7 @@ HTMLWidgets.widget({
                 .attr("fill", function(d) {
                     return curVizObj.view.tp_colourScale(d.sample_id);
                 })
-                .attr("stroke", "none")
-                .on("mouseover", function(d) {
-                    if (_checkForSelections(curVizObj)) {
-                        _mouseoverTp(d.sample_id, view_id);
-                    }
-                })
-                .on("mouseout", function(d) {
-                    if (_checkForSelections(curVizObj)) {
-                        _mouseoutTp(view_id);
-                    }
-                });
+                .attr("stroke", "none");
         }
 
         // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
