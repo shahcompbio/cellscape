@@ -674,6 +674,7 @@ function _linkClick(curVizObj, link_id) {
             d3.select("#" + curVizObj.view_id).selectAll(".nodeLabel_" + sc_id).remove(); // remove node labels
             d3.select("#" + curVizObj.view_id).select(".gridCellG.sc_" + sc_id).remove(); // remove copy number profile
             d3.select("#" + curVizObj.view_id).select(".gtypeAnnot.sc_" + sc_id).remove(); // remove genotype annotation
+            d3.select("#" + curVizObj.view_id).select(".tpAnnot.sc_" + sc_id).remove(); // remove timepoint annotation
             d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id).remove(); // remove indicator
 
             // remove single cell from list of single cells
@@ -1522,6 +1523,16 @@ function _updateTrimmedMatrix(curVizObj) {
                     return "translate(0," + (-1*diff_y) + ")";
                 });
         }
+        
+        // translate timepoint annotation
+        if (curVizObj.view.tpsSpecified) {
+            d3.select("#" + curVizObj.view_id).select(".tpAnnot.sc_" + sc_id)
+                .transition()
+                .duration(1000)
+                .attr("transform", function() {
+                    return "translate(0," + (-1*diff_y) + ")";
+                });
+        }
 
         // translate indicator
         d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id)
@@ -1570,37 +1581,6 @@ function _updateTrimmedMatrix(curVizObj) {
         .transition()
         .duration(1000)
         .attr("y", matrix_height + (config.chromLegendHeight / 2));
-
-    // check for gtypes no longer in the view
-    if (curVizObj.view.gtypesSpecified) {
-        // for each genotype
-        Object.keys(curVizObj.data.gtypes).forEach(function(gtype_id) {
-            // check that the genotype has members in the view
-            var gtype_members_in_view = 
-                _getIntersection(curVizObj.data.gtypes[gtype_id], 
-                    curVizObj.data.hm_sc_ids);
-
-            // if no members left in view, delete the genotype from the legend
-            if (gtype_members_in_view.length == 0) {
-                d3.select("#" + curVizObj.view_id).select(".legendGroupRect.gtype_" + gtype_id).remove();
-                d3.select("#" + curVizObj.view_id).select(".legendGroupText.gtype_" + gtype_id).remove();
-            }
-        })
-
-        // adjust position of gtypes in legend
-        d3.select("#" + curVizObj.view_id).selectAll(".legendGroupRect")
-            .transition()
-            .duration(1000)
-            .attr("y", function(d,i) {
-                return config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing);
-            });
-        d3.select("#" + curVizObj.view_id).selectAll(".legendGroupText")
-            .transition()
-            .duration(1000)
-            .attr("y", function(d,i) {
-                return config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + i*(config.rectHeight + config.rectSpacing) + (config.legendFontHeight/2);
-            })
-    }
 }
 
 /* function to get chromosome min and max values
