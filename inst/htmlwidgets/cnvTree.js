@@ -260,7 +260,7 @@ HTMLWidgets.widget({
         var maxCNV = 6;
         var cnvColorScale;
         var discrete_colours = ["#417EAA", "#D6D5D5", "#C63C4C"];
-        var targeted_colours = ["#df5952", "#ffffbf", "#6a90c3"];
+        var targeted_colours = ["#6a90c3", "#ffffbf", "#df5952"];
         // continuous data
         if (curVizObj.userConfig.continuous_cnv) {
             cnvColorScale = d3.scale.linear()  
