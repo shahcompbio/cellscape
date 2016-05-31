@@ -822,6 +822,7 @@ HTMLWidgets.widget({
 
         // TOOLTIP FUNCTIONS
 
+        // single cell node tip
         curVizObj.nodeTip = d3.tip()
             .attr('class', 'd3-tip')
             .offset([-10, 0])
@@ -829,6 +830,24 @@ HTMLWidgets.widget({
                 return "<span style='color:white'>" + d + "</span>";
             });
         curVizObj.view.treeSVG.call(curVizObj.nodeTip);
+
+        // mutation site tip
+        curVizObj.mutTip = d3.tip()
+            .attr('class', 'd3-tip')
+            .offset([-10, 0])
+            .html(function(d) {
+                return "<span style='color:white'>" + d + "</span>";
+            });
+        curVizObj.view.cnvSVG.call(curVizObj.mutTip);
+
+        // mutation value tip
+        curVizObj.valTip = d3.tip()
+            .attr('class', 'd3-tip')
+            .offset([-10, 0])
+            .html(function(d) {
+                return "<span style='color:white'>" + d + "</span>";
+            });
+        curVizObj.view.cnvSVG.call(curVizObj.valTip);
 
         // PLOT CNV 
 
@@ -862,7 +881,8 @@ HTMLWidgets.widget({
                         else {
                             genotype = "none";
                         }
-                        return "gridCell sc_" + d.sc_id + " gtype_" + genotype;
+                        var mut = (curVizObj.userConfig.heatmap_type == "targeted") ? d.site.replace(":","coord") : "none";
+                        return "gridCell sc_" + d.sc_id + " gtype_" + genotype + " mut_" + mut;
                     })
                     .attr("x", function(d) { 
                         return d.x; 
@@ -897,11 +917,22 @@ HTMLWidgets.widget({
                     .on("mouseover", function(d) {
                         if (_checkForSelections(curVizObj)) {
                             _mouseoverNode(d.sc_id, view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
+
+                            // for targeted mutations, show mutation tooltip on top of the first row in the heatmap
+                            if (curVizObj.userConfig.heatmap_type == "targeted") {
+                                curVizObj.mutTip.show(d.site, 
+                                    containerDIV.select(".gridCell.sc_" + curVizObj.data.hm_sc_ids[0] + ".mut_" + d.site.replace(":","coord")).node());
+                            }
+
+                            // show mutation value 
+                            curVizObj.valTip.show(d.gridCell_value);
                         }
                     })
                     .on("mouseout", function(d) {
                         if (_checkForSelections(curVizObj)) {
                             _mouseoutNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip);
+                            curVizObj.mutTip.hide();
+                            curVizObj.valTip.hide();
                         }
                     })
                     .append("title")
