@@ -937,24 +937,6 @@ function _scaledElbow(curVizObj, d, source_name, source, target) {
         + "V" + target.y + "H" + target.x;
 }
 
-/* function to calculate the result of a linear system, given m, b, upper limit and lower limit
-*/
-function _calcLinearRes(m, x, b, lowerLimit, upperLimit) {
-    var calculation = m*x + b;
-    var res;
-    if (calculation < lowerLimit) {
-        res = lowerLimit;
-    }
-    else if (calculation > upperLimit) {
-        res = upperLimit;
-    }
-    else {
-        res = calculation;
-    }
-    return res;
-}
-
-
 /* function to plot the force-directed graph
 * @param {Object} curVizObj
 */
@@ -963,11 +945,11 @@ function _plotForceDirectedGraph(curVizObj) {
         userConfig = curVizObj.userConfig;
 
     // force layout function
-    var force_layout = d3.layout.force() // TODO update below
+    var force_layout = d3.layout.force()
         .size([config.treeWidth, config.treeHeight])
-        .linkDistance(_calcLinearRes(1.9203, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 4.3023, 4, 20))
-        .gravity(_calcLinearRes(-0.0922, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 0.7815, 0.2, 0.7)) 
-        .charge(_calcLinearRes(-5.5321, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), -65.11, -100, -70))
+        .linkDistance(20)
+        .gravity(.09)
+        .charge(-20)
         .nodes(userConfig.sc_tree_nodes)
         .links(userConfig.sc_tree_edges)
         .start();        
@@ -1105,12 +1087,12 @@ function _rePlotForceLayout(curVizObj) {
         // layout function
         var force_layout = d3.layout.force()
             .size([config.treeWidth, config.treeHeight])
-            .linkDistance(_calcLinearRes(1.9203, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 4.3023, 4, 20))
-            .gravity(_calcLinearRes(-0.0922, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 0.7815, 0.2, 0.7)) 
-            .charge(_calcLinearRes(-5.5321, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), -65.11, -100, -70))
+            .linkDistance(20)
+            .gravity(.09)
+            .charge(-20)
             .nodes(userConfig.sc_tree_nodes)
             .links(userConfig.sc_tree_edges)
-            .start();        
+            .start();       
     }
 
     // node circles
