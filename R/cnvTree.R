@@ -303,10 +303,10 @@ cnvTree <- function(cnv_data = NULL,
     # CALCULATE CLONAL PREVALENCE FOR EACH SAMPLE
 
     # number of cells with each sample id
-    samples <- plyr::ddply(sc_annot, .(sample_id), summarise, n_in_sample = length(single_cell_id))
+    samples <- plyr::ddply(sc_annot, "sample_id", summarise, n_in_sample = length(single_cell_id))
 
     # number of cells with each unique sample id, genotype combination
-    genotypes_and_samples <- plyr::ddply(sc_annot, .(sample_id, genotype), summarise, n = length(single_cell_id))
+    genotypes_and_samples <- plyr::ddply(sc_annot, c("sample_id", "genotype"), summarise, n = length(single_cell_id))
 
     # get clonal prevalence
     clonal_prev <- merge(samples, genotypes_and_samples, by=c("sample_id"), all.y=TRUE)
