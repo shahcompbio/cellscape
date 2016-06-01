@@ -1105,9 +1105,9 @@ function _rePlotForceLayout(curVizObj) {
         // layout function
         var force_layout = d3.layout.force()
             .size([config.treeWidth, config.treeHeight])
-            .linkDistance(20)
-            .gravity(.09)
-            .charge(-20)
+            .linkDistance(_calcLinearRes(1.9203, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 4.3023, 4, 20))
+            .gravity(_calcLinearRes(-0.0922, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 0.7815, 0.2, 0.7)) 
+            .charge(_calcLinearRes(-5.5321, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), -65.11, -100, -70))
             .nodes(userConfig.sc_tree_nodes)
             .links(userConfig.sc_tree_edges)
             .start();        
