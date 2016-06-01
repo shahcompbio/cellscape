@@ -303,15 +303,16 @@ cnvTree <- function(cnv_data = NULL,
 
   # IF ALL NECESSARY PRAMETERS ARE PRESENT FOR TIMESWEEP
   if (!is.null(gtype_tree_edges) && !is.null(sc_annot) && ("timepoint" %in% colnames(sc_annot))) {
-    print("getting timesweep")
 
     # CALCULATE CLONAL PREVALENCE FOR EACH SAMPLE
 
     # number of cells with each sample id
-    samples <- plyr::ddply(sc_annot, "timepoint", summarise, n_in_sample = length(single_cell_id))
+    annots_gb_tp <- dplyr::group_by(sc_annot, timepoint)
+    samples <- dplyr::summarise(annots_gb_tp, n_in_sample = length(single_cell_id))
 
     # number of cells with each unique sample id, genotype combination
-    genotypes_and_samples <- plyr::ddply(sc_annot, c("timepoint", "genotype"), summarise, n = length(single_cell_id))
+    annots_gb_tp_gtype <- dplyr::group_by(sc_annot, timepoint, genotype)
+    genotypes_and_samples <- dplyr::summarise(annots_gb_tp_gtype, n = length(single_cell_id))
 
     # get clonal prevalence
     clonal_prev <- merge(samples, genotypes_and_samples, by=c("timepoint"), all.y=TRUE)
