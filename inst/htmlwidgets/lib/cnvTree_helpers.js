@@ -937,6 +937,23 @@ function _scaledElbow(curVizObj, d, source_name, source, target) {
         + "V" + target.y + "H" + target.x;
 }
 
+/* function to calculate the result of a linear system, given m, b, upper limit and lower limit
+*/
+function _calcLinearRes(m, x, b, lowerLimit, upperLimit) {
+    var calculation = m*x + b;
+    var res;
+    if (calculation < lowerLimit) {
+        res = lowerLimit;
+    }
+    else if (calculation > upperLimit) {
+        res = upperLimit;
+    }
+    else {
+        res = calculation;
+    }
+    return res;
+}
+
 
 /* function to plot the force-directed graph
 * @param {Object} curVizObj
@@ -945,30 +962,15 @@ function _plotForceDirectedGraph(curVizObj) {
     var config = curVizObj.generalConfig,
         userConfig = curVizObj.userConfig;
 
-    var gravityLimit = 0.2;
-    var gravityCalculation = 
-        (config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*(-0.0922) + 0.7815;
-    var gravity = (gravityCalculation < gravityLimit) ? gravityLimit : gravityCalculation;
+    // force layout function
     var force_layout = d3.layout.force() // TODO update below
         .size([config.treeWidth, config.treeHeight])
-        .linkDistance(function() {
-            var m = 1.9203;
-            var c = 4.3023;
-            return (config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*m + c;
-        })
-        .gravity(gravity) 
-        .charge(function() {
-            var m = -5.5321;
-            var c = -65.11;
-            var limit = -100;
-            var charge = (config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*m + c;
-            return (charge < limit) ? limit : charge;
-        })
+        .linkDistance(_calcLinearRes(1.9203, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 4.3023, 4, 20))
+        .gravity(_calcLinearRes(-0.0922, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 0.7815, 0.2, 0.7)) 
+        .charge(_calcLinearRes(-5.5321, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), -65.11, -100, -70))
         .nodes(userConfig.sc_tree_nodes)
         .links(userConfig.sc_tree_edges)
         .start();        
-    console.log("gravity");
-    console.log((config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*(-0.0922) + 0.7815);
 
     // plot links
     var link = curVizObj.view.treeSVG

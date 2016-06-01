@@ -47,7 +47,7 @@ cnvTree <- function(cnv_data = NULL,
                     sc_annot = NULL, 
                     display_node_ids = FALSE, 
                     show_warnings = TRUE,
-                    width = 1400, 
+                    width = 900, 
                     height = 800) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
