@@ -70,8 +70,6 @@ HTMLWidgets.widget({
 
         // get params from R
         curVizObj.userConfig = x;
-        console.log("curVizObj");
-        console.log(curVizObj);
         curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot != undefined); // (T/F) genotype annotation is specified
         curVizObj.view.tpsSpecified = // (T/F) timepoint annotation is specified
             (curVizObj.view.gtypesSpecified) ? curVizObj.userConfig.sc_annot[0]["timepoint"] : false;
@@ -1021,7 +1019,7 @@ HTMLWidgets.widget({
                 .attr("height", curVizObj.view.hm.rowHeight)
                 .attr("width", config.annotColWidth)
                 .attr("fill", function(d) {
-                    return curVizObj.view.alpha_colour_assignment[d.genotype];
+                    return curVizObj.view.colour_assignment[d.genotype];
                 })
                 .attr("stroke", "none");
         }

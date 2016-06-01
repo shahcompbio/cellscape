@@ -1636,7 +1636,7 @@ function _getGtypeColours(gtypes) {
     // get the alpha colour assignment
     Object.keys(colour_assignment).forEach(function(key, key_idx) {
         alpha_colour_assignment[key] = 
-            _increase_brightness(colour_assignment[key], 60);
+            _increase_brightness(colour_assignment[key], 30);
     });
 
     return {"colour_assignment": colour_assignment, "alpha_colour_assignment": alpha_colour_assignment}; 
