@@ -22,7 +22,7 @@ function _brushEnd(curVizObj, brush) {
 
         // highlight selected sc's indicators & nodes
         selectedSCs.forEach(function(sc_id) {
-            _highlightIndicator(sc_id, curVizObj);   
+            _highlightIndicator(sc_id, curVizObj.view_id);   
             _highlightNode(sc_id, curVizObj);    
         });
     } else {
@@ -71,8 +71,8 @@ function _mouseoverNode(sc_id, view_id, nodeTip, switchView, sc_annot) {
                           d3.select("#" + view_id).select(".graph.node.node_" + sc_id).node());
     }
 
-    // highlight indicator TODO
-    // _highlightIndicator(sc_id, curVizObj);
+    // highlight indicator 
+    _highlightIndicator(sc_id, view_id);
 
     // highlight node's genotype and timepoint
     var gtype = _getGenotype(sc_annot, sc_id);
@@ -93,7 +93,7 @@ function _mouseoutNode(sc_id, view_id, nodeTip) {
     nodeTip.hide(sc_id);
 
     //unhighlight indicator TODO
-    // _resetIndicator(curVizObj, sc_id);
+    _resetIndicator(view_id, sc_id);
 
     // reset genotypes
     _mouseoutGenotype(view_id);
@@ -193,38 +193,29 @@ function _highlightTp(tp, view_id) {
     d3.select("#" + view_id).selectAll(".tpGuide.tp_" + tp).attr("stroke-opacity", 1);
 }
 
-/* mouseover function for genotype annotations
-* highlights indicator & node for all sc's with this genotype annotation id, highlights genotype annotation rectangle in legend
-* @param {String} genotype -- genotype to highlight
-* @param {String} highlightColour -- colour to highlight indicators/nodes
+/* function to highlight a single cell
+* @param {String} sc_id -- single cell id
 * @param {String} view_id -- id of current view
 */
-function _mouseoverGroupAnnot(genotype, highlightColour, view_id) {
-    // highlight indicator & node for all sc's with this genotype annotation id
-    d3.select("#" + view_id).selectAll(".indic.gtype_" + genotype).attr("fill-opacity", 1);
-    d3.select("#" + view_id).selectAll(".node.gtype_" + genotype).attr("fill", highlightColour);
-
-    // highlight genotype annotation rectangle in legend
-    _highlightGroupAnnotLegendRect(genotype, highlightColour, view_id);
+function _highlightSingleCell(sc_id, view_id) {
+    d3.select("#" + view_id).selectAll(".graph.node.node_" + sc_id).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tree.node.node_" + sc_id).classed("inactive", false);
 }
 
-/* mouseover function for genotype annotations
-* reset indicators, nodes, genotype annotation rectangles in legend
+/* function to inactivate all single cells
 * @param {String} view_id -- id of current view
-* @param {String} time_space -- if time or space view provided, this string should be "time" or "space", respectively
 */
-function _mouseoutGroupAnnot(view_id, time_space) {
-    // reset indicators & nodes
-    _resetIndicators(view_id);
-    _resetNodes(view_id);
+function _inactivateSingleCells(view_id) {
+    d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", true);
+    d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", true);
+}
 
-    // reset genotype annotation rectangles in legend
-    _resetGroupAnnotLegendRects(view_id);
-
-    // highlight genotype in timesweep
-    if (time_space == "time") {
-        // _resetView(view_id);
-    }
+/* function to reset all single cells
+* @param {String} view_id -- id of current view
+*/
+function _resetSingleCells(view_id) {
+    d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", false);
 }
 
 /* function to highlight a node in the tree
@@ -255,10 +246,10 @@ function _resetGroupAnnotLegendRects(view_id) {
 
 /* function to highlight indicator for a single cell
 * @param {String} sc_id -- single cell id
-* @param {Object} curVizObj
+* @param {String} view_id -- id for current view
 */
-function _highlightIndicator(sc_id, curVizObj) {
-    d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id)
+function _highlightIndicator(sc_id, view_id) {
+    d3.select("#" + view_id).select(".indic.sc_" + sc_id)
         .attr("fill-opacity", 1);
 }
 
@@ -275,9 +266,10 @@ function _resetNode(sc_id, curVizObj) {
 
 /* function to reset indicator for a single cell
 * @param {String} sc_id -- single cell id
+* @param {String} view_id -- id for current view
 */
-function _resetIndicator(curVizObj, sc_id) {
-    d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id)
+function _resetIndicator(view_id, sc_id) {
+    d3.select("#" + view_id).select(".indic.sc_" + sc_id)
         .attr("fill-opacity", 0);
 }
 
@@ -573,15 +565,9 @@ function _getLinkId(d) {
 function _linkMouseout(curVizObj, resetSelectedSCList) {
     // if there's no node or link selection taking place, or scissors tool on, reset the links
     if (_checkForSelections(curVizObj) || d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
-        // reset nodes
-        d3.select("#" + curVizObj.view_id).selectAll(".node")
-            .attr("fill", function(d) {
-                return _getNodeFill(curVizObj, d.sc_id);
-            });
-
-        // reset indicators
-        d3.select("#" + curVizObj.view_id).selectAll(".indic")
-            .attr("fill-opacity", 0);
+        // reset nodes & indicators
+        _resetSingleCells(curVizObj.view_id);
+        _resetIndicators(curVizObj.view_id);
 
         // reset links
         d3.select("#" + curVizObj.view_id).selectAll(".link")
@@ -602,6 +588,8 @@ function _linkMouseout(curVizObj, resetSelectedSCList) {
 function _linkMouseover(curVizObj, link_id) {
     // if there's no node or link selection taking place
     if (_checkForSelections(curVizObj)) {
+        // turn off all single cells
+        _inactivateSingleCells(curVizObj.view_id);
         // highlight downstream links
         _downstreamEffects(curVizObj, link_id);                     
     }
@@ -681,29 +669,9 @@ function _downstreamEffects(curVizObj, link_id) {
     curVizObj.view.selectedSCs.push(target_id);
     curVizObj.view.selectedLinks.push(link_id);
 
-    // highlight node
-    if (curVizObj.generalConfig.switchView) { // tree view is on
-        d3.select("#" + curVizObj.view_id).select(".tree.node_" + target_id)
-            .attr("fill", curVizObj.generalConfig.highlightColour);
-    }
-    else { // graph view is on
-        d3.select("#" + curVizObj.view_id).select(".graph.node_" + target_id)
-            .attr("fill", curVizObj.generalConfig.highlightColour);
-    }
-
-    // highlight indicator for target
-    d3.select("#" + curVizObj.view_id).select(".indic.sc_" + target_id)
-        .attr("fill-opacity", 1);
-
-    // highlight link
-    if (curVizObj.generalConfig.switchView) { // tree view is on
-        d3.select("#" + curVizObj.view_id).select(".tree."+link_id)
-            .attr("stroke", curVizObj.generalConfig.linkHighlightColour);
-    }
-    else { // graph view is on
-        d3.select("#" + curVizObj.view_id).select(".graph."+link_id)
-            .attr("stroke", curVizObj.generalConfig.linkHighlightColour);
-    }
+    // highlight node & its indicator
+    _highlightSingleCell(target_id, curVizObj.view_id);
+    _highlightIndicator(target_id, curVizObj.view_id);
 
     // get the targets of this target
     var sourceRX = new RegExp("link_source_" + target_id + "_target_(.+)");
