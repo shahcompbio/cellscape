@@ -54,12 +54,12 @@ ul {
 
 .graph.node.inactive {
     fill: #ffffff;
-    stroke: #B7B7B7;
+    stroke: #CECECE;
 }
 
 .tree.node.inactive {
     fill: #ffffff;
-    stroke: #B7B7B7;
+    stroke: #CECECE;
 }
 
 .legendGroupRect.active {

@@ -37,10 +37,10 @@ HTMLWidgets.widget({
             annotHmSpace: 3,
 
             // colours
-            defaultNodeColour: "#B7B7B7",
+            defaultNodeColour: "#CECECE",
             highlightColour: "#000000",
             linkHighlightColour: "#000000",
-            defaultLinkColour: "#B7B7B7",
+            defaultLinkColour: "#CECECE",
 
             // chromosome legend
             chromLegendHeight: 15, // height of chromosome legend
