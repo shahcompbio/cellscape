@@ -602,6 +602,8 @@ function _linkMouseover(curVizObj, link_id) {
         curVizObj.view.selectedSCs = [];
         curVizObj.view.selectedLinks = [];
 
+        // turn off all single cells
+        _inactivateSingleCells(curVizObj.view_id);
         // highlight downstream links
         _downstreamEffects(curVizObj, link_id); 
 
@@ -651,6 +653,9 @@ function _linkClick(curVizObj, link_id) {
                 curVizObj.data.hm_sc_ids.splice(index, 1);
             }
         })
+
+        // reset single cells
+        _resetSingleCells(curVizObj.view_id);
 
         // adjust copy number matrix to fill the entire space
         d3.timer(_updateTrimmedMatrix(curVizObj), 300);
