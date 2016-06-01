@@ -1440,7 +1440,7 @@ function _getTP(sc_annot, sc_id) {
     if (sc_annot) {
         var sc_w_gtype = _.findWhere(sc_annot, {"single_cell_id": sc_id});
         // if there's an annotation for this single cell, return it, otherwise return "none"
-        return (sc_w_gtype && sc_w_gtype.sample_id) ? sc_w_gtype.sample_id : "none";
+        return (sc_w_gtype && sc_w_gtype.timepoint) ? sc_w_gtype.timepoint : "none";
     }
     else {
         return "none";

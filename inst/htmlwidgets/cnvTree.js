@@ -72,7 +72,7 @@ HTMLWidgets.widget({
         curVizObj.userConfig = x;
         curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot != null); // (T/F) genotype annotation is specified
         curVizObj.view.tpsSpecified = // (T/F) timepoint annotation is specified
-            (curVizObj.view.gtypesSpecified) ? curVizObj.userConfig.sc_annot[0]["sample_id"] : false;
+            (curVizObj.view.gtypesSpecified) ? curVizObj.userConfig.sc_annot[0]["timepoint"] : false;
 
         // selected single cells list & selected links list
         curVizObj.view.selectedSCs = [];
@@ -299,7 +299,7 @@ HTMLWidgets.widget({
         if (curVizObj.view.gtypesSpecified) {
 
             // sorted timepoints
-            curVizObj.data.tps = _.uniq(_.pluck(curVizObj.userConfig.sc_annot, "sample_id")).sort(function(a, b) {
+            curVizObj.data.tps = _.uniq(_.pluck(curVizObj.userConfig.sc_annot, "timepoint")).sort(function(a, b) {
                                                                                           var regex = /(^[a-zA-Z]*)(\d*)$/;
                                                                                           matchA = regex.exec(a);
                                                                                           matchB = regex.exec(b); 
@@ -1036,7 +1036,7 @@ HTMLWidgets.widget({
                 .enter()
                 .append("rect")
                 .attr("class", function(d) {
-                    return "tpAnnot tp_" + d.sample_id + " sc_" + d.single_cell_id;
+                    return "tpAnnot tp_" + d.timepoint + " sc_" + d.single_cell_id;
                 })
                 .attr("x", 0)
                 .attr("y", function(d) { 
@@ -1046,7 +1046,7 @@ HTMLWidgets.widget({
                 .attr("height", curVizObj.view.hm.rowHeight)
                 .attr("width", config.annotColWidth)
                 .attr("fill", function(d) {
-                    return curVizObj.view.tp_colourScale(d.sample_id);
+                    return curVizObj.view.tp_colourScale(d.timepoint);
                 })
                 .attr("stroke", "none");
         }

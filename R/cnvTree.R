@@ -31,7 +31,7 @@
 #' @param sc_annot {Data frame} (Required for TimeSweep/SpaceSweep) Annotations (genotype and sample id) for each single cell.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "genotype" - genotype assignment
-#'                       (3) {String} "sample_id" - id of the sample (either a time point or a spatial location)
+#'                       (3) {String} "timepoint" - id of the sampled time point. 
 #'                                                  Note: in the case of time points, they will be ordered alphabetically
 #'
 #' @param sample_type {String} (Required for TimeSweep/SpaceSweep) Sample type ("time" or "space"). 
@@ -49,8 +49,8 @@ cnvTree <- function(cnv_data = NULL,
                     display_node_ids = FALSE, 
                     sample_type = NULL,
                     show_warnings = TRUE,
-                    width = 1000, 
-                    height = 1000) {
+                    width = 900, 
+                    height = 800) {
 
   # CHECK REQUIRED INPUTS ARE PRESENT 
 
@@ -280,15 +280,15 @@ cnvTree <- function(cnv_data = NULL,
     # ensure column names are correct
     if (!("single_cell_id" %in% colnames(sc_annot)) ||
         !("genotype" %in% colnames(sc_annot)) ||
-        !("sample_id" %in% colnames(sc_annot))) {
+        !("timepoint" %in% colnames(sc_annot))) {
       stop(paste("Single cell group assignment data frame must have the following column names: ", 
-          "\"single_cell_id\", \"genotype\", \"sample_id\"", sep=""))
+          "\"single_cell_id\", \"genotype\", \"timepoint\"", sep=""))
     }
 
     # ensure data is of the correct type
     sc_annot$single_cell_id <- as.character(sc_annot$single_cell_id)
     sc_annot$genotype <- as.character(sc_annot$genotype)
-    sc_annot$sample_id <- as.character(sc_annot$sample_id)
+    sc_annot$timepoint <- as.character(sc_annot$timepoint)
 
     # remove all single cells that are not in the tree
     scs_in_groups <- unique(sc_annot$single_cell_id)
@@ -303,17 +303,17 @@ cnvTree <- function(cnv_data = NULL,
     # CALCULATE CLONAL PREVALENCE FOR EACH SAMPLE
 
     # number of cells with each sample id
-    samples <- plyr::ddply(sc_annot, "sample_id", summarise, n_in_sample = length(single_cell_id))
+    samples <- plyr::ddply(sc_annot, "timepoint", summarise, n_in_sample = length(single_cell_id))
 
     # number of cells with each unique sample id, genotype combination
-    genotypes_and_samples <- plyr::ddply(sc_annot, c("sample_id", "genotype"), summarise, n = length(single_cell_id))
+    genotypes_and_samples <- plyr::ddply(sc_annot, c("timepoint", "genotype"), summarise, n = length(single_cell_id))
 
     # get clonal prevalence
-    clonal_prev <- merge(samples, genotypes_and_samples, by=c("sample_id"), all.y=TRUE)
+    clonal_prev <- merge(samples, genotypes_and_samples, by=c("timepoint"), all.y=TRUE)
     clonal_prev$clonal_prev <- clonal_prev$n/clonal_prev$n_in_sample
 
     # rename columns
-    colnames(clonal_prev)[which(colnames(clonal_prev) == "sample_id")] <- "timepoint"
+    colnames(clonal_prev)[which(colnames(clonal_prev) == "timepoint")] <- "timepoint"
     colnames(clonal_prev)[which(colnames(clonal_prev) == "genotype")] <- "clone_id"
 
     # GET INFORMATION FOR TIMESWEEP
