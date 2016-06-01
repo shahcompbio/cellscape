@@ -945,6 +945,10 @@ function _plotForceDirectedGraph(curVizObj) {
     var config = curVizObj.generalConfig,
         userConfig = curVizObj.userConfig;
 
+    var gravityLimit = 0.2;
+    var gravityCalculation = 
+        (config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*(-0.0922) + 0.7815;
+    var gravity = (gravityCalculation < gravityLimit) ? gravityLimit : gravityCalculation;
     var force_layout = d3.layout.force() // TODO update below
         .size([config.treeWidth, config.treeHeight])
         .linkDistance(function() {
@@ -952,17 +956,19 @@ function _plotForceDirectedGraph(curVizObj) {
             var c = 4.3023;
             return (config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*m + c;
         })
-        .gravity((config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*(-0.0922) + 0.7815) 
+        .gravity(gravity) 
         .charge(function() {
             var m = -5.5321;
             var c = -65.11;
-            console.log("charge");
-            console.log((config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*m + c);
-            return (config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*m + c;
+            var limit = -100;
+            var charge = (config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*m + c;
+            return (charge < limit) ? limit : charge;
         })
         .nodes(userConfig.sc_tree_nodes)
         .links(userConfig.sc_tree_edges)
         .start();        
+    console.log("gravity");
+    console.log((config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*(-0.0922) + 0.7815);
 
     // plot links
     var link = curVizObj.view.treeSVG
