@@ -31,10 +31,9 @@
 #' @param sc_annot {Data frame} (Required for TimeSweep/SpaceSweep) Annotations (genotype and sample id) for each single cell.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "genotype" - genotype assignment
-#'                       (3) {String} "timepoint" - id of the sampled time point. 
+#'                       (3) {String} (Optional) "timepoint" - id of the sampled time point. 
 #'                                                  Note: in the case of time points, they will be ordered alphabetically
 #'
-#' @param sample_type {String} (Required for TimeSweep/SpaceSweep) Sample type ("time" or "space"). 
 #' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
 #' @param show_warnings {Boolean} (Optional) Whether or not to show any warnings. Default is TRUE.
 #' @param width {Number} (Optional) Width of the plot.
@@ -47,7 +46,6 @@ cnvTree <- function(cnv_data = NULL,
                     gtype_tree_edges = NULL,
                     sc_annot = NULL, 
                     display_node_ids = FALSE, 
-                    sample_type = NULL,
                     show_warnings = TRUE,
                     width = 900, 
                     height = 800) {
@@ -279,26 +277,30 @@ cnvTree <- function(cnv_data = NULL,
   if (!is.null(sc_annot)) {
     # ensure column names are correct
     if (!("single_cell_id" %in% colnames(sc_annot)) ||
-        !("genotype" %in% colnames(sc_annot)) ||
-        !("timepoint" %in% colnames(sc_annot))) {
+        !("genotype" %in% colnames(sc_annot))) {
       stop(paste("Single cell group assignment data frame must have the following column names: ", 
-          "\"single_cell_id\", \"genotype\", \"timepoint\"", sep=""))
+          "\"single_cell_id\", \"genotype\"", sep=""))
     }
 
     # ensure data is of the correct type
     sc_annot$single_cell_id <- as.character(sc_annot$single_cell_id)
     sc_annot$genotype <- as.character(sc_annot$genotype)
-    sc_annot$timepoint <- as.character(sc_annot$timepoint)
+    if ("timepoint" %in% colnames(sc_annot)) {
+      sc_annot$timepoint <- as.character(sc_annot$timepoint)
+    }
 
     # remove all single cells that are not in the tree
     scs_in_groups <- unique(sc_annot$single_cell_id)
     scs_missing_from_tree <- setdiff(scs_in_groups,scs_in_tree)
     sc_annot <- sc_annot[which(!(sc_annot$single_cell_id %in% scs_missing_from_tree)),]
+
+    # to JSON
+    sc_annot_JSON <- jsonlite::toJSON(sc_annot)
   }
 
-  # IF ALL NECESSARY PRAMETERS ARE PRESENT FOR TIMESWEEP/SPACESWEEP
-  if (!is.null(gtype_tree_edges) && !is.null(sample_type) && !is.null(sc_annot)) {
-    print("getting timesweep/spacesweep")
+  # IF ALL NECESSARY PRAMETERS ARE PRESENT FOR TIMESWEEP
+  if (!is.null(gtype_tree_edges) && !is.null(sc_annot) && ("timepoint" %in% colnames(sc_annot))) {
+    print("getting timesweep")
 
     # CALCULATE CLONAL PREVALENCE FOR EACH SAMPLE
 
@@ -317,51 +319,40 @@ cnvTree <- function(cnv_data = NULL,
     colnames(clonal_prev)[which(colnames(clonal_prev) == "genotype")] <- "clone_id"
 
     # GET INFORMATION FOR TIMESWEEP
-    if (sample_type == "time") {
-      time_space_view_provided <- "time"
-      mutations <- "NA"
-      clone_colours <- "NA"
-      xaxis_title <- "Time Point"
-      yaxis_title <- "Clonal Prevalence"
-      alpha <- 50 
-      genotype_position <- "stack" 
-      perturbations <- "NA" 
-      sort <- FALSE 
-      show_warnings <- TRUE
+    timesweep_wanted <- TRUE
+    mutations <- "NA"
+    clone_colours <- "NA"
+    xaxis_title <- "Time Point"
+    yaxis_title <- "Clonal Prevalence"
+    alpha <- 50 
+    genotype_position <- "stack" 
+    perturbations <- "NA" 
+    sort <- FALSE 
+    show_warnings <- TRUE
 
-      timesweep_userParams <- processUserData(clonal_prev, 
-                                              gtype_tree_edges, 
-                                              mutations,
-                                              clone_colours, 
-                                              xaxis_title, 
-                                              yaxis_title, 
-                                              alpha, 
-                                              genotype_position, 
-                                              perturbations, 
-                                              sort, 
-                                              show_warnings,
-                                              width, 
-                                              height)
-    }
-    # GET INFORMATION FOR SPACESWEEP
-    else if (sample_type == "space") {
-      time_space_view_provided <- "space"
-
-    }
-    else {
-      stop(paste("User has provided all the necessary information for a TimeSweep/SpaceSweep view,",
-        " but not specified the sample_type (must be 'space' or 'time')", sep=""))
-    }
+    timesweep_userParams <- processUserData(clonal_prev, 
+                                            gtype_tree_edges, 
+                                            mutations,
+                                            clone_colours, 
+                                            xaxis_title, 
+                                            yaxis_title, 
+                                            alpha, 
+                                            genotype_position, 
+                                            perturbations, 
+                                            sort, 
+                                            show_warnings,
+                                            width, 
+                                            height)
   }
   else {
     timesweep_userParams <- list()
-    time_space_view_provided <- NULL
+    timesweep_wanted <- FALSE
   }
 
 
   # forward options using x
   cnvTree_userParams <- list(
-    sc_annot=jsonlite::toJSON(sc_annot), # single cells and their associated group ids
+    sc_annot=sc_annot_JSON, # single cells and their associated group ids
     sc_tree_edges=jsonlite::toJSON(tree_edges_for_layout), # tree edges for phylogeny
     sc_tree_nodes=jsonlite::toJSON(tree_nodes_for_layout), # tree nodes for phylogeny
     link_ids=link_ids, # ids for all links in the phylogeny
@@ -375,7 +366,7 @@ cnvTree <- function(cnv_data = NULL,
     display_node_ids=display_node_ids, # whether or not to display the node id labels on each node
     scs_missing_from_hm=scs_missing_from_hm, # single cells in tree but not heatmap
     continuous_cnv=continuous_cnv, # whether copy number data should be continuous or discrete
-    time_space_view_provided=time_space_view_provided # type of time/space view provided (NULL, "time", or "space")
+    timesweep_wanted=timesweep_wanted # type of time/space view provided (NULL, "time", or "space")
   )
   x = append(cnvTree_userParams, timesweep_userParams)
 
@@ -653,10 +644,7 @@ findMode <- function(x) {
 }
 
 
-
-
 # TIMESWEEP HELPERS
-
 
 #' Function to process the user data
 processUserData <- function(clonal_prev, 

@@ -70,7 +70,9 @@ HTMLWidgets.widget({
 
         // get params from R
         curVizObj.userConfig = x;
-        curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot != null); // (T/F) genotype annotation is specified
+        console.log("curVizObj");
+        console.log(curVizObj);
+        curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot != undefined); // (T/F) genotype annotation is specified
         curVizObj.view.tpsSpecified = // (T/F) timepoint annotation is specified
             (curVizObj.view.gtypesSpecified) ? curVizObj.userConfig.sc_annot[0]["timepoint"] : false;
 
@@ -86,12 +88,12 @@ HTMLWidgets.widget({
         config.width = vizObj.width - 15;    
         config.cnvTreeViewHeight;
         // user wants timesweep 
-        if (curVizObj.userConfig.time_space_view_provided == "time") {
+        if (curVizObj.userConfig.timesweep_wanted) {
             config.cnvTreeViewHeight = (vizObj.height) * 2/3;
             config.tsViewHeight = (vizObj.height) * 1/3;
         } 
         // user wants spacesweep
-        else if (curVizObj.userConfig.time_space_view_provided == "time") {
+        else if (curVizObj.userConfig.timesweep_wanted) {
             // TODO
             config.cnvTreeViewHeight = (vizObj.height);
         }
@@ -1400,9 +1402,9 @@ HTMLWidgets.widget({
 
 
         // RUN TIMESWEEP
-        _run_timesweep(el.id, config.width, config.tsViewHeight, x);
-
-
+        if (curVizObj.userConfig.timesweep_wanted) {
+            _run_timesweep(el.id, config.width, config.tsViewHeight, x);
+        }
     },
 
     resize: function(el, width, height, instance) {

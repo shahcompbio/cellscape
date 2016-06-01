@@ -1616,7 +1616,8 @@ function _getPhyloColours(curVizObj) {
 */
 function _getGtypeColours(gtypes) {
 
-    var colour_assignment = {};
+    var colour_assignment = {},
+        alpha_colour_assignment = {};
 
     var s = 0.95, // saturation
         l = 0.76; // lightness
@@ -1635,7 +1636,7 @@ function _getGtypeColours(gtypes) {
     // get the alpha colour assignment
     Object.keys(colour_assignment).forEach(function(key, key_idx) {
         alpha_colour_assignment[key] = 
-            _increase_brightness(colour_assignment[key], curVizObj.userConfig.alpha);
+            _increase_brightness(colour_assignment[key], 60);
     });
 
     return {"colour_assignment": colour_assignment, "alpha_colour_assignment": alpha_colour_assignment}; 
