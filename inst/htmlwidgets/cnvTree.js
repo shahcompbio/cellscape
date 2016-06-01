@@ -1271,7 +1271,7 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         _mouseoverGenotype(d, view_id);
                         // show labels in timesweep
-                        if (typeof _showLabels == 'function') {
+                        if (curVizObj.userConfig.timesweep_wanted) {
                             _showLabels(d, view_id);
                         }
                     }
@@ -1280,7 +1280,7 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         _mouseoutGenotype(view_id);
                         // hide labels in timesweep
-                        if (typeof _hideLabels == 'function') {
+                        if (curVizObj.userConfig.timesweep_wanted) {
                             _hideLabels(view_id);
                         }
                     }
@@ -1303,7 +1303,7 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         _mouseoverGenotype(d, view_id);
                         // show labels in timesweep
-                        if (typeof _showLabels == 'function') {
+                        if (curVizObj.userConfig.timesweep_wanted) {
                             _showLabels(d, view_id);
                         }
                     }
@@ -1312,7 +1312,7 @@ HTMLWidgets.widget({
                     if (_checkForSelections(curVizObj)) {
                         _mouseoutGenotype(view_id);
                         // hide labels in timesweep
-                        if (typeof _hideLabels == 'function') {
+                        if (curVizObj.userConfig.timesweep_wanted) {
                             _hideLabels(view_id);
                         }
                     }

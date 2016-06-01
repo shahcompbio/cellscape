@@ -7,6 +7,8 @@ function _brushEnd(curVizObj, brush) {
     var selectedSCs = [];
     var extent = d3.event.target.extent();
     if (!brush.empty()) {
+        // turn off all single cells
+        _inactivateSingleCells(curVizObj.view_id);
 
         // highlight selected grid cell rows
         d3.select("#" + curVizObj.view_id).selectAll(".gtypeAnnot").classed("active", function(d) {
@@ -23,7 +25,7 @@ function _brushEnd(curVizObj, brush) {
         // highlight selected sc's indicators & nodes
         selectedSCs.forEach(function(sc_id) {
             _highlightIndicator(sc_id, curVizObj.view_id);   
-            _highlightNode(sc_id, curVizObj);    
+            _highlightSingleCell(sc_id, curVizObj.view_id);    
         });
     } else {
         _clearBrush(curVizObj.view_id);
@@ -49,7 +51,7 @@ function _clearBrush(view_id) {
     d3.select("#" + view_id).selectAll(".gridCell").classed("active", false)
 
     // reset nodes and indicators
-    _resetNodes(view_id);
+    _resetSingleCells(view_id);
     _resetIndicators(view_id);
 }
 
