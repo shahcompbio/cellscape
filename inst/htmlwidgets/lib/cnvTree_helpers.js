@@ -945,11 +945,21 @@ function _plotForceDirectedGraph(curVizObj) {
     var config = curVizObj.generalConfig,
         userConfig = curVizObj.userConfig;
 
-    var force_layout = d3.layout.force()
+    var force_layout = d3.layout.force() // TODO update below
         .size([config.treeWidth, config.treeHeight])
-        .linkDistance(20)
-        .gravity(.09)
-        .charge(-20)
+        .linkDistance(function() {
+            var m = 1.9203;
+            var c = 4.3023;
+            return (config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*m + c;
+        })
+        .gravity((config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*(-0.0922) + 0.7815) 
+        .charge(function() {
+            var m = -5.5321;
+            var c = -65.11;
+            console.log("charge");
+            console.log((config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*m + c);
+            return (config.smallest_tree_dim / userConfig.sc_tree_nodes.length)*m + c;
+        })
         .nodes(userConfig.sc_tree_nodes)
         .links(userConfig.sc_tree_edges)
         .start();        

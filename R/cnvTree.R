@@ -297,6 +297,9 @@ cnvTree <- function(cnv_data = NULL,
     # to JSON
     sc_annot_JSON <- jsonlite::toJSON(sc_annot)
   }
+  else {
+    sc_annot_JSON <- sc_annot
+  }
 
   # IF ALL NECESSARY PRAMETERS ARE PRESENT FOR TIMESWEEP
   if (!is.null(gtype_tree_edges) && !is.null(sc_annot) && ("timepoint" %in% colnames(sc_annot))) {
