@@ -577,11 +577,18 @@ getMutOrder <- function(mut_data) {
   # get mutation site as one string
   cur_data$site <- paste(trimws(cur_data$chr), trimws(cur_data$coord), sep=separator)
 
-  # get only site, VAF and single cell id
-  cur_data <- cur_data[,c("site", "single_cell_id", "VAF")]
+  # group data by mutation site
+  cur_data$VAF_rounded <- cur_data$VAF
+  cur_data$VAF_rounded[which(cur_data$VAF_rounded < 0.05)] <- -10000000
+  cur_data$VAF_rounded[which(cur_data$VAF_rounded >= 0.95)] <- 1
+  cur_data$VAF_rounded[which(is.na(cur_data$VAF_rounded))] <- 0.5
+  cur_data$VAF_rounded[which(is.infinite(cur_data$VAF_rounded))] <- 0.5
 
-  # get a data frame of sites by single cell ID, containing VAF
-  mat <- reshape2::dcast(cur_data, site ~ single_cell_id, value.var="VAF")
+  # group data by mutation site -- get only site, rounded VAF and single cell id
+  cur_data_for_mat <- cur_data[,c("site", "single_cell_id", "VAF_rounded")]
+
+  # get a data frame of sites X single cell ID, containing rounded VAF
+  mat <- reshape2::dcast(cur_data_for_mat, site ~ single_cell_id, value.var="VAF_rounded")
   rownames(mat) <- mat$site # set rownames to site names
   mat <- mat[, -which(colnames(mat) == "site")] # remove site column
 
@@ -592,7 +599,24 @@ getMutOrder <- function(mut_data) {
   # get the order of hierarchically clustered mutations
   mut_order <- rownames(mat)[mut_clust$order]
 
-  return(mut_order)
+  # get average VAF for each site
+  cur_data_grouped_by_site <- dplyr::group_by(cur_data, site)
+  mut_site_avg <- dplyr::summarise(cur_data_grouped_by_site, avg_VAF=sum(VAF, na.rm=TRUE)/length(VAF))
+
+  # order average mutation VAFs by the order of mutations calculated by hierarchical clustering
+  mut_site_avg_ordered <- mut_site_avg[match(mut_order, mut_site_avg$site),]
+
+  # find slope of the ordered sites' VAFs
+  model <- lm(formula = seq(1, nrow(mut_site_avg_ordered)) ~ mut_site_avg_ordered$avg_VAF, x=TRUE, y=TRUE, na.action=na.omit)
+  slope <- coef(model)["mut_site_avg_ordered$avg_VAF"]
+
+  # if the mutation VAFs are generally increasing, reverse order
+  if (slope > 0) {
+    return(rev(mut_order))
+  }
+  else {
+    return(mut_order)
+  }
 }
 
 #' function to get targeted heatmap information 
