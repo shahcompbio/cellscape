@@ -12,7 +12,7 @@ if (length(args)!=2) {
 }
 
 # parameters
-path <- args[1] # e.g. "/Users/msmith/data/external/SA501_xenograft_data/hmmcopy_all/"
+path <- args[1] # e.g. "/Users/msmith/big_data/SA501_xenograft_data/hmmcopy_all/"
 fileRX <- "SA501.*segments.csv"
 singleCellIdRX <- "SA501X3F-([0-9]+).segments.csv"
 

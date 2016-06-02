@@ -1,6 +1,6 @@
 Package: cnvTree
 Title: Explores single cell copy number profiles in the context of a single cell tree.
-Version: 0.0.1.9050
+Version: 0.0.1.9051
 Authors@R: person("Maia", "Smith", email = "maiaannesmith@gmail.com", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
 Depends:
