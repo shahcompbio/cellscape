@@ -38,17 +38,17 @@ function _brushEnd(curVizObj, brush) {
 /* function to check for selections
 */
 function _checkForSelections(curVizObj) {
-    return ((d3.select("#" + curVizObj.view_id).selectAll(".nodeSelected")[0].length == 0) && // node selection
-            (d3.select("#" + curVizObj.view_id).selectAll(".linkSelected")[0].length == 0) && // link selection
-            (d3.select("#" + curVizObj.view_id).selectAll(".brushButtonSelected")[0].length == 0) && // brush button not selected
-            (d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 0)) // scissors button not selected
+    return ((d3.select("#" + curVizObj.view_id).selectAll(".nodeSelected")[0].length === 0) && // node selection
+            (d3.select("#" + curVizObj.view_id).selectAll(".linkSelected")[0].length === 0) && // link selection
+            (d3.select("#" + curVizObj.view_id).selectAll(".brushButtonSelected")[0].length === 0) && // brush button not selected
+            (d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length === 0)); // scissors button not selected
 }
 
 /* function to clear any brush selection
 */
 function _clearBrush(view_id) {
-    d3.select("#" + view_id).select(".cnvSVG").classed("brushed", false)
-    d3.select("#" + view_id).selectAll(".gridCell").classed("active", false)
+    d3.select("#" + view_id).select(".cnvSVG").classed("brushed", false);
+    d3.select("#" + view_id).selectAll(".gridCell").classed("active", false);
 
     // reset nodes and indicators
     _resetSingleCells(view_id);
@@ -414,7 +414,7 @@ function _gt_findTreeByRoot(list, name) {
 function _gt_getLinearTreeSegments(curVizObj, curNode, chains, base) {
 
     // if it's a new base, create the base, with no descendants in its array yet
-    if (base == "") {
+    if (base === "") {
         base = curNode.id;
         chains[base] = [];
         curVizObj.data.gtypeTreeChainRoots.push(curNode.id);
@@ -468,8 +468,8 @@ function _getYCoordinates(curVizObj) {
         missing_scs_sorted.push({
             sc_id: sc_id,
             n_ancestors: curVizObj.data.treeAncestorsArr[sc_id].length
-        })
-    })
+        });
+    });
     // sort by descending number of ancestors
     _sortByKey(missing_scs_sorted, "n_ancestors"); 
     missing_scs_sorted.reverse();
@@ -490,7 +490,7 @@ function _getYCoordinates(curVizObj) {
                 if (curVizObj.data.yCoordinates[desc]) {
                     y_coordinates_of_direct_descendants.push(curVizObj.data.yCoordinates[desc]);
                 }
-            })
+            });
 
             // set the y-coordinate for this latent single cell to be 
             // the average y-coordinate of these direct descendants
@@ -514,7 +514,7 @@ function _getYCoordinates(curVizObj) {
         // mark this cell as assigned to a y-coordinate
         assigned_scs.push(sc.sc_id);
 
-    })
+    });
 }
 
 
@@ -550,7 +550,7 @@ function _getXCoordinates(curVizObj) {
             curVizObj.data.xCoordinatesDist[node.sc_id] = 
                 spaceBeforeStart + (curVizObj.data.pathDists[node.sc_id] / curVizObj.data.max_tree_path_dist)*treeWidth;
         }
-    })
+    });
 }
 
 /* function to get the link id for a link data object
@@ -581,7 +581,7 @@ function _linkMouseout(curVizObj, resetSelectedSCList) {
             curVizObj.view.selectedLinks = [];
         }
     }
-};
+}
 
 /* function for mouseover of link
 * @param {Object} curVizObj
@@ -637,7 +637,7 @@ function _linkClick(curVizObj, link_id) {
             // remove link from list of links
             var index = userConfig.link_ids.indexOf(link_id);
             userConfig.link_ids.splice(index, 1);
-        })
+        });
         // for each single cell
         curVizObj.view.selectedSCs.forEach(function(sc_id) {
             d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id).remove(); // remove node in tree
@@ -652,7 +652,7 @@ function _linkClick(curVizObj, link_id) {
             if (index != -1) {
                 curVizObj.data.hm_sc_ids.splice(index, 1);
             }
-        })
+        });
 
         // reset single cells
         _resetSingleCells(curVizObj.view_id);
@@ -693,7 +693,7 @@ function _downstreamEffects(curVizObj, link_id) {
     targetLinks_of_targetNode.map(function(target_link_id) {
         _downstreamEffects(curVizObj, target_link_id);
     });
-};
+}
 
 /* function to get order of tree nodes
 * @param {Object} descendants -- descendants for each node
@@ -715,7 +715,7 @@ function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
     });
 
     // if there are no targets, append the current node to the node order array
-    if (targets.length == 0) {
+    if (targets.length === 0) {
         nodeOrder.push(node_name);
     }
     // there are targets
@@ -735,7 +735,7 @@ function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
     }
 
     return nodeOrder;
- };
+ }
 
 /* function to get font size for labels, given their content the size of the nodes that contain them
 * @param {Array} labels -- array of node labels
@@ -756,7 +756,7 @@ function _getLabelFontSize(labels, width) {
         if (n_chars > max_n_chars) {
             max_n_chars = n_chars; 
         }
-    })
+    });
 
     // get font size, given longest node label (4 pixels per character)
     var aspect_ratio = 7/4; // font aspect ratio of (font height / font width)
@@ -777,7 +777,7 @@ function _retrieveSCTree(sc_id, nodes) {
       foundNode = _.findWhere(nodes, {sc_id: sc_id});
    }
    return foundNode;
-};
+}
 
 /* function to get the tree structures for each node, given an array of edges 
 * param {Array} directed_edges -- array of directed edges objects (source, target)
@@ -786,14 +786,14 @@ function _getTreeStructures(directed_edges) {
    var treeStructures = []; // all (descendant) tree structures for all single cells 
 
    directed_edges.forEach(function(edge) {
-      var parent = _retrieveSCTree(edge["source_sc_id"], treeStructures);
-      var child = _retrieveSCTree(edge["target_sc_id"], treeStructures);
+      var parent = _retrieveSCTree(edge.source_sc_id, treeStructures);
+      var child = _retrieveSCTree(edge.target_sc_id, treeStructures);
       if (parent.children) parent.children.push(child);
       else parent.children = [child];
    });
 
    return treeStructures;
-};
+}
 
 /* function to get descendants id's for the specified key
 * @param {Object} root - key for which we want descendants
@@ -802,10 +802,10 @@ function _getTreeStructures(directed_edges) {
 function _getDescendantIds(root, descendants) {
     var child;
 
-    if (root["children"].length > 0) {
-        for (var i = 0; i < root["children"].length; i++) {
-            child = root["children"][i];
-            descendants.push(child["sc_id"]);
+    if (root.children.length > 0) {
+        for (var i = 0; i < root.children.length; i++) {
+            child = root.children[i];
+            descendants.push(child.sc_id);
             _getDescendantIds(child, descendants);
         }
     }
@@ -822,7 +822,7 @@ function _getDirectDescendants(curNode, dir_descendants) {
     if (curNode.children.length > 0) {
         for (var i = 0; i < curNode.children.length; i++) {
             dir_descendants[curNode.sc_id].push(curNode.children[i].sc_id);
-            _getDirectDescendants(curNode.children[i], dir_descendants)
+            _getDirectDescendants(curNode.children[i], dir_descendants);
         }
     }
 
@@ -838,7 +838,7 @@ function _getDirectAncestors(curNode, dir_ancestors) {
     if (curNode.children.length > 0) {
         for (var i = 0; i < curNode.children.length; i++) {
             dir_ancestors[curNode.children[i].sc_id] = curNode.sc_id;
-            _getDirectAncestors(curNode.children[i], dir_ancestors)
+            _getDirectAncestors(curNode.children[i], dir_ancestors);
         }
     }
 
@@ -857,7 +857,7 @@ function _getAncestorIds(curVizObj) {
     // set up each node as originally containing an empty list of ancestors
     treeNodes.forEach(function(node, idx) {
         ancestors[node.sc_id] = [];
-    })
+    });
 
     // get ancestors data from the descendants data
     treeNodes.forEach(function(node, idx) {
@@ -867,7 +867,7 @@ function _getAncestorIds(curVizObj) {
             // add the node to descentant's ancestor list
             ancestors[curDescendants[i]].push(node.sc_id);
         }
-    })
+    });
 
     return ancestors;
 }
@@ -921,8 +921,8 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
         }
 
         // get the path lengths for its descendants
-        _getDistToNodes(curVizObj, desc, cumulative_dist)
-    });;
+        _getDistToNodes(curVizObj, desc, cumulative_dist);
+    });
 }
 
 /* scaled elbow function (takes into account the minimum link distance for the single cell)
@@ -932,9 +932,7 @@ function _scaledElbow(curVizObj, d, source_name, source, target) {
     // minimum link distance for this single cell
     var min_link_dist = (curVizObj.data.minTargetLink[source_name]/curVizObj.data.max_tree_path_dist)*curVizObj.generalConfig.treeWidth; // TODO add padding
 
-    return "M" + source.x + "," + source.y
-        + "H" + (source.x + (min_link_dist)/2)
-        + "V" + target.y + "H" + target.x;
+    return "M" + source.x + "," + source.y + "H" + (source.x + (min_link_dist)/2) + "V" + target.y + "H" + target.x;
 }
 
 /* function to calculate the result of a linear system, given m, b, upper limit and lower limit
@@ -1026,7 +1024,8 @@ function _plotForceDirectedGraph(curVizObj) {
             return config.tree_r;
         })
         .attr("fill", function(d) {
-            return d.fill = _getNodeFill(curVizObj, d.sc_id);
+            d.fill = _getNodeFill(curVizObj, d.sc_id);
+            return d.fill;
         })
         .attr("stroke", function(d) {
             return _getNodeStroke(curVizObj, d.sc_id);
@@ -1059,10 +1058,12 @@ function _plotForceDirectedGraph(curVizObj) {
         var r = (userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
 
         nodeCircle.attr("cx", function(d) { 
-                return d.x = Math.max(r, Math.min(config.treeWidth - r, d.x)); 
+                    d.x = Math.max(r, Math.min(config.treeWidth - r, d.x));
+                return d.x;
             })
             .attr("cy", function(d) { 
-                return d.y = Math.max(r, Math.min(config.treeHeight - r, d.y)); 
+                d.y = Math.max(r, Math.min(config.treeHeight - r, d.y));
+                return d.y;
             });
 
         if (userConfig.display_node_ids) {
@@ -1083,18 +1084,19 @@ function _plotForceDirectedGraph(curVizObj) {
 
 function _rePlotForceLayout(curVizObj) {
     var config = curVizObj.generalConfig,
-        userConfig = curVizObj.userConfig;
+        userConfig = curVizObj.userConfig,
+        force_layout;
 
     // SCALE
     if (curVizObj.generalConfig.distOn) {
         // layout function
-        var force_layout = d3.layout.force()
+        force_layout = d3.layout.force()
             .size([config.treeWidth, config.treeHeight])
             .linkDistance(function(d) {
                 // divide by 2 so that two max paths can fit on the smallest dimension
                 return (d.dist/curVizObj.data.max_tree_path_dist)*(config.smallest_tree_dim/2); 
             })
-            .gravity(.09)
+            .gravity(".09")
             .charge(-100)
             .nodes(userConfig.sc_tree_nodes)
             .links(userConfig.sc_tree_edges)
@@ -1103,7 +1105,7 @@ function _rePlotForceLayout(curVizObj) {
     // UNSCALE
     else {
         // layout function
-        var force_layout = d3.layout.force()
+        force_layout = d3.layout.force()
             .size([config.treeWidth, config.treeHeight])
             .linkDistance(_calcLinearRes(1.9203, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 4.3023, 4, 20))
             .gravity(_calcLinearRes(-0.0922, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 0.7815, 0.2, 0.7)) 
@@ -1168,8 +1170,8 @@ function _plotNodeLabels(curVizObj, tree_type) {
             var isNumber = !isNaN(d.sc_id);
             return (isNumber) ? parseInt(d.sc_id, 10) : d.sc_id; 
         })
-        .attr("x", function(d) { return d.x})
-        .attr("y", function(d) { return d.y})
+        .attr("x", function(d) { return d.x; })
+        .attr("y", function(d) { return d.y; })
         .attr("font-size", 
             _getLabelFontSize(_.pluck(curVizObj.userConfig.sc_tree_nodes, "sc_id"), 
                 curVizObj.generalConfig.tree_w_labels_r * 2))
@@ -1210,8 +1212,9 @@ function _getElbow(curVizObj, d, half_rowHeight) {
         target.x = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
         source.y = curVizObj.data.xCoordinates[d.source_sc_id];
         target.y = curVizObj.data.xCoordinates[d.target_sc_id];
+        
+        return diagonal({source: source, target: target});
     }
-    return diagonal({source: source, target: target});
 }
 
 /* function to plot phylogenetic tree aligned with heatmap
@@ -1223,7 +1226,7 @@ function _plotAlignedPhylogeny(curVizObj) {
     var half_rowHeight = (curVizObj.view.hm.rowHeight/2); // half the height of one heatmap row
 
     // create links
-    var link = curVizObj.view.treeSVG.append("g")
+    curVizObj.view.treeSVG.append("g")
         .classed("treeLinks", true)
         .selectAll(".tree.link")                  
         .data(curVizObj.userConfig.sc_tree_edges)                   
@@ -1352,14 +1355,13 @@ function _switchView(curVizObj) {
     d3.select("#" + curVizObj.view_id).select(".forceDirectedIcon").attr("opacity", config.treeOpacity);
     d3.select("#" + curVizObj.view_id).select(".phylogenyIcon").attr("opacity", config.graphOpacity);
 
-    config.switchView = !config.switchView
+    config.switchView = !config.switchView;
 }
 
 /* function to plot tree/graph scaled by edge distances
 * @param {Object} curVizObj
 */
 function _scaleTree(curVizObj) {
-    var config = curVizObj.generalConfig;
     var half_rowHeight = (curVizObj.view.hm.rowHeight/2); // half the height of one heatmap row
     curVizObj.generalConfig.distOn = !curVizObj.generalConfig.distOn;
 
@@ -1541,7 +1543,7 @@ function _updateTrimmedMatrix(curVizObj) {
         .duration(1000)
         .attr("y", function(d) { 
             return d.y = curVizObj.data.yCoordinates[d.sc_id] + half_rowHeight; 
-        })
+        });
 
     // move chromosome legend up
     d3.select("#" + curVizObj.view_id).selectAll(".chromBox")
@@ -1565,7 +1567,10 @@ function _getChromBounds(curVizObj) {
     for (var i = 0; i < chroms.length; i++) {
 
         // get all the starts and ends of segments for this chromosome
-        var cur_chrom_data = _.filter(curVizObj.userConfig.cnv_data, function(cnv){ return cnv.chr == chroms[i]; });
+        var cur_chrom_data = _.filter(curVizObj.userConfig.cnv_data, 
+                                      function(cnv){ 
+                                        return cnv.chr == chroms[i]; 
+                                      });
         var cur_starts = _.pluck(cur_chrom_data, "start");
         var cur_ends = _.pluck(cur_chrom_data, "end");
 
@@ -1609,7 +1614,7 @@ function _getPhyloColours(curVizObj) {
         var prev_colour = col;
         curVizObj.data.gtypeTreeChains[cur_node].forEach(function(desc, desc_i) {
             // if we're on the phantom root's branch and it's the first descendant
-            if (cur_node == curVizObj.generalConfig.phantomRoot && desc_i == 0) {
+            if (cur_node == curVizObj.generalConfig.phantomRoot && desc_i === 0) {
 
                 // do not decrease the brightness
                 colour_assignment[desc] = prev_colour;
@@ -1681,7 +1686,7 @@ function _getGtypeColours(gtypes) {
 function _hslToRgb(h, s, l){
     var r, g, b;
 
-    if(s == 0){
+    if(s === 0){
         r = g = b = l; // achromatic
     }else{
         var hue2rgb = function hue2rgb(p, q, t){
@@ -1744,14 +1749,14 @@ function _sortAlphaNum(a,b) {
 */
 function _arrayMode(arr) 
 {
-    if(arr.length == 0)
+    if(arr.length === 0)
         return null;
     var modeMap = {};
     var maxEl = arr[0], maxIntensity = 1;
     for(var i = 0; i < arr.length; i++)
     {
         var el = arr[i];
-        if(modeMap[el] == null)
+        if(modeMap[el] === null)
             modeMap[el] = 1;
         else
             modeMap[el]++;  
@@ -1822,10 +1827,10 @@ function _sortByKey(array, firstKey, secondKey) {
         }
         else {
             if (typeof(a[secondKey] == "string")) {
-                return (res == 0) ? (a[secondKey] > b[secondKey]) : res;
+                return (res === 0) ? (a[secondKey] > b[secondKey]) : res;
             }
             else if (typeof(a[secondKey] == "number")) {
-                return (res == 0) ? (a[secondKey] - b[secondKey]) : res;
+                return (res === 0) ? (a[secondKey] - b[secondKey]) : res;
             }
             else {
                 return res;
@@ -1840,7 +1845,7 @@ function _sortByKey(array, firstKey, secondKey) {
 */
 function _getIntersection(array1, array2) {
 
-    if (array1 == undefined || array2 == undefined) {
+    if (array1 === undefined || array2 === undefined) {
         return [];
     }
 
@@ -1864,7 +1869,7 @@ function _getIntersection(array1, array2) {
 function _hslToRgb(h, s, l){
     var r, g, b;
 
-    if(s == 0){
+    if(s === 0){
         r = g = b = l; // achromatic
     }else{
         var hue2rgb = function hue2rgb(p, q, t){
@@ -1933,4 +1938,3 @@ function _decrease_brightness(hex, percent){
        ((0|(1<<8) + g * (100 - percent) / 100).toString(16)).substr(1) +
        ((0|(1<<8) + b * (100 - percent) / 100).toString(16)).substr(1);
 }
-

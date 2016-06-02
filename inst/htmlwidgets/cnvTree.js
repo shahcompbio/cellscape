@@ -70,7 +70,7 @@ HTMLWidgets.widget({
 
         // get params from R
         curVizObj.userConfig = x;
-        curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot != undefined); // (T/F) genotype annotation is specified
+        curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot !== undefined); // (T/F) genotype annotation is specified
         curVizObj.view.tpsSpecified = // (T/F) timepoint annotation is specified
             (curVizObj.view.gtypesSpecified) ? curVizObj.userConfig.sc_annot[0]["timepoint"] : false;
 
@@ -284,12 +284,13 @@ HTMLWidgets.widget({
 
             // both alpha and regular colour assignments
             // if the genotype tree is provided, colour nodes by its phylogeny
+            var colour_assignments;
             if (curVizObj.userConfig.gtype_tree_edges) {
-                var colour_assignments = _getPhyloColours(curVizObj);
+                colour_assignments = _getPhyloColours(curVizObj);
             }
             // genotype tree not provided - random colours
             else {
-                var colour_assignments = _getGtypeColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));             
+                colour_assignments = _getGtypeColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));             
             }
             curVizObj.view.colour_assignment = colour_assignments.colour_assignment;
             curVizObj.view.alpha_colour_assignment = colour_assignments.alpha_colour_assignment;
@@ -582,13 +583,13 @@ HTMLWidgets.widget({
             .attr("fill", config.topBarColour)
             .on("mouseover", function() {
                 // if this button is not selected
-                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length === 0) {
                     d3.select(this).attr("fill", config.topBarHighlight);
                 }
             })
             .on("mouseout", function() {
                 // if this button is not selected
-                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length === 0) {
                     d3.select(this).attr("fill", config.topBarColour);
                 }
             })
@@ -610,13 +611,13 @@ HTMLWidgets.widget({
             .attr("height", selectionButtonIconWidth)
             .on("mouseover", function() {
                 // if this button is not selected
-                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length === 0) {
                     d3.select("#" + view_id).select(".selectionButton").attr("fill", config.topBarHighlight);
                 }
             })
             .on("mouseout", function() {
                 // if this button is not selected
-                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length === 0) {
                     d3.select("#" + view_id).select(".selectionButton").attr("fill", config.topBarColour);
                 }
             })
@@ -643,13 +644,13 @@ HTMLWidgets.widget({
             .attr("fill", config.topBarColour)
             .on("mouseover", function() {
                 // if this button is not selected
-                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length === 0) {
                     d3.select(this).attr("fill", config.topBarHighlight);
                 }
             })
             .on("mouseout", function() {
                 // if this button is not selected
-                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length === 0) {
                     d3.select(this).attr("fill", config.topBarColour);
                 }
             })
@@ -672,13 +673,13 @@ HTMLWidgets.widget({
             .attr("height", scissorsButtonIconWidth)
             .on("mouseover", function() {
                 // if this button is not selected
-                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length === 0) {
                     d3.select("#" + view_id).select(".scissorsButton").attr("fill", config.topBarHighlight);
                 }
             })
             .on("mouseout", function() {
                 // if this button is not selected
-                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length == 0) {
+                if (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length === 0) {
                     d3.select("#" + view_id).select(".scissorsButton").attr("fill", config.topBarColour);
                 }
             })
@@ -770,13 +771,13 @@ HTMLWidgets.widget({
                 .attr("fill", config.topBarColour)
                 .on("mouseover", function() {
                     // if this button is not selected
-                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length == 0) {
+                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length === 0) {
                         d3.select(this).attr("fill", config.topBarHighlight);
                     }
                 })
                 .on("mouseout", function() {
                     // if this button is not selected
-                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length == 0) {
+                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length === 0) {
                         d3.select(this).attr("fill", config.topBarColour);
                     }
                 })
@@ -798,13 +799,13 @@ HTMLWidgets.widget({
                 .attr("height", rulerIconWidth)
                 .on("mouseover", function() {
                     // if this button is not selected
-                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length == 0) {
+                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length === 0) {
                         d3.select("#" + view_id).select(".rulerButton").attr("fill", config.topBarHighlight);
                     }
                 })
                 .on("mouseout", function() {
                     // if this button is not selected
-                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length == 0) {
+                    if (d3.select("#" + view_id).selectAll(".rulerButtonSelected")[0].length === 0) {
                         d3.select("#" + view_id).select(".rulerButton").attr("fill", config.topBarColour);
                     }
                 })
@@ -1319,9 +1320,9 @@ HTMLWidgets.widget({
                 });
 
             // note end of genotype annotation legend
-            config.gtypeAnnotEndY = config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 
-                + Object.keys(curVizObj.data.gtypes).length*(config.rectHeight + config.rectSpacing) 
-                + config.legendFontHeight;
+            config.gtypeAnnotEndY = config.gtypeAnnotStartY + config.legendTitleHeight + config.rectSpacing*2 + 
+              Object.keys(curVizObj.data.gtypes).length*(config.rectHeight + config.rectSpacing) + 
+              config.legendFontHeight;
         }
 
 
