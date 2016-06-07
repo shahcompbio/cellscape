@@ -449,9 +449,9 @@ HTMLWidgets.widget({
 
         // top panel title
         topBarSVG.append("text")
-            .attr("x", config.width/2)
+            .attr("x", 10)
             .attr("y", config.topBarHeight/2)
-            .attr("text-anchor", "middle")
+            .attr("text-anchor", "start")
             .attr("dy", "+0.35em")
             .attr("font-family", "Arial")
             .attr("fill", "white")
@@ -589,7 +589,7 @@ HTMLWidgets.widget({
         // brush selection button
         topBarSVG.append("rect")
             .attr("class", "selectionButton")
-            .attr("x", 0)
+            .attr("x", config.width - 2*bigButtonWidth - smallButtonWidth)
             .attr("y", 0)
             .attr("width", smallButtonWidth)
             .attr("height", config.topBarHeight)
@@ -620,7 +620,7 @@ HTMLWidgets.widget({
             .text("Select Single Cells in Heatmap");
         topBarSVG.append("image")
             .attr("xlink:href", selectionButton_base64)
-            .attr("x", smallButtonWidth/2 - (selectionButtonIconWidth/2))
+            .attr("x", config.width - 2*bigButtonWidth - smallButtonWidth + (smallButtonWidth - selectionButtonIconWidth)/2)
             .attr("y", 7)
             .attr("width", selectionButtonIconWidth)
             .attr("height", selectionButtonIconWidth)
@@ -650,7 +650,7 @@ HTMLWidgets.widget({
         // scissors button
         topBarSVG.append("rect")
             .attr("class", "scissorsButton")
-            .attr("x", smallButtonWidth)
+            .attr("x", config.width - 2*bigButtonWidth - 2*smallButtonWidth)
             .attr("y", 0)
             .attr("width", smallButtonWidth)
             .attr("height", config.topBarHeight)
@@ -682,7 +682,7 @@ HTMLWidgets.widget({
             .text("Prune Tree/Graph");
         topBarSVG.append("image")
             .attr("xlink:href", scissorsButton_base64)
-            .attr("x", smallButtonWidth*3/2 - (scissorsButtonIconWidth/2))
+            .attr("x", config.width - 2*bigButtonWidth - 2*smallButtonWidth + (smallButtonWidth - scissorsButtonIconWidth)/2)
             .attr("y", 7)
             .attr("width", scissorsButtonIconWidth)
             .attr("height", scissorsButtonIconWidth)
@@ -713,7 +713,7 @@ HTMLWidgets.widget({
         // graph/tree button
         topBarSVG.append("rect")
             .attr("class", "graphTreeButton")
-            .attr("x", smallButtonWidth*2)
+            .attr("x", config.width - 2*bigButtonWidth - 3*smallButtonWidth)
             .attr("y", 0)
             .attr("width", smallButtonWidth)
             .attr("height", config.topBarHeight)
@@ -735,7 +735,7 @@ HTMLWidgets.widget({
         topBarSVG.append("image")
             .classed("forceDirectedIcon", true)
             .attr("xlink:href", forceDirectedIcon_base64)
-            .attr("x", smallButtonWidth*5/2 - (graphTreeIconWidth/2))
+            .attr("x", config.width - 2*bigButtonWidth - 3*smallButtonWidth + (smallButtonWidth - graphTreeIconWidth)/2)
             .attr("y", 7)
             .attr("width", graphTreeIconWidth)
             .attr("height", graphTreeIconWidth)
@@ -755,7 +755,7 @@ HTMLWidgets.widget({
         topBarSVG.append("image")
             .classed("phylogenyIcon", true)
             .attr("xlink:href", phylogenyIcon_base64)
-            .attr("x", smallButtonWidth*5/2 - (graphTreeIconWidth/2))
+            .attr("x", config.width - 2*bigButtonWidth - 3*smallButtonWidth + (smallButtonWidth - graphTreeIconWidth)/2)
             .attr("y", 7)
             .attr("width", graphTreeIconWidth)
             .attr("height", graphTreeIconWidth)
