@@ -463,6 +463,35 @@ function _gt_getLinearTreeSegments(curVizObj, curNode, chains, base) {
     return chains;
 }
 
+/* function to handle single cells that are missing heatmap data
+* --> store the single cells missing heatmap data that we should still plot in the phylogeny 
+*     (ONLY those whose descendants do have heatmap data)
+* --> remove any cells that do not have data-associated descendants
+* @param {Object} curVizObj
+*/
+function _handleMissingScs(curVizObj) {
+    // plot single cells that don't have heatmap data ONLY IF their descendants do have heatmap data
+    curVizObj.data.missing_scs_to_plot = [];
+    curVizObj.data.missing_scs_to_remove = [];
+    curVizObj.userConfig.scs_missing_from_hm.forEach(function(sc_id) {
+
+        // descendants
+        var cur_descs = curVizObj.data.treeDescendantsArr[sc_id];
+
+        // if at least one of the descendants have heatmap data, add it to the list of missing scs to plot
+        var cur_descs_missing_data = _getIntersection(cur_descs, curVizObj.userConfig.scs_missing_from_hm);
+        if (cur_descs_missing_data.length != cur_descs.length) {
+            curVizObj.data.missing_scs_to_plot.push(sc_id);
+        }
+
+        // otherwise, mark the node as removable
+        else {
+            curVizObj.data.missing_scs_to_remove.push(sc_id);
+        }
+
+    });
+}
+
 /* function to get the y-coordinate for each single cell
 * @param {Object} curVizObj
 */
@@ -486,15 +515,15 @@ function _getYCoordinates(curVizObj) {
             config.paddingGeneral + (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
     });
 
-    // sort single cells without heatmap data by the number of ancestors they have
+    // sort single cells w/o data by descending number of ancestors
     var missing_scs_sorted = [];
-    curVizObj.userConfig.scs_missing_from_hm.forEach(function(sc_id) {
+    curVizObj.data.missing_scs_to_plot.forEach(function(sc_id) {
         missing_scs_sorted.push({
             sc_id: sc_id,
             n_ancestors: curVizObj.data.treeAncestorsArr[sc_id].length
         });
     });
-    // sort by descending number of ancestors
+
     _sortByKey(missing_scs_sorted, "n_ancestors"); 
     missing_scs_sorted.reverse();
 
@@ -981,6 +1010,40 @@ function _calcLinearRes(m, x, b, lowerLimit, upperLimit) {
 }
 
 
+/* function to remove any edges involving single cells that were removed due to no presence heatmap data, 
+* nor descendants with heatmap data -- store the filtered set of edges in new array
+*/
+function _getEdgesToPlot(curVizObj) {
+    // edges to plot (remove any involving single cells that were removed due to no presence heatmap data, 
+    // nor descendants with heatmap data)
+    var edges_to_plot = [];
+    curVizObj.userConfig.sc_tree_edges.forEach(function(edge) {
+        if (curVizObj.data.missing_scs_to_remove.indexOf(edge.source_sc_id) == -1 && 
+            curVizObj.data.missing_scs_to_remove.indexOf(edge.target_sc_id) == -1) {
+                edges_to_plot.push(edge);
+        }
+    })
+
+    return edges_to_plot;
+}
+
+/* function to remove any nodes involving single cells that were removed due to no presence heatmap data, 
+* nor descendants with heatmap data -- store the filtered set of nodes in new array
+*/
+function _getNodesToPlot(curVizObj) {
+
+    // nodes to plot (remove any involving single cells that were removed due to no presence heatmap data, 
+    // nor descendants with heatmap data)
+    var nodes_to_plot = [];
+    curVizObj.userConfig.sc_tree_nodes.forEach(function(node) {
+        if (curVizObj.data.missing_scs_to_remove.indexOf(node.sc_id) == -1) {
+            nodes_to_plot.push(node);
+        }
+    })
+
+    return nodes_to_plot;
+}
+
 /* function to plot the force-directed graph
 * @param {Object} curVizObj
 */
@@ -1003,7 +1066,7 @@ function _plotForceDirectedGraph(curVizObj) {
         .append("g")
         .classed("graphLinks", true)
         .selectAll(".link")
-        .data(userConfig.sc_tree_edges)
+        .data(_getEdgesToPlot(curVizObj))
         .enter().append("line")
         .classed("link", true)
         .attr("class", function(d) {
@@ -1030,7 +1093,7 @@ function _plotForceDirectedGraph(curVizObj) {
     var nodeG = curVizObj.view.treeSVG.append("g")
         .classed("graphNodes", true)
         .selectAll(".graphNodesG")
-        .data(userConfig.sc_tree_nodes)
+        .data(_getNodesToPlot(curVizObj))
         .enter()
         .append("g")
         .attr("class", "graphNodesG");
@@ -1257,7 +1320,7 @@ function _plotAlignedPhylogeny(curVizObj) {
     curVizObj.view.treeSVG.append("g")
         .classed("treeLinks", true)
         .selectAll(".tree.link")                  
-        .data(curVizObj.userConfig.sc_tree_edges)                   
+        .data(_getEdgesToPlot(curVizObj))                   
         .enter().append("path")  
         .attr("class", function(d) {
             d.link_id = "link_source_" + d.source_sc_id + "_target_" + d.target_sc_id;
@@ -1293,7 +1356,7 @@ function _plotAlignedPhylogeny(curVizObj) {
     // create nodes
     var nodeG = curVizObj.view.treeSVG
         .selectAll(".treeNodesG")
-        .data(curVizObj.userConfig.sc_tree_nodes)
+        .data(_getNodesToPlot(curVizObj))
         .enter()
         .append("g")
         .attr("class", "treeNodesG");;
