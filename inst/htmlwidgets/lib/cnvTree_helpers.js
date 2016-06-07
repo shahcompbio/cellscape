@@ -54,11 +54,9 @@ function _brushEnd(curVizObj, brush) {
 
 /* function to check for selections
 */
-function _checkForSelections(curVizObj) {
-    return ((d3.select("#" + curVizObj.view_id).selectAll(".nodeSelected")[0].length === 0) && // node selection
-            (d3.select("#" + curVizObj.view_id).selectAll(".linkSelected")[0].length === 0) && // link selection
-            (d3.select("#" + curVizObj.view_id).selectAll(".brushButtonSelected")[0].length === 0) && // brush button not selected
-            (d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length === 0)); // scissors button not selected
+function _checkForSelections(view_id) {
+    return ((d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length === 0) && // brush button not selected
+            (d3.select("#" + view_id).selectAll(".scissorsButtonSelected")[0].length === 0)); // scissors button not selected
 }
 
 /* function to clear any brush selection
@@ -592,7 +590,7 @@ function _getLinkId(d) {
 */
 function _linkMouseout(curVizObj, resetSelectedSCList) {
     // if there's no node or link selection taking place, or scissors tool on, reset the links
-    if (_checkForSelections(curVizObj) || d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
+    if (_checkForSelections(curVizObj.view_id) || d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
         // reset nodes & indicators
         _resetSingleCells(curVizObj.view_id);
         _resetIndicators(curVizObj.view_id);
@@ -615,7 +613,7 @@ function _linkMouseout(curVizObj, resetSelectedSCList) {
 */
 function _linkMouseover(curVizObj, link_id) {
     // if there's no node or link selection taking place
-    if (_checkForSelections(curVizObj)) {
+    if (_checkForSelections(curVizObj.view_id)) {
         // turn off all single cells
         _inactivateSingleCells(curVizObj.view_id);
         // highlight downstream links
@@ -1066,12 +1064,12 @@ function _plotForceDirectedGraph(curVizObj) {
             return (config.graphOpacity == 1) ? "auto" : "none";
         })
         .on('mouseover', function(d) {
-            if (_checkForSelections(curVizObj)) {
+            if (_checkForSelections(curVizObj.view_id)) {
                 _mouseoverNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
             }
         })
         .on('mouseout', function(d) {
-            if (_checkForSelections(curVizObj)) {
+            if (_checkForSelections(curVizObj.view_id)) {
                 _mouseoutNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip);
             }
         })
@@ -1328,12 +1326,12 @@ function _plotAlignedPhylogeny(curVizObj) {
             return (config.treeOpacity == 1) ? "auto" : "none";
         })
         .on('mouseover', function(d) {
-            if (_checkForSelections(curVizObj)) {
+            if (_checkForSelections(curVizObj.view_id)) {
                 _mouseoverNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
             }
         })
         .on('mouseout', function(d) {
-            if (_checkForSelections(curVizObj)) {
+            if (_checkForSelections(curVizObj.view_id)) {
                 _mouseoutNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip);
             }
         });

@@ -937,7 +937,7 @@ HTMLWidgets.widget({
                         return cur_colorscale(d.gridCell_value);
                     })
                     .on("mouseover", function(d) {
-                        if (_checkForSelections(curVizObj)) {
+                        if (_checkForSelections(view_id)) {
                             _mouseoverNode(d.sc_id, view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
 
                             // for targeted mutations, show mutation tooltip on top of the first row in the heatmap
@@ -951,7 +951,7 @@ HTMLWidgets.widget({
                         }
                     })
                     .on("mouseout", function(d) {
-                        if (_checkForSelections(curVizObj)) {
+                        if (_checkForSelections(view_id)) {
                             _mouseoutNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip);
                             curVizObj.mutTip.hide();
                             curVizObj.valTip.hide();
@@ -1045,12 +1045,12 @@ HTMLWidgets.widget({
                 })
                 .attr("stroke", "none")
                 .on("mouseover", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoverNode(d.single_cell_id, view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
                     }
                 })
                 .on("mouseout", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoutNode(d.single_cell_id, curVizObj.view_id, curVizObj.nodeTip);
                     }
                 });
@@ -1082,12 +1082,12 @@ HTMLWidgets.widget({
                 })
                 .attr("stroke", "none")
                 .on("mouseover", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoverNode(d.single_cell_id, view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
                     }
                 })
                 .on("mouseout", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoutNode(d.single_cell_id, curVizObj.view_id, curVizObj.nodeTip);
                     }
                 });
@@ -1310,7 +1310,7 @@ HTMLWidgets.widget({
                     return curVizObj.view.colour_assignment[d];
                 })
                 .on("mouseover", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoverGenotype(d, view_id);
                         // show labels in timesweep
                         if (curVizObj.userConfig.timesweep_wanted) {
@@ -1319,7 +1319,7 @@ HTMLWidgets.widget({
                     }
                 })
                 .on("mouseout", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoutGenotype(view_id);
                         // hide labels in timesweep
                         if (curVizObj.userConfig.timesweep_wanted) {
@@ -1342,7 +1342,7 @@ HTMLWidgets.widget({
                 .attr("font-size", config.legendFontHeight)
                 .attr("fill", "black")
                 .on("mouseover", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoverGenotype(d, view_id);
                         // show labels in timesweep
                         if (curVizObj.userConfig.timesweep_wanted) {
@@ -1351,7 +1351,7 @@ HTMLWidgets.widget({
                     }
                 })
                 .on("mouseout", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoutGenotype(view_id);
                         // hide labels in timesweep
                         if (curVizObj.userConfig.timesweep_wanted) {
@@ -1405,12 +1405,12 @@ HTMLWidgets.widget({
                     return curVizObj.view.tp_colourScale(d);
                 })
                 .on("mouseover", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoverTp(d, view_id);
                     }
                 })
                 .on("mouseout", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoutTp(view_id);
                     }
                 });
@@ -1429,12 +1429,12 @@ HTMLWidgets.widget({
                 .attr("font-size", config.legendFontHeight)
                 .attr("fill", "black")
                 .on("mouseover", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoverTp(d, view_id);
                     }
                 })
                 .on("mouseout", function(d) {
-                    if (_checkForSelections(curVizObj)) {
+                    if (_checkForSelections(view_id)) {
                         _mouseoutTp(view_id);
                     }
                 });
