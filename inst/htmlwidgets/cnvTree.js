@@ -1037,7 +1037,17 @@ HTMLWidgets.widget({
                 .attr("fill", function(d) {
                     return curVizObj.view.colour_assignment[d.genotype];
                 })
-                .attr("stroke", "none");
+                .attr("stroke", "none")
+                .on("mouseover", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                        _mouseoverNode(d.single_cell_id, view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
+                    }
+                })
+                .on("mouseout", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                        _mouseoutNode(d.single_cell_id, curVizObj.view_id, curVizObj.nodeTip);
+                    }
+                });
         }
 
         // PLOT TIMEPOINT ANNOTATION COLUMN
@@ -1064,7 +1074,17 @@ HTMLWidgets.widget({
                 .attr("fill", function(d) {
                     return curVizObj.view.tp_colourScale(d.timepoint);
                 })
-                .attr("stroke", "none");
+                .attr("stroke", "none")
+                .on("mouseover", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                        _mouseoverNode(d.single_cell_id, view_id, curVizObj.nodeTip, config.switchView, curVizObj.userConfig.sc_annot);
+                    }
+                })
+                .on("mouseout", function(d) {
+                    if (_checkForSelections(curVizObj)) {
+                        _mouseoutNode(d.single_cell_id, curVizObj.view_id, curVizObj.nodeTip);
+                    }
+                });
         }
 
         // PLOT CLASSICAL PHYLOGENY & FORCE DIRECTED GRAPH
