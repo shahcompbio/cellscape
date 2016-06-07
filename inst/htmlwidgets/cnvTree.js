@@ -58,7 +58,10 @@ HTMLWidgets.widget({
             topBarHighlight: "#C6C6C6",
 
             // switch between graph/tree
-            switchView: true
+            switchView: true,
+
+            // title
+            viewTitle: "CNVTREE"
         };
 
         // global variable curVizObj
@@ -443,6 +446,18 @@ HTMLWidgets.widget({
             .attr("rx", 10)
             .attr("ry", 10)
             .attr("fill", config.topBarColour);
+
+        // top panel title
+        topBarSVG.append("text")
+            .attr("x", config.width/2)
+            .attr("y", config.topBarHeight/2)
+            .attr("text-anchor", "middle")
+            .attr("dy", "+0.35em")
+            .attr("font-family", "Arial")
+            .attr("fill", "white")
+            .attr("pointer-events","none")
+            .text(config.viewTitle);
+
 
         // button widths
         var smallButtonWidth = 42; 
