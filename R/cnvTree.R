@@ -727,6 +727,12 @@ processUserData <- function(clonal_prev,
   mut_data <- getMutationsData(mutations, tree_edges, clonal_prev)
   mutation_info <- mut_data$mutation_info
   mutation_prevalences <- mut_data$mutation_prevalences
+  if (is.data.frame(mutations)) {
+    mutations_provided <- TRUE
+  }
+  else {
+    mutations_provided <- FALSE
+  }
 
   # REPLACE SPACES WITH UNDERSCORES
   spaces_replaced <- replaceSpaces(clonal_prev, tree_edges, clone_colours, mutation_info, mutations, mutation_prevalences)
