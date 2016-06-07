@@ -788,7 +788,7 @@ HTMLWidgets.widget({
         if (curVizObj.userConfig.distances_provided) {
             topBarSVG.append("rect")
                 .attr("class", "rulerButton")
-                .attr("x", smallButtonWidth*3)
+                .attr("x", config.width - 2*bigButtonWidth - 4*smallButtonWidth)
                 .attr("y", 0)
                 .attr("width", smallButtonWidth)
                 .attr("height", config.topBarHeight)
@@ -819,7 +819,7 @@ HTMLWidgets.widget({
                 .text("Scale Tree/Graph");
             topBarSVG.append("image")
                 .attr("xlink:href", rulerIcon_base64)
-                .attr("x", smallButtonWidth*7/2 - (rulerIconWidth/2))
+                .attr("x", config.width - 2*bigButtonWidth - 4*smallButtonWidth + (smallButtonWidth - rulerIconWidth)/2)
                 .attr("y", 5)
                 .attr("width", rulerIconWidth)
                 .attr("height", rulerIconWidth)
