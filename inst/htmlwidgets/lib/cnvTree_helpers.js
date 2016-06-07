@@ -491,6 +491,8 @@ function _handleMissingScs(curVizObj) {
 
         // otherwise, mark the node as removable
         else {
+            console.warn("Single cell " + sc_id + " present in the phylogeny, but will be removed from the " + 
+                "view as it does not have heatmap data, nor do any of its descendants have heatmap data.")
             curVizObj.data.missing_scs_to_remove.push(sc_id);
         }
 
