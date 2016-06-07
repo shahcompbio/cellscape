@@ -1065,8 +1065,7 @@ function _plotForceDirectedGraph(curVizObj) {
         .gravity(_calcLinearRes(-0.0922, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 0.7815, 0.2, 0.7)) 
         .charge(_calcLinearRes(-5.5321, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), -65.11, -100, -70))
         .nodes(userConfig.sc_tree_nodes)
-        .links(userConfig.sc_tree_edges)
-        .start();        
+        .links(userConfig.sc_tree_edges);        
 
     // plot links
     var link = curVizObj.view.treeSVG
@@ -1142,21 +1141,26 @@ function _plotForceDirectedGraph(curVizObj) {
             if (_checkForSelections(curVizObj.view_id)) {
                 _mouseoutNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip);
             }
-        })
-        .call(force_layout.drag);
+        });
 
     // node single cell labels (if user wants to display them)
     if (userConfig.display_node_ids) {
         var nodeLabel = _plotNodeLabels(curVizObj, "graph");
     }
 
-    force_layout.on("tick", function() {
+    // use timeout function to allow rest of the page to load first
+    setTimeout(function() {
+        // run the layout a fixed number of times
+        force_layout.start();
+        var n = 100;
+        for (var i = n*n; i > 0; --i) force_layout.tick();
+        force_layout.stop();
 
         // radius of nodes
         var r = (userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
 
         nodeCircle.attr("cx", function(d) { 
-                    d.x = Math.max(r, Math.min(config.treeWidth - r, d.x));
+                d.x = Math.max(r, Math.min(config.treeWidth - r, d.x));
                 return d.x;
             })
             .attr("cy", function(d) { 
@@ -1197,8 +1201,7 @@ function _rePlotForceLayout(curVizObj) {
             .gravity(".09")
             .charge(-100)
             .nodes(userConfig.sc_tree_nodes)
-            .links(userConfig.sc_tree_edges)
-            .start();     
+            .links(userConfig.sc_tree_edges);     
     }
     // UNSCALE
     else {
@@ -1209,17 +1212,20 @@ function _rePlotForceLayout(curVizObj) {
             .gravity(_calcLinearRes(-0.0922, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 0.7815, 0.2, 0.7)) 
             .charge(_calcLinearRes(-5.5321, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), -65.11, -100, -70))
             .nodes(userConfig.sc_tree_nodes)
-            .links(userConfig.sc_tree_edges)
-            .start();        
+            .links(userConfig.sc_tree_edges);        
     }
 
-    // node circles
-    var nodeCircle = curVizObj.view.treeSVG.selectAll(".graph.node")
-        .on('mousedown.drag', null);
-    nodeCircle
-        .call(force_layout.drag);
+    // use timeout function to allow rest of the page to load first
+    setTimeout(function() {
+        
+        // run the layout a fixed number of times
+        force_layout.start();
+        var n = 100;
+        for (var i = n*n; i > 0; --i) force_layout.tick();
+        force_layout.stop();
 
-    force_layout.on("tick", function() {
+        // node circles
+        var nodeCircle = curVizObj.view.treeSVG.selectAll(".graph.node");
 
         // radius of nodes
         var r = (userConfig.display_node_ids) ? config.tree_w_labels_r : config.tree_r;
