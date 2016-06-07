@@ -198,7 +198,7 @@ HTMLWidgets.widget({
         // get direct ancestors for each ndoe
         curVizObj.data.direct_ancestors = _getDirectAncestors(curVizObj.data.treeStructure, {});
 
-        // get nodes missing heatmap data that we should still plot
+        // get nodes missing heatmap data that we should still plot (and note those that we shouldn't)
         _handleMissingScs(curVizObj);
 
         // get linear chains in genotype tree 

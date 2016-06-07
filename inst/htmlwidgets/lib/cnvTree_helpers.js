@@ -312,15 +312,20 @@ function _resetNodes(view_id) {
 * @param {String} sc_id -- single cell id
 */
 function _getNodeFill(curVizObj, sc_id) {
+    var missingColour = "white";
+
     // genotype annotations specified -- colour by genotype
     if (curVizObj.view.gtypesSpecified) {
         var found_sc_with_gtype = _.findWhere(curVizObj.userConfig.sc_annot, {single_cell_id: sc_id});
         return (found_sc_with_gtype) ? // if this sc has a genotype
             curVizObj.view.alpha_colour_assignment[found_sc_with_gtype.genotype] : 
-            "white";
+            missingColour;
     }
-    // no genotype annotations -- default colour
-    return curVizObj.generalConfig.defaultNodeColour;
+    // no genotype annotations -- default colour, unless heatmap data is missing for this cell
+    else {
+        return (curVizObj.userConfig.scs_missing_from_hm.indexOf(sc_id) != -1) ? 
+            missingColour : curVizObj.generalConfig.defaultNodeColour;
+    }
 }
 
 /* function to get the stroke colour of a node
