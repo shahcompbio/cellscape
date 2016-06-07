@@ -10,12 +10,18 @@ d3.selection.prototype.moveToFront = function() {
 * @param {Object} curVizObj
 */
 function _brushEnd(curVizObj, brush) {
-    var selectedSCs = [];
+    var cur_selectedSCs = [];
     var extent = d3.event.target.extent();
-    if (!brush.empty()) {
+
+    // if there were no previously selected single cells, inactivate all single cells
+    if (curVizObj.view.selectedSCs.length === 0) {
         // turn off all single cells
         _inactivateSingleCells(curVizObj.view_id);
+    }
 
+    // if the brush is not empty
+    if (!brush.empty()) {
+        
         // highlight selected grid cell rows
         d3.select("#" + curVizObj.view_id).selectAll(".gtypeAnnot").classed("active", function(d) {
             // if any transformation has occurred
@@ -23,17 +29,22 @@ function _brushEnd(curVizObj, brush) {
                 t_y = t.translate[1];
             var brushed = extent[0] <= (d.y+curVizObj.view.hm.rowHeight+t_y) && (d.y+t_y) <= extent[1];
             if (brushed) {
-                selectedSCs.push(d.single_cell_id);
+                cur_selectedSCs.push(d.single_cell_id);
             }
             return brushed;
         });
 
         // highlight selected sc's indicators & nodes
-        selectedSCs.forEach(function(sc_id) {
+        cur_selectedSCs.forEach(function(sc_id) {
             _highlightIndicator(sc_id, curVizObj.view_id);   
             _highlightSingleCell(sc_id, curVizObj.view_id);    
         });
-    } else {
+
+        // add the currently selected single cells to the curVizObj list
+        curVizObj.view.selectedSCs = curVizObj.view.selectedSCs.concat(cur_selectedSCs);
+    } 
+    // if the brush is empty
+    else {
         _clearBrush(curVizObj.view_id);
     }
 
@@ -59,6 +70,9 @@ function _clearBrush(view_id) {
     // reset nodes and indicators
     _resetSingleCells(view_id);
     _resetIndicators(view_id);
+
+    // reset selectedSCs list
+    curVizObj.view.selectedSCs = [];
 }
 
 /* function for node mouseover
@@ -671,6 +685,10 @@ function _linkClick(curVizObj, link_id) {
 
         // adjust copy number matrix to fill the entire space
         d3.timer(_updateTrimmedMatrix(curVizObj), 300);
+
+        // reset lists of selected links and selected single cells
+        curVizObj.view.selectedLinks = [];
+        curVizObj.view.selectedSCs = [];
     }
 }
 
