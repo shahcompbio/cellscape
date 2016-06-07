@@ -17,7 +17,7 @@
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "chr" - chromosome number
 #'                       (3) {Number} "coord" - genomic coordinate
-#'                       (5) {Number} "VAF" - variant allele frequency.
+#'                       (5) {Number} "VAF" - variant allele frequency [0, 1].
 #'
 #' @param tree_edges {Data frame} Edges for the single cell phylogenetic tree.
 #'   Format: columns are (1) {String} "source" - edge source (single cell id)
@@ -148,6 +148,14 @@ cnvTree <- function(cnv_data = NULL,
     mut_data$chr <- as.character(mut_data$chr)
     mut_data$coord <- as.numeric(as.character(mut_data$coord))
     mut_data$VAF <- as.numeric(as.character(mut_data$VAF))
+
+    # ensure VAF is between 0 and 1
+    if (length(which(mut_data$VAF < 0)) > 0) {
+      stop("You have entered mutation data with VAF < 0. Only enter data between 0 and 1 (NA is ok).")
+    }
+    if (length(which(mut_data$VAF > 1)) > 0) {
+      stop("You have entered mutation data with VAF > 1. Only enter data between 0 and 1 (NA is ok).")
+    }
 
     # set continuous cnv to false (we're now using VAF data that is always continuous)
     continuous_cnv <- FALSE
