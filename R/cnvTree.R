@@ -296,9 +296,15 @@ cnvTree <- function(cnv_data = NULL,
 
     # to JSON
     sc_annot_JSON <- jsonlite::toJSON(sc_annot)
+
+    # note that annotations are provided
+    sc_annot_provided <- TRUE
   }
   else {
     sc_annot_JSON <- sc_annot
+
+    # note that annotations are NOT provided
+    sc_annot_provided <- FALSE
   }
 
   # IF ALL NECESSARY PRAMETERS ARE PRESENT FOR TIMESWEEP
@@ -357,6 +363,7 @@ cnvTree <- function(cnv_data = NULL,
   # forward options using x
   cnvTree_userParams <- list(
     sc_annot=sc_annot_JSON, # single cells and their associated group ids
+    sc_annot_provided=sc_annot_provided, # whether or not single cell annotations are provided by the user
     sc_tree_edges=jsonlite::toJSON(tree_edges_for_layout), # tree edges for phylogeny
     sc_tree_nodes=jsonlite::toJSON(tree_nodes_for_layout), # tree nodes for phylogeny
     link_ids=link_ids, # ids for all links in the phylogeny

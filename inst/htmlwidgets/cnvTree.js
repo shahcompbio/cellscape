@@ -74,9 +74,9 @@ HTMLWidgets.widget({
 
         // get params from R
         curVizObj.userConfig = x;
-        curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot !== undefined); // (T/F) genotype annotation is specified
+        curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot_provided); // (T/F) genotype annotation is specified
         curVizObj.view.tpsSpecified = // (T/F) timepoint annotation is specified
-            (curVizObj.view.gtypesSpecified) ? curVizObj.userConfig.sc_annot[0]["timepoint"] : false;
+            (curVizObj.userConfig.sc_annot_provided) ? curVizObj.userConfig.sc_annot[0]["timepoint"] : false;
 
         // selected single cells list & selected links list
         curVizObj.view.selectedSCs = [];
