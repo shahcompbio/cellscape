@@ -854,7 +854,7 @@ HTMLWidgets.widget({
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function(d) {
-                return "<span style='color:white'>" + d + "</span>";
+                return "<strong>Cell:</strong> <span style='color:white'>" + d + "</span>";
             });
         curVizObj.view.treeSVG.call(curVizObj.nodeTip);
 
@@ -863,7 +863,7 @@ HTMLWidgets.widget({
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function(d) {
-                return "<span style='color:white'>" + d + "</span>";
+                return "<strong>Site:</strong> <span style='color:white'>" + d + "</span>";
             });
         curVizObj.view.cnvSVG.call(curVizObj.mutTip);
 
@@ -872,7 +872,8 @@ HTMLWidgets.widget({
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function(d) {
-                return "<span style='color:white'>" + d + "</span>";
+                var valType = (curVizObj.userConfig.heatmap_type == "targeted") ? "VAF" : "CNV";
+                return "<strong>" + valType + ":</strong> <span style='color:white'>" + d + "</span>";
             });
         curVizObj.view.cnvSVG.call(curVizObj.valTip);
 
