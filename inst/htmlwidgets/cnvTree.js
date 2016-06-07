@@ -1118,13 +1118,6 @@ HTMLWidgets.widget({
         // height for continuous cnv data legend rectangle (make it the same as the discrete CNV legend height)
         var legendRectHeight = (maxCNV+1)*(config.rectHeight + config.rectSpacing);
 
-        // heatmap legend rectangle / text genotype
-        var heatmapLegendG = curVizObj.view.cnvLegendSVG
-            .selectAll(".heatmapLegendG")
-            .data(cnvColorScale.domain())
-            .enter()
-            .append("g")
-            .classed("heatmapLegendG", true);
 
         // CNV LEGEND
         if (curVizObj.userConfig.heatmap_type == "cnv") {
@@ -1135,7 +1128,8 @@ HTMLWidgets.widget({
                 var normal_relative = (2/maxCNV);
 
                 // linear gradient for fill of targeted mutation legend
-                heatmapLegendG.append("linearGradient")
+                curVizObj.view.cnvLegendSVG
+                    .append("linearGradient")
                     .attr("id", "targetedGradient")
                     .attr("gradientUnits", "userSpaceOnUse")
                     .attr("x1", 0).attr("y1", legendRectStart)
@@ -1151,7 +1145,7 @@ HTMLWidgets.widget({
                     .attr("stop-color", function(d) { return d.color; });
 
                 // legend rectangle with gradient
-                heatmapLegendG
+                curVizObj.view.cnvLegendSVG
                     .append("rect")
                     .attr("x", config.paddingGeneral)
                     .attr("y", legendRectStart)
@@ -1160,7 +1154,7 @@ HTMLWidgets.widget({
                     .attr("fill", "url(#targetedGradient)");
 
                 // legend text
-                heatmapLegendG
+                curVizObj.view.cnvLegendSVG
                     .append("text")
                     .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                     .attr("y", legendRectStart)
@@ -1169,7 +1163,7 @@ HTMLWidgets.widget({
                     .attr("font-family", "Arial")
                     .attr("font-size", config.legendFontHeight)
                     .style("fill", "black");
-                heatmapLegendG
+                curVizObj.view.cnvLegendSVG
                     .append("text")
                     .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                     .attr("y", legendRectStart + (1-normal_relative)*legendRectHeight)
@@ -1178,7 +1172,7 @@ HTMLWidgets.widget({
                     .attr("font-family", "Arial")
                     .attr("font-size", config.legendFontHeight)
                     .style("fill", "black");
-                heatmapLegendG
+                curVizObj.view.cnvLegendSVG
                     .append("text")
                     .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                     .attr("y", legendRectStart + legendRectHeight)
@@ -1190,6 +1184,15 @@ HTMLWidgets.widget({
 
             // DISCRETE DATA
             else {
+
+                // heatmap legend rectangle / text genotype
+                var heatmapLegendG = curVizObj.view.cnvLegendSVG
+                    .selectAll(".heatmapLegendG")
+                    .data(cnvColorScale.domain())
+                    .enter()
+                    .append("g")
+                    .classed("heatmapLegendG", true);
+
                 // CNV legend rectangles
                 heatmapLegendG
                     .append("rect")
@@ -1227,7 +1230,7 @@ HTMLWidgets.widget({
         // TARGETED HEATMAP LEGEND
         else {
             // linear gradient for fill of targeted mutation legend
-            heatmapLegendG.append("linearGradient")
+            curVizObj.view.cnvLegendSVG.append("linearGradient")
                 .attr("id", "targetedGradient")
                 .attr("gradientUnits", "userSpaceOnUse")
                 .attr("x1", 0).attr("y1", legendRectStart)
@@ -1243,7 +1246,7 @@ HTMLWidgets.widget({
                 .attr("stop-color", function(d) { return d.color; });
 
             // VAF legend rectangle with gradient
-            heatmapLegendG
+            curVizObj.view.cnvLegendSVG
                 .append("rect")
                 .attr("x", config.paddingGeneral)
                 .attr("y", legendRectStart)
@@ -1252,23 +1255,36 @@ HTMLWidgets.widget({
                 .attr("fill", "url(#targetedGradient)");
 
             // VAF legend text
-            heatmapLegendG
+            curVizObj.view.cnvLegendSVG
                 .append("text")
+                .attr("class", "VAFlegendText")
                 .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                 .attr("y", legendRectStart)
-                .attr("dy", "+0.71em")
-                .text("1")
+                .attr("dy", "+0.35em")
                 .attr("font-family", "Arial")
                 .attr("font-size", config.legendFontHeight)
-                .style("fill", "black");
-            heatmapLegendG
+                .attr("fill", "black")
+                .text("1");
+            curVizObj.view.cnvLegendSVG
                 .append("text")
+                .attr("class", "VAFlegendText")
+                .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
+                .attr("y", legendRectStart + legendRectHeight/2)
+                .attr("dy", "+0.35em")
+                .attr("font-family", "Arial")
+                .attr("font-size", config.legendFontHeight)
+                .attr("fill", "black")
+                .text("0.5");
+            curVizObj.view.cnvLegendSVG
+                .append("text")
+                .attr("class", "VAFlegendText")
                 .attr("x", config.paddingGeneral + config.rectHeight + config.rectSpacing)
                 .attr("y", legendRectStart + legendRectHeight)
-                .text("0")
+                .attr("dy", "+0.35em")
                 .attr("font-family", "Arial")
                 .attr("font-size", config.legendFontHeight)
-                .style("fill", "black");
+                .attr("fill", "black")
+                .text("0");
         }
         config.gtypeAnnotStartY = legendRectStart + legendRectHeight + config.paddingGeneral; // starting y-pixel for genotype annotation legend
 
