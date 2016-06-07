@@ -65,12 +65,10 @@ function _clearBrush(view_id) {
 function _mouseoverNode(sc_id, view_id, nodeTip, switchView, sc_annot) {
     // show single cell tooltip
     if (switchView) {
-        nodeTip.show(sc_id, 
-                          d3.select("#" + view_id).select(".tree.node.node_" + sc_id).node());
+        nodeTip.show(sc_id, d3.select("#" + view_id).select(".tree.node.node_" + sc_id).node());
     }
     else {
-        nodeTip.show(sc_id, 
-                          d3.select("#" + view_id).select(".graph.node.node_" + sc_id).node());
+        nodeTip.show(sc_id, d3.select("#" + view_id).select(".graph.node.node_" + sc_id).node());
     }
 
     // highlight indicator 
@@ -83,6 +81,10 @@ function _mouseoverNode(sc_id, view_id, nodeTip, switchView, sc_annot) {
     d3.select("#" + view_id).selectAll(".legendGroupRect.gtype_" + gtype).classed("active", true);
     d3.select("#" + view_id).selectAll(".legendTpRect").classed("active", false);
     d3.select("#" + view_id).selectAll(".legendTpRect.tp_" + tp).classed("active", true);
+
+    // highlight node itself
+    d3.select("#" + view_id).selectAll(".graph.node.node_" + sc_id).classed("active", true);
+    d3.select("#" + view_id).selectAll(".tree.node.node_" + sc_id).classed("active", true);
 }
 
 /* function for node mouseout
@@ -131,6 +133,8 @@ function _mouseoutGenotype(view_id) {
     d3.select("#" + view_id).selectAll(".gtypeAnnot").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".graph.node").classed("active", false);
+    d3.select("#" + view_id).selectAll(".tree.node").classed("active", false);
     d3.select("#" + view_id).selectAll(".legendGroupRect").classed("active", false);
     d3.select("#" + view_id).selectAll(".tsPlot").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendTreeNode").classed("inactive", false);

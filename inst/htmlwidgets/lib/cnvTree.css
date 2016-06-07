@@ -62,6 +62,14 @@ ul {
     stroke: #CECECE;
 }
 
+.graph.node.active {
+    fill: #000000;
+}
+
+.tree.node.active {
+    fill: #000000;
+}
+
 .legendGroupRect.active {
     stroke: #000000;
 }
