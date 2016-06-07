@@ -21,6 +21,7 @@ HTMLWidgets.widget({
         var defaults = {
             // tree
             tree_r: 4, // tree node radius
+            min_tree_r: 3.5, // minimum tree node radius
             tree_w_labels_r: 7, // tree node radius when labels displayed within
             distOn: false, // whether or not we're scaling by edge distances
             treeOpacity: 1, // tree starts with opacity 1 
@@ -245,6 +246,11 @@ HTMLWidgets.widget({
         if (curVizObj.view.gtypesSpecified) {
             _reformatGroupAnnots(curVizObj);
         }
+
+        // ADJUST TREE NODE RADIUS BASED ON ROW HEIGHT 
+
+        config.tree_r = (curVizObj.view.hm.rowHeight/2 < config.min_tree_r) ? 
+            config.min_tree_r : curVizObj.view.hm.rowHeight/2;
 
         // GET X- and Y-COORDINATE FOR EACH SINGLE CELL
 

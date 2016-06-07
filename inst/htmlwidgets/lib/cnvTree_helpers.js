@@ -1,5 +1,11 @@
 // D3 EFFECTS FUNCTIONS
 
+d3.selection.prototype.moveToFront = function() {
+  return this.each(function(){
+    this.parentNode.appendChild(this);
+  });
+};
+
 /* brush selection ending function
 * @param {Object} curVizObj
 */
@@ -82,9 +88,11 @@ function _mouseoverNode(sc_id, view_id, nodeTip, switchView, sc_annot) {
     d3.select("#" + view_id).selectAll(".legendTpRect").classed("active", false);
     d3.select("#" + view_id).selectAll(".legendTpRect.tp_" + tp).classed("active", true);
 
-    // highlight node itself
+    // highlight node itself & bring it to front
     d3.select("#" + view_id).selectAll(".graph.node.node_" + sc_id).classed("active", true);
     d3.select("#" + view_id).selectAll(".tree.node.node_" + sc_id).classed("active", true);
+    d3.select(d3.select("#" + view_id).selectAll(".graph.node.node_" + sc_id).node().parentNode).moveToFront();
+    d3.select(d3.select("#" + view_id).selectAll(".tree.node.node_" + sc_id).node().parentNode).moveToFront();
 }
 
 /* function for node mouseout
