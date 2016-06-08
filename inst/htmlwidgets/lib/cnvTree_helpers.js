@@ -168,7 +168,7 @@ function _mouseoutTp(view_id) {
     d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendTpRect").classed("active", false);
-    d3.select("#" + view_id).selectAll(".tpGuide").attr("stroke-opacity", 0);
+    _hideTpGuides(view_id);
 }
 
 /* function to inactivate all genotypes
@@ -191,7 +191,7 @@ function _inactivateTps(view_id) {
     d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", true);
     d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", true);
     d3.select("#" + view_id).selectAll(".legendTpRect").classed("active", false);
-    d3.select("#" + view_id).selectAll(".tpGuide").attr("stroke-opacity", 0);
+    _hideTpGuides(view_id);
 }
 
 /* function to highlight a particular genotype
@@ -216,7 +216,7 @@ function _highlightTp(tp, view_id) {
     d3.select("#" + view_id).selectAll(".graph.node.tp_" + tp).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tree.node.tp_" + tp).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendTpRect.tp_" + tp).classed("active", true);
-    d3.select("#" + view_id).selectAll(".tpGuide.tp_" + tp).attr("stroke-opacity", 1);
+    _hlTpGuide(view_id, tp);
 }
 
 /* function to highlight a single cell
