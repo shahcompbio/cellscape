@@ -3345,7 +3345,7 @@ function _hlTpGuide(view_id, tp) {
 */
 function _hideTpGuides(view_id) {
 	// hide timepoint guides
-	d3.select("#" + curVizObj.view_id).selectAll(".tpGuide")
+	d3.select("#" + view_id).selectAll(".tpGuide")
 		.attr("stroke", "white")
 		.attr("stroke-opacity", 0.4);
 
