@@ -342,6 +342,7 @@ cnvTree <- function(cnv_data = NULL,
     clone_colours <- "NA"
     xaxis_title <- "Time Point"
     yaxis_title <- "Clonal Prevalence"
+    phylogeny_title <- "Clonal Phylogeny"
     alpha <- 50 
     genotype_position <- "stack" 
     perturbations <- "NA" 
@@ -354,6 +355,7 @@ cnvTree <- function(cnv_data = NULL,
                                             clone_colours, 
                                             xaxis_title, 
                                             yaxis_title, 
+                                            phylogeny_title,
                                             alpha, 
                                             genotype_position, 
                                             perturbations, 
@@ -696,6 +698,7 @@ processUserData <- function(clonal_prev,
                       clone_colours, 
                       xaxis_title, 
                       yaxis_title, 
+                      phylogeny_title,
                       alpha, 
                       genotype_position, 
                       perturbations, 
@@ -759,8 +762,10 @@ processUserData <- function(clonal_prev,
     clone_cols = jsonlite::toJSON(clone_colours),
     mutations = jsonlite::toJSON(mutation_info),
     mutation_prevalences = jsonlite::toJSON(mutation_prevalences),
-    xaxis_title = xaxis_title,
-    yaxis_title = yaxis_title,
+    mutations_provided=mutations_provided, # whether or not mutations are provided
+    xaxis_title = as.character(xaxis_title),
+    yaxis_title = as.character(yaxis_title),
+    phylogeny_title = as.character(phylogeny_title),
     alpha = alpha,
     genotype_position = genotype_position,
     perturbations = jsonlite::toJSON(perturbations),
