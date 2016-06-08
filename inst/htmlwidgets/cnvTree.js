@@ -854,7 +854,8 @@ HTMLWidgets.widget({
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function(d) {
-                return "<strong>Cell:</strong> <span style='color:white'>" + d + "</span>";
+                return "<strong>" + curVizObj.userConfig.node_type + ":</strong> <span style='color:white'>" + 
+                    d + "</span>";
             });
         curVizObj.view.treeSVG.call(curVizObj.nodeTip);
 

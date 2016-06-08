@@ -36,11 +36,13 @@
 #'
 #' @param timepoint_title {String} (Optional) Legend title for timepoint groups. Default is "Timepoint".
 #' @param clone_title {String} (Optional) Legend title for clones. Default is "Clone".
-#' @param value_type {String} (Optional) The type of value plotted in heatmap - will affect legend and heatmap tooltips. 
-#'                                       Default is "VAF" for mutation data, and "CNV" for copy number data.
 #' @param xaxis_title {String} (Optional) For TimeSweep - x-axis title. Default is "Time Point".
 #' @param yaxis_title {String} (Optional) For TimeSweep - y-axis title. Default is "Clonal Prevalence".
 #' @param phylogeny_title {String} (Optional) For TimeSweep - legend phylogeny title. Default is "Clonal Phylogeny".
+#' @param value_type {String} (Optional) The type of value plotted in heatmap - will affect legend and heatmap tooltips. 
+#'                                       Default is "VAF" for mutation data, and "CNV" for copy number data.
+#' @param node_type {String} (Optional) The type of node plotted in single cell phylogeny - will affect phylogeny tooltips. 
+#'                                       Default is "Cell".
 #' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
 #' @param show_warnings {Boolean} (Optional) Whether or not to show any warnings. Default is TRUE.
 #' @param width {Number} (Optional) Width of the plot.
@@ -58,6 +60,7 @@ cnvTree <- function(cnv_data = NULL,
                     yaxis_title = "Clonal Prevalence",
                     phylogeny_title = "Clonal Phylogeny",
                     value_type = NULL,
+                    node_type = "Cell",
                     display_node_ids = FALSE, 
                     show_warnings = TRUE,
                     width = 900, 
@@ -410,6 +413,7 @@ cnvTree <- function(cnv_data = NULL,
     heatmap_type=heatmap_type, # type of data in heatmap (cnv or targeted)
     heatmapWidth=heatmapWidth, # width of the heatmap
     value_type=value_type, # type of value in the heatmap
+    node_type=node_type, # type of node in single cell phylogeny
     timepoint_title=as.character(timepoint_title), # legend title for timepoints
     clone_title=as.character(clone_title), # legend title for timepoints
     root=root, # name of root
