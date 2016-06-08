@@ -34,6 +34,7 @@
 #'                       (3) {String} (Optional) "timepoint" - id of the sampled time point. 
 #'                                                  Note: in the case of time points, they will be ordered alphabetically
 #'
+#' @param timepoint_title {String} (Optional) Legend title for timepoint groups. Default is "Timepoint".
 #' @param value_type {String} (Optional) The type of value plotted in heatmap - will affect legend and heatmap tooltips. 
 #'                                       Default is "VAF" for mutation data, and "CNV" for copy number data.
 #' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
@@ -47,6 +48,7 @@ cnvTree <- function(cnv_data = NULL,
                     tree_edges, 
                     gtype_tree_edges = NULL,
                     sc_annot = NULL, 
+                    timepoint_title = "Timepoint",
                     value_type = NULL,
                     display_node_ids = FALSE, 
                     show_warnings = TRUE,
@@ -403,6 +405,7 @@ cnvTree <- function(cnv_data = NULL,
     heatmap_type=heatmap_type, # type of data in heatmap (cnv or targeted)
     heatmapWidth=heatmapWidth, # width of the heatmap
     value_type=value_type, # type of value in the heatmap
+    timepoint_title=as.character(timepoint_title), # legend title for timepoints
     root=root, # name of root
     display_node_ids=display_node_ids, # whether or not to display the node id labels on each node
     scs_missing_from_hm=scs_missing_from_hm, # single cells in tree but not heatmap

@@ -1397,7 +1397,7 @@ HTMLWidgets.widget({
                 .attr("font-family", "Arial")
                 .attr("font-weight", "bold")
                 .attr("font-size", config.legendTitleHeight)
-                .text("Timepoint");
+                .text(curVizObj.userConfig.timepoint_title);
 
             // genotype annotation legend rectangle / text genotype
             var tpAnnotLegendG = curVizObj.view.cnvLegendSVG
