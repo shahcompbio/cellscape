@@ -35,8 +35,12 @@
 #'                                                  Note: in the case of time points, they will be ordered alphabetically
 #'
 #' @param timepoint_title {String} (Optional) Legend title for timepoint groups. Default is "Timepoint".
+#' @param clone_title {String} (Optional) Legend title for clones. Default is "Clone".
 #' @param value_type {String} (Optional) The type of value plotted in heatmap - will affect legend and heatmap tooltips. 
 #'                                       Default is "VAF" for mutation data, and "CNV" for copy number data.
+#' @param xaxis_title {String} (Optional) For TimeSweep - x-axis title. Default is "Time Point".
+#' @param yaxis_title {String} (Optional) For TimeSweep - y-axis title. Default is "Clonal Prevalence".
+#' @param phylogeny_title {String} (Optional) For TimeSweep - legend phylogeny title. Default is "Clonal Phylogeny".
 #' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
 #' @param show_warnings {Boolean} (Optional) Whether or not to show any warnings. Default is TRUE.
 #' @param width {Number} (Optional) Width of the plot.
@@ -49,6 +53,10 @@ cnvTree <- function(cnv_data = NULL,
                     gtype_tree_edges = NULL,
                     sc_annot = NULL, 
                     timepoint_title = "Timepoint",
+                    clone_title = "Clone",
+                    xaxis_title = "Time Point",
+                    yaxis_title = "Clonal Prevalence",
+                    phylogeny_title = "Clonal Phylogeny",
                     value_type = NULL,
                     display_node_ids = FALSE, 
                     show_warnings = TRUE,
@@ -361,9 +369,6 @@ cnvTree <- function(cnv_data = NULL,
     timesweep_wanted <- TRUE
     mutations <- "NA"
     clone_colours <- "NA"
-    xaxis_title <- "Time Point"
-    yaxis_title <- "Clonal Prevalence"
-    phylogeny_title <- "Clonal Phylogeny"
     alpha <- 50 
     genotype_position <- "stack" 
     perturbations <- "NA" 
@@ -374,9 +379,9 @@ cnvTree <- function(cnv_data = NULL,
                                             gtype_tree_edges, 
                                             mutations,
                                             clone_colours, 
-                                            xaxis_title, 
-                                            yaxis_title, 
-                                            phylogeny_title,
+                                            as.character(xaxis_title), 
+                                            as.character(yaxis_title), 
+                                            as.character(phylogeny_title),
                                             alpha, 
                                             genotype_position, 
                                             perturbations, 
@@ -406,6 +411,7 @@ cnvTree <- function(cnv_data = NULL,
     heatmapWidth=heatmapWidth, # width of the heatmap
     value_type=value_type, # type of value in the heatmap
     timepoint_title=as.character(timepoint_title), # legend title for timepoints
+    clone_title=as.character(clone_title), # legend title for timepoints
     root=root, # name of root
     display_node_ids=display_node_ids, # whether or not to display the node id labels on each node
     scs_missing_from_hm=scs_missing_from_hm, # single cells in tree but not heatmap

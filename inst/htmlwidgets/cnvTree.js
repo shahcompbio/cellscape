@@ -1302,7 +1302,7 @@ HTMLWidgets.widget({
                 .attr("font-family", "Arial")
                 .attr("font-weight", "bold")
                 .attr("font-size", config.legendTitleHeight)
-                .text("Clone");
+                .text(curVizObj.userConfig.clone_title);
 
             // genotype annotation legend rectangle / text genotype
             var gtypeAnnotLegendG = curVizObj.view.cnvLegendSVG
