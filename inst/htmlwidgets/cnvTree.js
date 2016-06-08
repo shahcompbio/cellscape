@@ -872,8 +872,8 @@ HTMLWidgets.widget({
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function(d) {
-                var valType = (curVizObj.userConfig.heatmap_type == "targeted") ? "VAF" : "CNV";
-                return "<strong>" + valType + ":</strong> <span style='color:white'>" + d + "</span>";
+                return "<strong>" + curVizObj.userConfig.value_type + ":</strong> <span style='color:white'>" + 
+                    d + "</span>";
             });
         curVizObj.view.cnvSVG.call(curVizObj.valTip);
 
@@ -1114,9 +1114,7 @@ HTMLWidgets.widget({
             .attr("font-family", "Arial")
             .attr("font-weight", "bold")
             .attr("font-size", config.legendTitleHeight)
-            .text(function() {
-                return (curVizObj.userConfig.heatmap_type == "cnv") ? "CNV" : "VAF";
-            });
+            .text(curVizObj.userConfig.value_type);
 
         // starting y-coordinate for the heatmap rectangle(s) in legend
         var legendRectStart = config.heatmapLegendStartY + config.legendTitleHeight + config.rectSpacing*2;
