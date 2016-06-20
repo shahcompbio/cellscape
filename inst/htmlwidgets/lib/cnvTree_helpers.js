@@ -23,13 +23,14 @@ function _brushEnd(curVizObj, brush) {
     if (!brush.empty()) {
         
         // highlight selected grid cell rows
-        d3.select("#" + curVizObj.view_id).selectAll(".gtypeAnnot").classed("active", function(d) {
+        d3.select("#" + curVizObj.view_id).selectAll(".indic").classed("active", function(d) {
+            var y_coord = parseFloat(d3.select(this).attr("y"));
             // if any transformation has occurred
             var t = d3.transform(d3.select(this).attr("transform")), 
                 t_y = t.translate[1];
-            var brushed = extent[0] <= (d.y+curVizObj.view.hm.rowHeight+t_y) && (d.y+t_y) <= extent[1];
+            var brushed = extent[0] <= (y_coord+curVizObj.view.hm.rowHeight+t_y) && (y_coord+t_y) <= extent[1];
             if (brushed) {
-                cur_selectedSCs.push(d.single_cell_id);
+                cur_selectedSCs.push(d);
             }
             return brushed;
         });
