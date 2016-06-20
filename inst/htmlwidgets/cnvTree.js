@@ -39,7 +39,7 @@ HTMLWidgets.widget({
             annotHmSpace: 3,
 
             // colours
-            defaultNodeColour: "#CECECE",
+            defaultNodeColour: "#A3A3A3",
             highlightColour: "#000000",
             linkHighlightColour: "#000000",
             defaultLinkColour: "#CECECE",
@@ -712,7 +712,7 @@ HTMLWidgets.widget({
             .on("click", function() {
                 // if brush selection button is selected, turn it off
                 if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 1) {
-                    _clearBrush(curVizObj);
+                    _clearBrush(curVizObj.view_id);
                     _pushBrushSelectionButton(brush, curVizObj);
                 }
                 // push scissors button function
