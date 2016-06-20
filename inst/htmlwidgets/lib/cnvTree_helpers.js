@@ -554,10 +554,11 @@ function _getYCoordinates(curVizObj) {
             });
 
             // set the y-coordinate for this latent single cell to be 
-            // the average y-coordinate of these direct descendants
-            var sum_y = y_coordinates_of_direct_descendants.reduce((a, b) => a + b, 0);
-            var average_y = sum_y/(y_coordinates_of_direct_descendants.length);
-            curVizObj.data.yCoordinates[sc.sc_id] = average_y;  
+            // the midpoint between the min and max y-coordinates of these direct descendants
+            var min_y = Math.min.apply(Math, y_coordinates_of_direct_descendants);
+            var max_y = Math.max.apply(Math, y_coordinates_of_direct_descendants);
+            var mid_y = (min_y + max_y)/2;
+            curVizObj.data.yCoordinates[sc.sc_id] = mid_y;  
         }
 
         // if the cell has an ancestor with y-coordinates already assigned
