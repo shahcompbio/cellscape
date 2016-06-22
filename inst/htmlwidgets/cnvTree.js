@@ -265,6 +265,14 @@ HTMLWidgets.widget({
         // store original y coordinates, for tree pruning purposes
         curVizObj.data.originalYCoordinates = $.extend({}, curVizObj.data.yCoordinates);
 
+        // GET MUTATION ORDER FOR TARGETED DATA
+        
+        if (curVizObj.userConfig.heatmap_type == "targeted") {
+            curVizObj.data.mut_order = _getMutOrder(curVizObj.data.yCoordinates, 
+                        curVizObj.userConfig.scs_missing_from_hm,
+                        curVizObj.userConfig.site_heatmap_info);
+        }
+
         console.log("cnv curVizObj");
         console.log(curVizObj);
 
@@ -914,6 +922,10 @@ HTMLWidgets.widget({
                         return "gridCell sc_" + d.sc_id + " gtype_" + genotype + " mut_" + mut;
                     })
                     .attr("x", function(d) { 
+                        // for targeted data, get the x position given the mutation order
+                        if (curVizObj.userConfig.heatmap_type == "targeted") {
+                            d.x = curVizObj.data.mut_order.indexOf(d.site)*d.px_width;
+                        }
                         return d.x; 
                     })
                     .attr("y", function(d) { 

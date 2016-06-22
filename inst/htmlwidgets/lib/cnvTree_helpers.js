@@ -615,6 +615,61 @@ function _getXCoordinates(curVizObj) {
     });
 }
 
+/* function to get order of mutations for targeted data
+* @param {Object} yCoordinates -- y coordinate (value) for each single cell id (key)
+* @param {Array} scs_missing_from_hm -- single cells without data in the heatmap
+* @param {Object} site_heatmap_info -- for each mutation site (key), 
+*                                       an array of objects containing mutation info for each sc
+*/
+function _getMutOrder(yCoordinates, scs_missing_from_hm, site_heatmap_info) {
+    // get vertical order of single cells
+    var scs_sorted = Object.keys(yCoordinates).sort(function(a,b){return yCoordinates[a]-yCoordinates[b]});
+
+    // exclude those single cells not present in the heatmap
+    Array.prototype.diff = function(a) {
+        return this.filter(function(i) {return a.indexOf(i) < 0;});
+    };
+    var scs_sorted_hm = scs_sorted.diff(scs_missing_from_hm);
+    console.log("scs_sorted_hm");
+    console.log(scs_sorted_hm);
+
+    // for each site, get binary number by transforming its values (ordered by sc y-coord) to binary string
+    var site_binaries = {};
+    Object.keys(site_heatmap_info).forEach(function(site) {
+        // mutation data for the current site
+        var cur_mut_dat = $.extend([], site_heatmap_info[site]);
+
+        // change all grid cell values to binary
+        cur_mut_dat.forEach(function(dat) {
+            var new_gridCell_value;
+            if (!dat.gridCell_value || (dat.gridCell_value < 0.05)) { // set undefined & small values to zero
+                new_gridCell_value = 0;
+            }
+            else { // small values to 1
+                new_gridCell_value = 1;
+            }
+            dat.gridCell_value = new_gridCell_value;
+        })
+
+        // for each single cell (ordered vertically), append the gridCell value to the binary string
+        var cur_bin_string = "";
+        scs_sorted_hm.forEach(function(cur_sc) {
+            var cur_val = _.findWhere(cur_mut_dat, {sc_id: cur_sc}).gridCell_value;
+            var new_bin_string = cur_bin_string.concat(cur_val);
+            cur_bin_string = new_bin_string;
+        });
+
+        // set bin string for this site
+        site_binaries[site] = parseInt(cur_bin_string, 2);
+    });
+
+    // get horizontal order of mutations
+    var muts_ordered = Object.keys(site_binaries).sort(function(a,b){return site_binaries[a]-site_binaries[b]}).reverse();
+
+    return muts_ordered;
+
+}
+
 /* function to get the link id for a link data object
 * @param {Object} d - link data object
 */

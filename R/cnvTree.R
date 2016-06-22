@@ -151,6 +151,9 @@ cnvTree <- function(cnv_data = NULL,
     
     # get chromosome box information (chromosome legend)
     chrom_boxes <- getChromBoxInfo(chrom_bounds, n_bp_per_pixel)
+
+    # set heatmap info split by mutations to null
+    site_heatmap_info <- NULL
   }
 
   # TREE EDGE DATA
@@ -295,9 +298,12 @@ cnvTree <- function(cnv_data = NULL,
     # get the order of mutations based on a hierarchical clustering of the data
     mut_order <- getMutOrder(mut_data)
 
-    # heatmap information for each cell
-    heatmap_info <- getTargetedHeatmapForEachSC(mut_data, mut_order, heatmapWidth)
+    # heatmap information split by single cell and site
+    split_heatmap_info <- getTargetedHeatmapForEachSC(mut_data, mut_order, heatmapWidth)
+    heatmap_info <- split_heatmap_info$sc_split
+    site_heatmap_info <- split_heatmap_info$site_split
   }
+
   # GET SINGLE CELLS THAT ARE IN THE TREE BUT DON'T HAVE ASSOCIATED HEATMAP DATA
   scs_in_hm <- names(heatmap_info) # single cells in heatmap
   scs_in_tree <- unique(c(tree_edges$source, tree_edges$target))
@@ -416,7 +422,8 @@ cnvTree <- function(cnv_data = NULL,
     distances_provided=distances_provided, # whether or not distances are provided for tree edges
     chroms=chroms, # chromosomes
     chrom_boxes=jsonlite::toJSON(chrom_boxes), # chromosome legend boxes
-    heatmap_info=jsonlite::toJSON(heatmap_info), # heatmap information 
+    heatmap_info=jsonlite::toJSON(heatmap_info), # heatmap information split by single cell
+    site_heatmap_info=jsonlite::toJSON(site_heatmap_info), # heatmap info split by mutation site
     heatmap_type=heatmap_type, # type of data in heatmap (cnv or targeted)
     heatmapWidth=heatmapWidth, # width of the heatmap
     value_type=value_type, # type of value in the heatmap
@@ -796,9 +803,12 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
   colnames(heatmap_info)[which(colnames(heatmap_info) == "VAF")] <- "gridCell_value"
 
   # separate pixels by single cell id
-  heatmap_info_split <- split(heatmap_info , f = heatmap_info$sc_id)
+  heatmap_info_sc_split <- split(heatmap_info , f = heatmap_info$sc_id)
 
-  return (heatmap_info_split)
+  # separate pixels by mutation site
+  heatmap_info_site_split <- split(heatmap_info , f = heatmap_info$site)
+
+  return (list(sc_split=heatmap_info_sc_split, site_split=heatmap_info_site_split))
 }
 
 # function to find the mode of a vector
