@@ -19,6 +19,8 @@
 #'                       (3) {Number} "coord" - genomic coordinate
 #'                       (5) {Number} "VAF" - variant allele frequency [0, 1].
 #'
+#' @param mut_order {Array} (Optional) Mutation order for targeted mutation heatmap. 
+#'                                     Default will use a clustering function to determine mutation order.
 #' @param tree_edges {Data frame} Edges for the single cell phylogenetic tree.
 #'   Format: columns are (1) {String} "source" - edge source (single cell id)
 #'                       (2) {String} "target" - edge target (single cell id)
@@ -51,6 +53,7 @@
 #' @export
 cnvTree <- function(cnv_data = NULL, 
                     mut_data = NULL, 
+                    mut_order = NULL,
                     tree_edges, 
                     gtype_tree_edges = NULL,
                     sc_annot = NULL, 
@@ -181,6 +184,9 @@ cnvTree <- function(cnv_data = NULL,
     mut_data$coord <- as.numeric(as.character(mut_data$coord))
     mut_data$VAF <- as.numeric(as.character(mut_data$VAF))
 
+    # get site name for each mutation
+    mut_data$site <- paste(trimws(mut_data$chr), trimws(mut_data$coord), sep=":")
+
     # ensure VAF is between 0 and 1
     if (length(which(mut_data$VAF < 0)) > 0) {
       stop("You have entered mutation data with VAF < 0. Only enter data between 0 and 1 (NA is ok).")
@@ -200,8 +206,33 @@ cnvTree <- function(cnv_data = NULL,
     genome_length <- NULL
     chrom_boxes <- NULL
 
+    # if the user has provided the mutation order, check it includes all existing mutations
+    if (!is.null("mut_order")) {
+      sites <- unique(mut_data$site)
+      sites_missing_from_mut_order <- setdiff(sites, mut_order)
+      if (length(sites_missing_from_mut_order) > 0) {
+          stop(paste("The following mutation(s) are present in the targeted mutation data but ",
+              "are missing from the mutation order data: ",
+              paste(sites_missing_from_mut_order, collapse=", "), 
+              ". All mutation sites must be present in the mutation order data.", sep=""))
+      }
+      sites_extra_in_mut_order <- setdiff(mut_order, sites)
+      if (length(sites_extra_in_mut_order) > 0) {
+        if (show_warnings) {
+          print(paste("WARNING: The following mutation(s) are present in the mutation order data but ",
+              "are missing from the targeted mutation data: ",
+              paste(sites_extra_in_mut_order, collapse=", "), ". They will have no effect on the visualization.", sep=""))
+        }
+
+        # remove these excess sites from the mut_order data
+        mut_order_edited <- setdiff(sites, sites_extra_in_mut_order)
+      }
+    }
+    # if user has NOT provided mutation order, 
     # get the order of mutations based on a hierarchical clustering of the data
-    mut_order <- getMutOrder(mut_data)
+    else {
+      mut_order <- getMutOrder(mut_data)
+    }
 
     # heatmap information for each cell
     heatmap_info <- getTargetedHeatmapForEachSC(mut_data, mut_order, heatmapWidth)
@@ -623,9 +654,6 @@ getMutOrder <- function(mut_data) {
   separator <- ":"
 
   cur_data <- mut_data
-
-  # get mutation site as one string
-  cur_data$site <- paste(trimws(cur_data$chr), trimws(cur_data$coord), sep=separator)
 
   # group data by mutation site
   cur_data$VAF_rounded <- cur_data$VAF
