@@ -151,9 +151,60 @@ cnvTree <- function(cnv_data = NULL,
     
     # get chromosome box information (chromosome legend)
     chrom_boxes <- getChromBoxInfo(chrom_bounds, n_bp_per_pixel)
+  }
 
-    # set heatmap info split by mutations to null
-    site_heatmap_info <- NULL
+  # TARGETED MUTATIONS DATA
+
+  # targeted mutations data is provided
+  if (missing(cnv_data)) {
+
+    # set heatmap type
+    heatmap_type <- "targeted"
+
+    # check it's a data frame
+    if (!is.data.frame(mut_data)) {
+      stop("Targeted mutations data (parameter mut_data) must be a data frame.")
+    }
+
+    # ensure column names are correct
+    if (!("single_cell_id" %in% colnames(mut_data)) ||
+        !("chr" %in% colnames(mut_data)) ||
+        !("coord" %in% colnames(mut_data)) ||
+        !("VAF" %in% colnames(mut_data))) {
+      stop(paste("Targeted mutations data frame must have the following column names: ", 
+          "\"single_cell_id\", \"chr\", \"coord\", \"VAF\"", sep=""))
+    }
+
+    # ensure data is of the correct type
+    mut_data$single_cell_id <- as.character(mut_data$single_cell_id)
+    mut_data$chr <- as.character(mut_data$chr)
+    mut_data$coord <- as.numeric(as.character(mut_data$coord))
+    mut_data$VAF <- as.numeric(as.character(mut_data$VAF))
+
+    # ensure VAF is between 0 and 1
+    if (length(which(mut_data$VAF < 0)) > 0) {
+      stop("You have entered mutation data with VAF < 0. Only enter data between 0 and 1 (NA is ok).")
+    }
+    if (length(which(mut_data$VAF > 1)) > 0) {
+      stop("You have entered mutation data with VAF > 1. Only enter data between 0 and 1 (NA is ok).")
+    }
+
+    # set continuous cnv to false (we're now using VAF data that is always continuous)
+    continuous_cnv <- FALSE
+
+    # get chromosomes
+    chroms <- gtools::mixedsort(unique(mut_data$chr))
+
+    # set chromosome bounds, genome length and chromosome box info to NULL (not needed for mutation data)
+    chrom_bounds <- NULL
+    genome_length <- NULL
+    chrom_boxes <- NULL
+
+    # get the order of mutations based on a hierarchical clustering of the data
+    mut_order <- getMutOrder(mut_data)
+
+    # heatmap information for each cell
+    heatmap_info <- getTargetedHeatmapForEachSC(mut_data, mut_order, heatmapWidth)
   }
 
   # TREE EDGE DATA
@@ -238,70 +289,6 @@ cnvTree <- function(cnv_data = NULL,
   # otherwise, set the root
   else {
     root <- sources
-  }
-
-  # get number of descendants for each node in the tree
-  n_descs <- getAllDescendants(tree_edges)
-
-  # get DFS order of nodes in the tree
-  node_order <- getDFSNodeOrder(tree_edges, root, n_descs, c())
-  print("node_order")
-  print(node_order)
-
-  # TARGETED MUTATIONS DATA
-
-  # targeted mutations data is provided
-  if (missing(cnv_data)) {
-
-    # set heatmap type
-    heatmap_type <- "targeted"
-
-    # check it's a data frame
-    if (!is.data.frame(mut_data)) {
-      stop("Targeted mutations data (parameter mut_data) must be a data frame.")
-    }
-
-    # ensure column names are correct
-    if (!("single_cell_id" %in% colnames(mut_data)) ||
-        !("chr" %in% colnames(mut_data)) ||
-        !("coord" %in% colnames(mut_data)) ||
-        !("VAF" %in% colnames(mut_data))) {
-      stop(paste("Targeted mutations data frame must have the following column names: ", 
-          "\"single_cell_id\", \"chr\", \"coord\", \"VAF\"", sep=""))
-    }
-
-    # ensure data is of the correct type
-    mut_data$single_cell_id <- as.character(mut_data$single_cell_id)
-    mut_data$chr <- as.character(mut_data$chr)
-    mut_data$coord <- as.numeric(as.character(mut_data$coord))
-    mut_data$VAF <- as.numeric(as.character(mut_data$VAF))
-
-    # ensure VAF is between 0 and 1
-    if (length(which(mut_data$VAF < 0)) > 0) {
-      stop("You have entered mutation data with VAF < 0. Only enter data between 0 and 1 (NA is ok).")
-    }
-    if (length(which(mut_data$VAF > 1)) > 0) {
-      stop("You have entered mutation data with VAF > 1. Only enter data between 0 and 1 (NA is ok).")
-    }
-
-    # set continuous cnv to false (we're now using VAF data that is always continuous)
-    continuous_cnv <- FALSE
-
-    # get chromosomes
-    chroms <- gtools::mixedsort(unique(mut_data$chr))
-
-    # set chromosome bounds, genome length and chromosome box info to NULL (not needed for mutation data)
-    chrom_bounds <- NULL
-    genome_length <- NULL
-    chrom_boxes <- NULL
-
-    # get the order of mutations based on a hierarchical clustering of the data
-    mut_order <- getMutOrder(mut_data)
-
-    # heatmap information split by single cell and site
-    split_heatmap_info <- getTargetedHeatmapForEachSC(mut_data, mut_order, heatmapWidth)
-    heatmap_info <- split_heatmap_info$sc_split
-    site_heatmap_info <- split_heatmap_info$site_split
   }
 
   # GET SINGLE CELLS THAT ARE IN THE TREE BUT DON'T HAVE ASSOCIATED HEATMAP DATA
@@ -422,8 +409,7 @@ cnvTree <- function(cnv_data = NULL,
     distances_provided=distances_provided, # whether or not distances are provided for tree edges
     chroms=chroms, # chromosomes
     chrom_boxes=jsonlite::toJSON(chrom_boxes), # chromosome legend boxes
-    heatmap_info=jsonlite::toJSON(heatmap_info), # heatmap information split by single cell
-    site_heatmap_info=jsonlite::toJSON(site_heatmap_info), # heatmap info split by mutation site
+    heatmap_info=jsonlite::toJSON(heatmap_info), # heatmap information 
     heatmap_type=heatmap_type, # type of data in heatmap (cnv or targeted)
     heatmapWidth=heatmapWidth, # width of the heatmap
     value_type=value_type, # type of value in the heatmap
@@ -631,73 +617,6 @@ getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
   return (consecutive_px_merged_split)
 }
 
-#' function to get all descendants of each node
-#' @param {Data Frame} tree_edges -- edges of the tree
-getAllDescendants <- function(tree_edges) {
-  nodes <- unique(c(tree_edges$source, tree_edges$target))
-  target_descs <- data.frame(target = rep("randomstring", length(nodes)), 
-                            n_desc = rep(-1, length(nodes)), 
-                            stringsAsFactors=FALSE)
-  for (i in 1:length(nodes)) {
-    n_desc <- length(getAllDescendants_helper(tree_edges, nodes[i], c()))
-    target_descs[i,"target"] <- nodes[i]
-    target_descs[i,"n_desc"] <- as.numeric(n_desc)
-  }
-
-  return (target_descs)
-}
-
-#' helper function to get all descendants of a particular node
-#' @param {Data Frame} tree_edges -- edges of the tree
-#' @param {String} node -- node of interest
-#' @param {Array} descs -- descendants of this node
-getAllDescendants_helper <- function(tree_edges, node, descs) {
-
-  # get targets of current node
-  targets <- tree_edges[which(tree_edges$source == node),"target"]
-
-  # for each target, add its target
-  for (target in targets) {
-    # add the current target to the list of the node's descendants
-    descs <- c(descs, target)
-    descs <- getAllDescendants_helper(tree_edges, target, descs)
-  }
-
-  return (descs)
-}
-
-#' function to get the depth-first search order of the tree, given its edges
-#' @param {Data Frame} tree_edges -- edges of the tree
-#' @param {String} root -- root of the tree
-#' @param {Data Frame} n_descs -- each node and its number of descendants
-#' @param {Array} node_order -- order of nodes to be filled in as function proceeds
-getDFSNodeOrder <- function(tree_edges, root, n_descs, node_order) {
-
-  # add root to node order
-  node_order <- c(node_order, root)
-
-  # get targets of current root
-  targets <- tree_edges[which(tree_edges$source == root),"target"]
-
-  # for each target, get the number of descendants it has
-  target_descs <- data.frame(target = targets, stringsAsFactors=FALSE)
-  target_descs <- merge(target_descs, n_descs, by="target", all.x=TRUE)
-
-  # there are targets
-  if (length(targets) > 0) {
-    # order targets by the number of descendants they have
-    target_descs_ordered <- dplyr::arrange(target_descs, n_desc)
-
-    # for each (ordered) target, find their targets
-    for (target in target_descs_ordered$target) {
-      node_order <- getDFSNodeOrder(tree_edges, target, n_descs, node_order)
-    }
-  }
-
-  return(node_order)
-
-}
-
 #' function to get mutation order for targeted data
 #' @param {Data Frame} mut_data -- mutations data
 getMutOrder <- function(mut_data) {
@@ -707,20 +626,6 @@ getMutOrder <- function(mut_data) {
 
   # get mutation site as one string
   cur_data$site <- paste(trimws(cur_data$chr), trimws(cur_data$coord), sep=separator)
-
-  # # binarize VAFs
-  # cur_data$VAF_bin <- cur_data$VAF
-  # cur_data$VAF_bin[which(cur_data$VAF_bin < 0.05)] <- 0
-  # cur_data$VAF_bin[which(cur_data$VAF_bin >= 0.05)] <- 1
-
-  # # set NAs / Infs to 0
-  # cur_data$VAF_bin[which(is.na(cur_data$VAF_bin))] <- 0 
-  # cur_data$VAF_bin[which(is.infinite(cur_data$VAF_bin))] <- 0
-
-  # # get the 
-
-
-  # print(head(cur_data))
 
   # group data by mutation site
   cur_data$VAF_rounded <- cur_data$VAF
@@ -803,12 +708,9 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
   colnames(heatmap_info)[which(colnames(heatmap_info) == "VAF")] <- "gridCell_value"
 
   # separate pixels by single cell id
-  heatmap_info_sc_split <- split(heatmap_info , f = heatmap_info$sc_id)
+  heatmap_info_split <- split(heatmap_info , f = heatmap_info$sc_id)
 
-  # separate pixels by mutation site
-  heatmap_info_site_split <- split(heatmap_info , f = heatmap_info$site)
-
-  return (list(sc_split=heatmap_info_sc_split, site_split=heatmap_info_site_split))
+  return (heatmap_info_split)
 }
 
 # function to find the mode of a vector
