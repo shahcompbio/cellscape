@@ -19,7 +19,8 @@
 #'                       (3) {Number} "coord" - genomic coordinate
 #'                       (5) {Number} "VAF" - variant allele frequency [0, 1].
 #'
-#' @param mut_order {Array} (Optional) Mutation order for targeted mutation heatmap. 
+#' @param mut_order {Array} (Optional) Mutation order for targeted mutation heatmap 
+#'                                     (each mutation should consist of a string in the form "chrom:coord"). 
 #'                                     Default will use a clustering function to determine mutation order.
 #' @param tree_edges {Data frame} Edges for the single cell phylogenetic tree.
 #'   Format: columns are (1) {String} "source" - edge source (single cell id)
@@ -207,7 +208,7 @@ cnvTree <- function(cnv_data = NULL,
     chrom_boxes <- NULL
 
     # if the user has provided the mutation order, check it includes all existing mutations
-    if (!is.null("mut_order")) {
+    if (!is.null(mut_order)) {
       sites <- unique(mut_data$site)
       sites_missing_from_mut_order <- setdiff(sites, mut_order)
       if (length(sites_missing_from_mut_order) > 0) {
