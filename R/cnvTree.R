@@ -212,10 +212,10 @@ cnvTree <- function(cnv_data = NULL,
       sites <- unique(mut_data$site)
       sites_missing_from_mut_order <- setdiff(sites, mut_order)
       if (length(sites_missing_from_mut_order) > 0) {
-          stop(paste("The following mutation(s) are present in the targeted mutation data but ",
-              "are missing from the mutation order data: ",
-              paste(sites_missing_from_mut_order, collapse=", "), 
-              ". All mutation sites must be present in the mutation order data.", sep=""))
+        stop(paste("The following mutation(s) are present in the targeted mutation data but ",
+            "are missing from the mutation order data: ",
+            paste(sites_missing_from_mut_order, collapse=", "), 
+            ". All mutation sites must be present in the mutation order data.", sep=""))
       }
       sites_extra_in_mut_order <- setdiff(mut_order, sites)
       if (length(sites_extra_in_mut_order) > 0) {
@@ -380,7 +380,23 @@ cnvTree <- function(cnv_data = NULL,
   }
 
   # IF ALL NECESSARY PRAMETERS ARE PRESENT FOR TIMESWEEP
-  if (!is.null(gtype_tree_edges) && !is.null(sc_annot) && ("timepoint" %in% colnames(sc_annot))) {
+  if (!is.null(gtype_tree_edges) && 
+      !is.null(sc_annot) && 
+      ("timepoint" %in% colnames(sc_annot)) &&
+      ("genotype" %in% colnames(sc_annot))) {
+
+    # ENSURE THAT ALL GENOTYPES ARE PRESENT IN THE TREE
+
+    gtypes_in_gtype_tree <- unique(c(gtype_tree_edges$source, gtype_tree_edges$target))
+    gtypes_in_annots <- unique(sc_annot$genotype)
+    gtypes_missing_from_tree <- setdiff(gtypes_in_annots, gtypes_in_gtype_tree)
+    if (length(gtypes_missing_from_tree) > 0) {
+      stop(paste("The following genotype(s) are present in the single cell annotations data but ",
+          "are missing from the genotype tree: ",
+          paste(gtypes_missing_from_tree, collapse=", "), 
+          ". All genotypes must be present in the genotype tree data.", sep=""))
+    }
+
 
     # CALCULATE CLONAL PREVALENCE FOR EACH SAMPLE
 
