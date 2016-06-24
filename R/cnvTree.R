@@ -226,7 +226,7 @@ cnvTree <- function(cnv_data = NULL,
         }
 
         # remove these excess sites from the mut_order data
-        mut_order_edited <- setdiff(sites, sites_extra_in_mut_order)
+        mut_order <- setdiff(sites, sites_extra_in_mut_order)
       }
     }
     # if user has NOT provided mutation order, 
@@ -384,6 +384,11 @@ cnvTree <- function(cnv_data = NULL,
       !is.null(sc_annot) && 
       ("timepoint" %in% colnames(sc_annot)) &&
       ("genotype" %in% colnames(sc_annot))) {
+
+    # ensure correct type of genotype tree edge data
+
+    gtype_tree_edges$source <- as.character(gtype_tree_edges$source)
+    gtype_tree_edges$target <- as.character(gtype_tree_edges$target)
 
     # ENSURE THAT ALL GENOTYPES ARE PRESENT IN THE TREE
 
@@ -674,7 +679,7 @@ getMutOrder <- function(mut_data) {
 
   # group data by mutation site
   cur_data$VAF_rounded <- cur_data$VAF
-  cur_data$VAF_rounded[which(cur_data$VAF_rounded < 0.05)] <- -10000000
+  cur_data$VAF_rounded[which(cur_data$VAF_rounded < 0.05)] <- -10
   cur_data$VAF_rounded[which(cur_data$VAF_rounded >= 0.95)] <- 1
   cur_data$VAF_rounded[which(is.na(cur_data$VAF_rounded))] <- 0.5
   cur_data$VAF_rounded[which(is.infinite(cur_data$VAF_rounded))] <- 0.5
