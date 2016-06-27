@@ -142,7 +142,6 @@ function _mouseoverGenotype(gtype, view_id) {
 * @param {String} view_id -- id of current view
 */
 function _mouseoverTp(tp, view_id) {
-
     _inactivateTps(view_id);
     _highlightTp(tp, view_id);
 }
@@ -151,7 +150,6 @@ function _mouseoverTp(tp, view_id) {
 * @param {String} view_id -- id of current view
 */
 function _mouseoutGenotype(view_id) {
-    d3.select("#" + view_id).selectAll(".gtypeAnnot").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".graph.node").classed("active", false);
@@ -159,16 +157,17 @@ function _mouseoutGenotype(view_id) {
     d3.select("#" + view_id).selectAll(".legendGroupRect").classed("active", false);
     d3.select("#" + view_id).selectAll(".tsPlot").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendTreeNode").classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".indic").attr("fill-opacity", 0);
 }
 
 /* function for timepoint mouseover
 * @param {String} view_id -- id of current view
 */
 function _mouseoutTp(view_id) {
-    d3.select("#" + view_id).selectAll(".tpAnnot").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendTpRect").classed("active", false);
+    d3.select("#" + view_id).selectAll(".indic").attr("fill-opacity", 0);
     _hideTpGuides(view_id);
 }
 
@@ -176,7 +175,6 @@ function _mouseoutTp(view_id) {
 * @param {String} view_id -- id of current view
 */
 function _inactivateGenotypes(view_id) {
-    d3.select("#" + view_id).selectAll(".gtypeAnnot").classed("inactive", true);
     d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", true);
     d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", true);
     d3.select("#" + view_id).selectAll(".legendGroupRect").classed("active", false);
@@ -188,7 +186,6 @@ function _inactivateGenotypes(view_id) {
 * @param {String} view_id -- id of current view
 */
 function _inactivateTps(view_id) {
-    d3.select("#" + view_id).selectAll(".tpAnnot").classed("inactive", true);
     d3.select("#" + view_id).selectAll(".graph.node").classed("inactive", true);
     d3.select("#" + view_id).selectAll(".tree.node").classed("inactive", true);
     d3.select("#" + view_id).selectAll(".legendTpRect").classed("active", false);
@@ -200,7 +197,7 @@ function _inactivateTps(view_id) {
 * @param {String} view_id -- id of current view
 */
 function _highlightGenotype(gtype, view_id) {
-    d3.select("#" + view_id).selectAll(".gtypeAnnot.gtype_" + gtype).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".indic.gtype_" + gtype).attr("fill-opacity", 1);
     d3.select("#" + view_id).selectAll(".graph.node.gtype_" + gtype).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tree.node.gtype_" + gtype).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendGroupRect.gtype_" + gtype).classed("active", true);
@@ -213,7 +210,7 @@ function _highlightGenotype(gtype, view_id) {
 * @param {String} view_id -- id of current view
 */
 function _highlightTp(tp, view_id) {
-    d3.select("#" + view_id).selectAll(".tpAnnot.tp_" + tp).classed("inactive", false);
+    d3.select("#" + view_id).selectAll(".indic.tp_" + tp).attr("fill-opacity", 1);
     d3.select("#" + view_id).selectAll(".graph.node.tp_" + tp).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".tree.node.tp_" + tp).classed("inactive", false);
     d3.select("#" + view_id).selectAll(".legendTpRect.tp_" + tp).classed("active", true);
@@ -276,8 +273,7 @@ function _resetGroupAnnotLegendRects(view_id) {
 * @param {String} view_id -- id for current view
 */
 function _highlightIndicator(sc_id, view_id) {
-    d3.select("#" + view_id).select(".indic.sc_" + sc_id)
-        .attr("fill-opacity", 1);
+    d3.select("#" + view_id).select(".indic.sc_" + sc_id).attr("fill-opacity", 1);
 }
 
 /* function to reset a node in the tree
