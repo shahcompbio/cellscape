@@ -85,7 +85,7 @@ cnvTree <- function(cnv_data = NULL,
   }
 
   # heatmap width (pixels)
-  heatmapWidth <- (width/2) - 40 
+  heatmapWidth <- (width/2) 
 
   # VALUE TITLE (title for heatmap value legend)
 
