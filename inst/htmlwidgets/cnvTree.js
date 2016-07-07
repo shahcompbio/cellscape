@@ -338,7 +338,10 @@ HTMLWidgets.widget({
         // BRUSH SELECTION FUNCTION
 
         var brush = d3.svg.brush()
-            .y(d3.scale.linear().domain([0, config.hmHeight]).range([0, config.hmHeight]))
+            .y(d3.scale.linear()
+                .domain([config.paddingGeneral, config.hmHeight + config.paddingGeneral])
+                .range([config.paddingGeneral, config.hmHeight + config.paddingGeneral])
+            )
             .on("brushstart", function() { d3.select(".cnvSVG").classed("brushed", true); })
             .on("brushend", function() {
                 return _brushEnd(curVizObj, brush);
