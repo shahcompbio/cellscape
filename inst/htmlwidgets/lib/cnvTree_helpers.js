@@ -1046,6 +1046,7 @@ function _plotForceDirectedGraph(curVizObj) {
             if (curVizObj.data.treeDescendantsArr[d.sc_id].length > 0) charge = 10 * charge;
             return charge;
         })
+        .gravity(0.28)
         .nodes(userConfig.sc_tree_nodes)
         .links(userConfig.sc_tree_edges);        
 
@@ -1201,6 +1202,7 @@ function _rePlotForceLayout(curVizObj) {
                 if (curVizObj.data.treeDescendantsArr[d.sc_id].length > 0) charge = 10 * charge;
                 return charge;
             })
+            .gravity(0.28)
             .nodes(userConfig.sc_tree_nodes)
             .links(userConfig.sc_tree_edges);        
     }
