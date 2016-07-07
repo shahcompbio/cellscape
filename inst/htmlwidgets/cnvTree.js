@@ -63,7 +63,7 @@ HTMLWidgets.widget({
             switchView: true,
 
             // title
-            viewTitle: "CNVTREE"
+            viewTitle: "CELLSCAPE"
         };
 
         // global variable curVizObj
