@@ -997,24 +997,6 @@ function _scaledElbow(curVizObj, d, source_name, source, target) {
     return "M" + source.x + "," + source.y + "H" + (source.x + (min_link_dist)/2) + "V" + target.y + "H" + target.x;
 }
 
-/* function to calculate the result of a linear system, given m, b, upper limit and lower limit
-*/
-function _calcLinearRes(m, x, b, lowerLimit, upperLimit) {
-    var calculation = m*x + b;
-    var res;
-    if (calculation < lowerLimit) {
-        res = lowerLimit;
-    }
-    else if (calculation > upperLimit) {
-        res = upperLimit;
-    }
-    else {
-        res = calculation;
-    }
-    return res;
-}
-
-
 /* function to remove any edges involving single cells that were removed due to no presence heatmap data, 
 * nor descendants with heatmap data -- store the filtered set of edges in new array
 */
@@ -1059,19 +1041,24 @@ function _plotForceDirectedGraph(curVizObj) {
     // force layout function
     var force_layout = d3.layout.force() // TODO update below
         .size([config.treeWidth, config.treeHeight])
-        .linkDistance(_calcLinearRes(1.9203, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 4.3023, 4, 20))
-        .gravity(_calcLinearRes(-0.0922, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 0.7815, 0.2, 0.7)) 
-        .charge(_calcLinearRes(-5.5321, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), -65.11, -100, -70))
+        .charge(function(d){
+            var charge = -10;
+            if (curVizObj.data.treeDescendantsArr[d.sc_id].length > 0) charge = 10 * charge;
+            return charge;
+        })
         .nodes(userConfig.sc_tree_nodes)
         .links(userConfig.sc_tree_edges);        
 
     // plot links
-    var link = curVizObj.view.treeSVG
+    var linksG = curVizObj.view.treeSVG
         .append("g")
         .classed("graphLinks", true)
-        .selectAll(".link")
+        .selectAll(".linksG")
         .data(_getEdgesToPlot(curVizObj))
-        .enter().append("line")
+        .enter().append("g")
+        .classed("linksG", true);
+
+    var link = linksG.append("line")
         .classed("link", true)
         .attr("class", function(d) {
             return "link graph " + d.link_id;
@@ -1091,6 +1078,11 @@ function _plotForceDirectedGraph(curVizObj) {
         })
         .on("click", function(d) {
             _linkClick(curVizObj, d.link_id);
+        });
+
+    linksG.append("svg:title")
+        .text(function(d) {
+            return (d.dist) ? "Distance: "+d.dist : null;
         });
 
     // plot nodes
@@ -1196,8 +1188,6 @@ function _rePlotForceLayout(curVizObj) {
                 // divide by 2 so that two max paths can fit on the smallest dimension
                 return (d.dist/curVizObj.data.max_tree_path_dist)*(config.smallest_tree_dim/2); 
             })
-            .gravity(".09")
-            .charge(-100)
             .nodes(userConfig.sc_tree_nodes)
             .links(userConfig.sc_tree_edges);     
     }
@@ -1206,9 +1196,11 @@ function _rePlotForceLayout(curVizObj) {
         // layout function
         force_layout = d3.layout.force()
             .size([config.treeWidth, config.treeHeight])
-            .linkDistance(_calcLinearRes(1.9203, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 4.3023, 4, 20))
-            .gravity(_calcLinearRes(-0.0922, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), 0.7815, 0.2, 0.7)) 
-            .charge(_calcLinearRes(-5.5321, (config.smallest_tree_dim / userConfig.sc_tree_nodes.length), -65.11, -100, -70))
+            .charge(function(d){
+                var charge = -10;
+                if (curVizObj.data.treeDescendantsArr[d.sc_id].length > 0) charge = 10 * charge;
+                return charge;
+            })
             .nodes(userConfig.sc_tree_nodes)
             .links(userConfig.sc_tree_edges);        
     }
