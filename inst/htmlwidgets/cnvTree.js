@@ -109,11 +109,14 @@ HTMLWidgets.widget({
         config.containerHeight = config.cnvTreeViewHeight - config.topBarHeight;
         config.containerWidth = config.width;
 
+        // vertical spacing required for the title of the heatmap/tree, and the space below it
+        config.spacingForTitle = config.legendTitleHeight + config.rectSpacing*2;
+
         // heatmap configurations
-        config.hmHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingGeneral*2;
+        config.hmHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingGeneral*2 - config.spacingForTitle;
 
         // tree configurations
-        config.treeHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingGeneral*2;
+        config.treeHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingGeneral*2 - config.spacingForTitle;
 
         // heatmap legend start
         config.heatmapLegendStartY = 1 + config.paddingGeneral; // starting y-pixel for heatmap legend
@@ -338,10 +341,11 @@ HTMLWidgets.widget({
 
         // BRUSH SELECTION FUNCTION
 
+        var spaceBetweenTopBarAndView = config.paddingGeneral + config.spacingForTitle;
         var brush = d3.svg.brush()
             .y(d3.scale.linear()
-                .domain([config.paddingGeneral, config.hmHeight + config.paddingGeneral])
-                .range([config.paddingGeneral, config.hmHeight + config.paddingGeneral])
+                .domain([spaceBetweenTopBarAndView, config.hmHeight + spaceBetweenTopBarAndView])
+                .range([spaceBetweenTopBarAndView, config.hmHeight + spaceBetweenTopBarAndView])
             )
             .on("brushstart", function() { d3.select(".cnvSVG").classed("brushed", true); })
             .on("brushend", function() {
@@ -411,41 +415,49 @@ HTMLWidgets.widget({
 
         // CNV SVG
 
+        // x transformation for heatmap
+        var hm_t_x; 
+        if (curVizObj.view.gtypesSpecified && curVizObj.view.tpsSpecified) { // gtype and tp annots
+            hm_t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*3 + config.annotHmSpace);
+        }
+        else if (curVizObj.view.gtypesSpecified) { // gtype annot only
+            hm_t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*2 + config.annotHmSpace);
+        }
+        else { // no annots
+            hm_t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth);
+        }
+
         curVizObj.view.cnvSVG = containerSVG.append("g")
             .attr("class", "cnvSVG")
-            .attr("transform", function() {
-                var t_x; 
-                if (curVizObj.view.gtypesSpecified && curVizObj.view.tpsSpecified) { // gtype and tp annots
-                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*3 + config.annotHmSpace);
-                }
-                else if (curVizObj.view.gtypesSpecified) { // gtype annot only
-                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*2 + config.annotHmSpace);
-                }
-                else { // no annots
-                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth);
-                }
-                
-                return "translate(" + t_x + "," + 0 + ")"
-            });
+            .attr("transform", "translate(" + hm_t_x + "," + 0 + ")");
 
         // CNV LEGEND SVG
 
         curVizObj.view.cnvLegendSVG = containerSVG.append("g")
             .attr("class", "cnvLegendSVG")
-            .attr("transform", function() {
-                var t_x; 
-                if (curVizObj.view.gtypesSpecified && curVizObj.view.tpsSpecified) { // gtype and tp annots
-                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*3 + config.annotHmSpace + curVizObj.userConfig.heatmapWidth);
-                }
-                else if (curVizObj.view.gtypesSpecified) { // gtype annot only
-                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth*2 + config.annotHmSpace + curVizObj.userConfig.heatmapWidth);
-                }
-                else { // no annots
-                    t_x = (config.treeWidth + config.paddingGeneral + config.annotColWidth + curVizObj.userConfig.heatmapWidth);
-                }
+            .attr("transform", "translate(" + (hm_t_x + curVizObj.userConfig.heatmapWidth) + "," + 0 + ")");
 
-                return "translate(" + t_x + "," + 0 + ")"
-            });
+
+        // TITLE FOR TREE AND HEATMAP
+
+        containerSVG.append("text")
+            .attr("x", hm_t_x + (curVizObj.userConfig.heatmapWidth/2))
+            .attr("y", config.paddingGeneral)
+            .attr("dy", "+0.71em")
+            .attr("text-anchor", "middle")
+            .attr("font-family", "Arial")
+            .attr("font-weight", "bold")
+            .attr("font-size", config.legendTitleHeight)
+            .text("Heatmap");
+        containerSVG.append("text")
+            .attr("x", config.treeWidth/2)
+            .attr("y", config.paddingGeneral)
+            .attr("dy", "+0.71em")
+            .attr("text-anchor", "middle")
+            .attr("font-family", "Arial")
+            .attr("font-weight", "bold")
+            .attr("font-size", config.legendTitleHeight)
+            .text("Single Cell Phylogeny");
 
         // PLOT TOP PANEL
 
@@ -989,7 +1001,7 @@ HTMLWidgets.widget({
         chromBoxes.append("rect")
             .attr("class", function(d) { return "chromBox chr" + d.chr; })
             .attr("x", function(d) { return d.x; })
-            .attr("y", config.paddingGeneral + config.hmHeight - config.chromLegendHeight)
+            .attr("y", config.paddingGeneral + config.spacingForTitle + config.hmHeight - config.chromLegendHeight)
             .attr("height", config.chromLegendHeight)
             .attr("width", function(d) { return d.width; })
             .style("fill", function(d) { 
@@ -1003,7 +1015,7 @@ HTMLWidgets.widget({
         chromBoxes.append("text")
             .attr("class", function(d) { return "chromBoxText chr" + d.chr; })
             .attr("x", function(d) { return d.x + (d.width / 2); })
-            .attr("y", config.paddingGeneral + config.hmHeight - (config.chromLegendHeight / 2))
+            .attr("y", config.paddingGeneral + config.spacingForTitle + config.hmHeight - (config.chromLegendHeight / 2))
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .attr("font-family", "Arial")

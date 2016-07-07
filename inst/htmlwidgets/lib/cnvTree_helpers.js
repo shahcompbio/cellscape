@@ -516,7 +516,7 @@ function _getYCoordinates(curVizObj) {
 
         // starting y-coordinate for this id
         curVizObj.data.yCoordinates[sc_id] = 
-            config.paddingGeneral + (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
+            config.paddingGeneral + config.spacingForTitle + (sc_id_i/curVizObj.view.hm.nrows)*hmHeight; 
     });
 
     // sort single cells w/o data by descending number of ancestors
