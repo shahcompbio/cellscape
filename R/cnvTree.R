@@ -133,6 +133,10 @@ cnvTree <- function(cnv_data = NULL,
     cnv_data$end <- as.numeric(as.character(cnv_data$end))
     cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
 
+    # change "23" to "X", "24" to "Y"
+    cnv_data$chr[which(cnv_data$chr == "23")] <- "X"
+    cnv_data$chr[which(cnv_data$chr == "24")] <- "Y"
+
     # determine whether the data is discrete or continuous
     cnvs_without_nas <- na.omit(cnv_data$integer_copy_number)
     continuous_cnv <- !all(cnvs_without_nas == floor(cnvs_without_nas))
@@ -184,6 +188,10 @@ cnvTree <- function(cnv_data = NULL,
     mut_data$chr <- as.character(mut_data$chr)
     mut_data$coord <- as.numeric(as.character(mut_data$coord))
     mut_data$VAF <- as.numeric(as.character(mut_data$VAF))
+
+    # change "23" to "X", "24" to "Y"
+    mut_data$chr[which(mut_data$chr == "23")] <- "X"
+    mut_data$chr[which(mut_data$chr == "24")] <- "Y"
 
     # get site name for each mutation
     mut_data$site <- paste(trimws(mut_data$chr), trimws(mut_data$coord), sep=":")
