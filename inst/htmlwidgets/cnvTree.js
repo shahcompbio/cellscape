@@ -48,7 +48,7 @@ HTMLWidgets.widget({
             chromLegendHeight: 15, // height of chromosome legend
 
             // heatmap and genotype legends
-            heatmapLegendWidth: 110,
+            heatmapLegendWidth: 60,
             legendTitleHeight: 15, // height of legend titles
             rectHeight: 12, // rectangle in legend
             rectSpacing: 2, // spacing between legend rectangles
@@ -119,6 +119,11 @@ HTMLWidgets.widget({
         config.heatmapLegendStartY = 1 + config.paddingGeneral; // starting y-pixel for heatmap legend
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
+
+        // extend heatmapLegendWidth if timesweep present
+        if (curVizObj.userConfig.timesweep_wanted) {
+            config.heatmapLegendWidth = 110;
+        }
 
         // tree configurations
         config.treeWidth = config.width - config.annotColWidth - config.heatmapLegendWidth - curVizObj.userConfig.heatmapWidth - config.paddingGeneral*2;
