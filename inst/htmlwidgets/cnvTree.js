@@ -309,7 +309,8 @@ HTMLWidgets.widget({
             }
             // genotype tree not provided - random colours
             else {
-                colour_assignments = _getGtypeColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")));             
+                colour_assignments = _getGtypeColours(_.uniq(_.pluck(curVizObj.userConfig.sc_annot, "genotype")),
+                                                        curVizObj.userConfig.clone_cols);             
             }
             curVizObj.view.colour_assignment = colour_assignments.colour_assignment;
             curVizObj.view.alpha_colour_assignment = colour_assignments.alpha_colour_assignment;

@@ -37,6 +37,9 @@
 #'                       (3) {String} (Optional) "timepoint" - id of the sampled time point. 
 #'                                                  Note: in the case of time points, they will be ordered alphabetically
 #'
+#' @param clone_colours {Data Frame} (Optional) Clone ids and their corresponding colours 
+#'   Format: columns are (1) {String} "clone_id" - the clone ids
+#'                       (2) {String} "colour" - the corresponding Hex colour for each clone id.
 #' @param timepoint_title {String} (Optional) Legend title for timepoint groups. Default is "Timepoint".
 #' @param clone_title {String} (Optional) Legend title for clones. Default is "Clone".
 #' @param xaxis_title {String} (Optional) For TimeSweep - x-axis title. Default is "Time Point".
@@ -58,6 +61,7 @@ cnvTree <- function(cnv_data = NULL,
                     tree_edges, 
                     gtype_tree_edges = NULL,
                     sc_annot = NULL, 
+                    clone_colours = "NA",
                     timepoint_title = "Timepoint",
                     clone_title = "Clone",
                     xaxis_title = "Time Point",
@@ -86,6 +90,18 @@ cnvTree <- function(cnv_data = NULL,
 
   # heatmap width (pixels)
   heatmapWidth <- (width/2) 
+
+  # CLONE COLOURS
+
+  if (is.data.frame(clone_colours)) {
+
+    # ensure column names are correct
+    if (!("clone_id" %in% colnames(clone_colours)) ||
+        !("colour" %in% colnames(clone_colours))) {
+      stop(paste("Node colour data frame must have the following column names: ", 
+          "\"clone_id\", \"colour\"", sep=""))
+    }
+  }
 
   # VALUE TITLE (title for heatmap value legend)
 
@@ -432,7 +448,6 @@ cnvTree <- function(cnv_data = NULL,
     # GET INFORMATION FOR TIMESWEEP
     timesweep_wanted <- TRUE
     mutations <- "NA"
-    clone_colours <- "NA"
     alpha <- 50 
     genotype_position <- "stack" 
     perturbations <- "NA" 
@@ -462,6 +477,7 @@ cnvTree <- function(cnv_data = NULL,
 
   # forward options using x
   cnvTree_userParams <- list(
+    clone_cols = jsonlite::toJSON(clone_colours), # clone colours
     sc_annot=sc_annot_JSON, # single cells and their associated group ids
     sc_annot_provided=sc_annot_provided, # whether or not single cell annotations are provided by the user
     sc_tree_edges=jsonlite::toJSON(tree_edges_for_layout), # tree edges for phylogeny

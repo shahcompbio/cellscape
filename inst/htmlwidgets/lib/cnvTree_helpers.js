@@ -1689,42 +1689,63 @@ function _getChromBounds(curVizObj) {
 function _getPhyloColours(curVizObj) {
 
     var colour_assignment = {}, // standard colour assignment
-        alpha_colour_assignment = {}; // alpha colour assignment
+        alpha_colour_assignment = {}, // alpha colour assignment
+        clone_cols = curVizObj.userConfig.clone_cols;
 
-    var s = 0.88, // saturation
-        l = 0.77; // lightness
-
-    // number of nodes
-    var n_nodes = curVizObj.data.gtypeTreeChainRoots.length;
-
-    // colour each tree chain root a sequential colour from the spectrum
-    for (var i = 0; i < n_nodes; i++) {
-        var cur_node = curVizObj.data.gtypeTreeChainRoots[i];
-        var h = (i/n_nodes + 0.96) % 1;
-        var rgb = _hslToRgb(h, s, l); // hsl to rgb
-        var col = _rgb2hex("rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")"); // rgb to hex
-
-        colour_assignment[cur_node] = col;
-
-        // for each of the chain's descendants
-        var prev_colour = col;
-        curVizObj.data.gtypeTreeChains[cur_node].forEach(function(desc, desc_i) {
-            // if we're on the phantom root's branch and it's the first descendant
-            if (cur_node == curVizObj.generalConfig.phantomRoot && desc_i === 0) {
-
-                // do not decrease the brightness
-                colour_assignment[desc] = prev_colour;
+    // clone colours specified
+    if (clone_cols != "NA") {
+        // get colour assignment - use specified colours
+        // handling different inputs -- TODO should probably be done in R
+        clone_cols.forEach(function(col, col_idx) {
+            var col_value = col.colour;
+            if (col_value[0] != "#") { // append a hashtag if necessary
+                col_value = "#".concat(col_value);
             }
-            // we're not on the phantom root branch's first descendant
-            else {
-                // colour the descendant a lighter version of the previous colour in the chain
-                colour_assignment[desc] = 
-                    _decrease_brightness(prev_colour, 20);
-
-                // set the previous colour to the lightened colour
-                prev_colour = colour_assignment[desc]; 
+            if (col_value.length > 7) { // remove any alpha that may be present in the hex value
+                col_value = col_value.substring(0,7);
             }
-        })
+            colour_assignment[col.clone_id] = col_value;
+        });
+    }
+
+    // clone colours not specified
+    else {
+
+        var s = 0.88, // saturation
+            l = 0.77; // lightness
+
+        // number of nodes
+        var n_nodes = curVizObj.data.gtypeTreeChainRoots.length;
+
+        // colour each tree chain root a sequential colour from the spectrum
+        for (var i = 0; i < n_nodes; i++) {
+            var cur_node = curVizObj.data.gtypeTreeChainRoots[i];
+            var h = (i/n_nodes + 0.96) % 1;
+            var rgb = _hslToRgb(h, s, l); // hsl to rgb
+            var col = _rgb2hex("rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")"); // rgb to hex
+
+            colour_assignment[cur_node] = col;
+
+            // for each of the chain's descendants
+            var prev_colour = col;
+            curVizObj.data.gtypeTreeChains[cur_node].forEach(function(desc, desc_i) {
+                // if we're on the phantom root's branch and it's the first descendant
+                if (cur_node == curVizObj.generalConfig.phantomRoot && desc_i === 0) {
+
+                    // do not decrease the brightness
+                    colour_assignment[desc] = prev_colour;
+                }
+                // we're not on the phantom root branch's first descendant
+                else {
+                    // colour the descendant a lighter version of the previous colour in the chain
+                    colour_assignment[desc] = 
+                        _decrease_brightness(prev_colour, 20);
+
+                    // set the previous colour to the lightened colour
+                    prev_colour = colour_assignment[desc]; 
+                }
+            })
+        }
     }
 
 
@@ -1739,24 +1760,45 @@ function _getPhyloColours(curVizObj) {
 
 /* function to calculate colours for genotypes (not based on phylogeny)
 * @param {Array} gtypes -- gtypes in dataset, for which we need colours
+* @param {Object} clone_cols -- colours for each clone (specified by user)
 */
-function _getGtypeColours(gtypes) {
+function _getGtypeColours(gtypes, clone_cols) {
 
     var colour_assignment = {},
         alpha_colour_assignment = {};
 
-    var s = 0.95, // saturation
-        l = 0.76; // lightness
+    // clone colours specified
+    if (clone_cols != "NA") {
+        // get colour assignment - use specified colours
+        // handling different inputs -- TODO should probably be done in R
+        clone_cols.forEach(function(col, col_idx) {
+            var col_value = col.colour;
+            if (col_value[0] != "#") { // append a hashtag if necessary
+                col_value = "#".concat(col_value);
+            }
+            if (col_value.length > 7) { // remove any alpha that may be present in the hex value
+                col_value = col_value.substring(0,7);
+            }
+            colour_assignment[col.clone_id] = col_value;
+        });
+    }
 
-    // number of nodes
-    var n_nodes = gtypes.length;
+    // clone colours not specified
+    else {
 
-    for (var i = 0; i < n_nodes; i++) {
-        var h = i/n_nodes;
-        var rgb = _hslToRgb(h, s, l); // hsl to rgb
-        var col = _rgb2hex("rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")"); // rgb to hex
+        var s = 0.95, // saturation
+            l = 0.76; // lightness
 
-        colour_assignment[gtypes[i]] = col;
+        // number of nodes
+        var n_nodes = gtypes.length;
+
+        for (var i = 0; i < n_nodes; i++) {
+            var h = i/n_nodes;
+            var rgb = _hslToRgb(h, s, l); // hsl to rgb
+            var col = _rgb2hex("rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")"); // rgb to hex
+
+            colour_assignment[gtypes[i]] = col;
+        }
     }
 
     // get the alpha colour assignment
