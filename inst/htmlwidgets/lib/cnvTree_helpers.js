@@ -682,7 +682,10 @@ function _linkMouseover(curVizObj, link_id) {
 * @param {String} link_id -- id for clicked link
 */
 function _linkClick(curVizObj, link_id) {
-    var userConfig = curVizObj.userConfig;
+    var userConfig = curVizObj.userConfig,
+        index_link,
+        index_hm,
+        index_not_hm;
 
     // if scissors button is selected
     if (d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
@@ -693,8 +696,8 @@ function _linkClick(curVizObj, link_id) {
             d3.select("#" + curVizObj.view_id).selectAll("." + link_id).remove();
 
             // remove link from list of links
-            var index = userConfig.link_ids.indexOf(link_id);
-            userConfig.link_ids.splice(index, 1);
+            index_link = userConfig.link_ids.indexOf(link_id);
+            userConfig.link_ids.splice(index_link, 1);
         });
         // for each single cell
         curVizObj.view.selectedSCs.forEach(function(sc_id) {
@@ -705,10 +708,15 @@ function _linkClick(curVizObj, link_id) {
             d3.select("#" + curVizObj.view_id).select(".tpAnnot.sc_" + sc_id).remove(); // remove timepoint annotation
             d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id).remove(); // remove indicator
 
-            // remove single cell from list of single cells
-            var index = curVizObj.data.hm_sc_ids.indexOf(sc_id);
-            if (index != -1) {
-                curVizObj.data.hm_sc_ids.splice(index, 1);
+            // remove single cell from list of single cells in heatmap
+            index_hm = curVizObj.data.hm_sc_ids.indexOf(sc_id);
+            if (index_hm != -1) {
+                curVizObj.data.hm_sc_ids.splice(index_hm, 1);
+            }
+            // remove single cell from list of single cells NOT in heatmap
+            index_not_hm = curVizObj.data.missing_scs_to_plot.indexOf(sc_id);
+            if (index_not_hm != -1) {
+                curVizObj.data.missing_scs_to_plot.splice(index_not_hm, 1);
             }
         });
 
