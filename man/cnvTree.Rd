@@ -4,37 +4,93 @@
 \alias{cnvTree}
 \title{cnvTree}
 \usage{
-cnvTree(cnv_data, tree_edges, sc_id_order = "NA", sc_groups = NULL,
-  width = 1200, height = 1000)
+cnvTree(cnv_data = NULL, mut_data = NULL, mut_order = NULL, tree_edges,
+  gtype_tree_edges = NULL, sc_annot = NULL, clone_colours = "NA",
+  timepoint_title = "Timepoint", clone_title = "Clone",
+  xaxis_title = "Time Point", yaxis_title = "Clonal Prevalence",
+  phylogeny_title = "Clonal Phylogeny", value_type = NULL,
+  node_type = "Cell", display_node_ids = FALSE, show_warnings = TRUE,
+  width = 900, height = 800)
 }
 \arguments{
-\item{cnv_data}{{Data frame} Single cell copy number data frame.
+\item{cnv_data}{{Data frame} (Required if mut_data not provided) Single cell copy number segments data. 
+Note that every single cell id must be present in the tree_edges data frame.
 Format: columns are (1) {String} "single_cell_id" - single cell id
                     (2) {String} "chr" - chromosome number
                     (3) {Number} "start" - start position
                     (4) {Number} "end" - end position
                     (5) {Number} "integer_copy_number" - copy number state.}
 
+\item{mut_data}{{Data frame} (Required if cnv_data not provided) Single cell targeted mutation data frame.
+Note that every single cell id must be present in the tree_edges data frame.
+Format: columns are (1) {String} "single_cell_id" - single cell id
+                    (2) {String} "chr" - chromosome number
+                    (3) {Number} "coord" - genomic coordinate
+                    (5) {Number} "VAF" - variant allele frequency [0, 1].}
+
+\item{mut_order}{{Array} (Optional) Mutation order for targeted mutation heatmap 
+(each mutation should consist of a string in the form "chrom:coord"). 
+Default will use a clustering function to determine mutation order.}
+
 \item{tree_edges}{{Data frame} Edges for the single cell phylogenetic tree.
 Format: columns are (1) {String} "source" - edge source (single cell id)
-                    (2) {String} "target" - edge target (single cell id)}
+                    (2) {String} "target" - edge target (single cell id)
+                    (2) {Number} (Optional) "dist" - edge distance}
 
-\item{sc_id_order}{{Array} (Optional) Order of single cell ids.}
+\item{gtype_tree_edges}{{DataFrame} (Required for TimeSweep/SpaceSweep) Genotype tree edges of a rooted tree.
+Format: columns are (1) {String} "source" - source node id
+                    (2) {String} "target" - target node id.}
 
-\item{sc_groups}{{Data frame} (Optional) Group assignment (annotation) for each single cell.
+\item{sc_annot}{{Data frame} (Required for TimeSweep/SpaceSweep) Annotations (genotype and sample id) for each single cell.
 Format: columns are (1) {String} "single_cell_id" - single cell id
-                    (2) {String} "group" - group assignment}
+                    (2) {String} "genotype" - genotype assignment
+                    (3) {String} (Optional) "timepoint" - id of the sampled time point. 
+                                               Note: in the case of time points, they will be ordered alphabetically}
+
+\item{clone_colours}{{DataFrame} (Optional) Clone ids and their corresponding colours 
+Format: columns are (1) {String} "clone_id" - the clone ids
+                    (2) {String} "colour" - the corresponding Hex colour for each clone id.}
+
+\item{timepoint_title}{{String} (Optional) Legend title for timepoint groups. Default is "Timepoint".}
+
+\item{clone_title}{{String} (Optional) Legend title for clones. Default is "Clone".}
+
+\item{xaxis_title}{{String} (Optional) For TimeSweep - x-axis title. Default is "Time Point".}
+
+\item{yaxis_title}{{String} (Optional) For TimeSweep - y-axis title. Default is "Clonal Prevalence".}
+
+\item{phylogeny_title}{{String} (Optional) For TimeSweep - legend phylogeny title. Default is "Clonal Phylogeny".}
+
+\item{value_type}{{String} (Optional) The type of value plotted in heatmap - will affect legend and heatmap tooltips. 
+Default is "VAF" for mutation data, and "CNV" for copy number data.}
+
+\item{node_type}{{String} (Optional) The type of node plotted in single cell phylogeny - will affect phylogeny tooltips. 
+Default is "Cell".}
+
+\item{display_node_ids}{{Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.}
+
+\item{show_warnings}{{Boolean} (Optional) Whether or not to show any warnings. Default is TRUE.}
 
 \item{width}{{Number} (Optional) Width of the plot.}
 
 \item{height}{{Number} (Optional) Height of the plot.}
 }
 \description{
-Explores single cell copy number profiles in the context of a single cell tree.
-To use: Hover over nodes to inspect them. Click on nodes to select them.
-Hover over branches to inspect the downstream nodes. Click on branches to select the downstream nodes.
-To inspect a copy number profile, hover just to the left of the profile. Click this same region to select 
-single cell(s). 
-To exit any selection, double click near the single cell tree.
+\code{cnvTree} explores single cell copy number profiles in the context of a single cell tree.
+}
+\examples{
+library("cnvTree")
+# load single cell tree edges
+tree_edges <- read.csv(system.file("extdata", "tree_edges.csv", package = "cnvTree"))
+# load targeted mutations
+targeted_data <- read.csv(system.file("extdata", "targeted_muts.csv", package = "cnvTree"))
+# genotype tree edges
+gtype_tree_edges <- data.frame("source"=c("Ancestral", "Ancestral", "B","C", "D"), "target"=c("A", "B", "C", "D", "E"))
+# load annotations
+sc_annot <- read.csv(system.file("extdata", "annots.csv", package = "cnvTree"))
+# load mutation order
+mut_order <- scan(system.file("extdata", "mut_order.txt", package = "cnvTree"), what=character())
+# run cnvTree
+cnvTree(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
 }
 

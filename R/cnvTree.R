@@ -1,8 +1,8 @@
 #' cnvTree
 #'
-#' Explores single cell copy number profiles in the context of a single cell tree.
+#' \code{cnvTree} explores single cell copy number profiles in the context of a single cell tree.
 #'   
-#' @import htmlwidgets, gtools, jsonlite, reshape2, stringr, dplyr
+#' @import htmlwidgets
 #'
 #' @param cnv_data {Data frame} (Required if mut_data not provided) Single cell copy number segments data. 
 #'   Note that every single cell id must be present in the tree_edges data frame.
@@ -27,7 +27,7 @@
 #'                       (2) {String} "target" - edge target (single cell id)
 #'                       (2) {Number} (Optional) "dist" - edge distance
 #'
-#' @param gtype_tree_edges {Data Frame} (Required for TimeSweep/SpaceSweep) Genotype tree edges of a rooted tree.
+#' @param gtype_tree_edges {DataFrame} (Required for TimeSweep/SpaceSweep) Genotype tree edges of a rooted tree.
 #'   Format: columns are (1) {String} "source" - source node id
 #'                       (2) {String} "target" - target node id.
 #'
@@ -37,7 +37,7 @@
 #'                       (3) {String} (Optional) "timepoint" - id of the sampled time point. 
 #'                                                  Note: in the case of time points, they will be ordered alphabetically
 #'
-#' @param clone_colours {Data Frame} (Optional) Clone ids and their corresponding colours 
+#' @param clone_colours {DataFrame} (Optional) Clone ids and their corresponding colours 
 #'   Format: columns are (1) {String} "clone_id" - the clone ids
 #'                       (2) {String} "colour" - the corresponding Hex colour for each clone id.
 #' @param timepoint_title {String} (Optional) Legend title for timepoint groups. Default is "Timepoint".
@@ -55,6 +55,20 @@
 #' @param height {Number} (Optional) Height of the plot.
 #'
 #' @export
+#' @examples
+#' library("cnvTree")
+#' # load single cell tree edges
+#' tree_edges <- read.csv(system.file("extdata", "tree_edges.csv", package = "cnvTree"))
+#' # load targeted mutations
+#' targeted_data <- read.csv(system.file("extdata", "targeted_muts.csv", package = "cnvTree"))
+#' # genotype tree edges
+#' gtype_tree_edges <- data.frame("source"=c("Ancestral", "Ancestral", "B","C", "D"), "target"=c("A", "B", "C", "D", "E"))
+#' # load annotations
+#' sc_annot <- read.csv(system.file("extdata", "annots.csv", package = "cnvTree"))
+#' # load mutation order
+#' mut_order <- scan(system.file("extdata", "mut_order.txt", package = "cnvTree"), what=character())
+#' # run cnvTree
+#' cnvTree(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
 cnvTree <- function(cnv_data = NULL, 
                     mut_data = NULL, 
                     mut_order = NULL,
@@ -573,7 +587,7 @@ getChromBounds <- function(chroms, cnv_data) {
 }
 
 #' function to get chromosome box pixel info
-#' @param {Data Frame} chrom_bounds -- chromosome boundaries
+#' @param {DataFrame} chrom_bounds -- chromosome boundaries
 #' @param {Integer} n_bp_per_pixel -- number of base pairs per pixel
 getChromBoxInfo <- function(chrom_bounds, n_bp_per_pixel) {
   chrom_boxes <- data.frame(chr=chrom_bounds$chrom, 
@@ -587,7 +601,7 @@ getChromBoxInfo <- function(chrom_bounds, n_bp_per_pixel) {
 }
 
 #' function to get the genome length
-#' @param {Data Frame} chrom_bounds -- chromosome boundaries
+#' @param {DataFrame} chrom_bounds -- chromosome boundaries
 getGenomeLength <- function(chrom_bounds) {
 
   tmp_chrom_bounds <- chrom_bounds
@@ -599,7 +613,7 @@ getGenomeLength <- function(chrom_bounds) {
 
 #' function to get the number of base pairs per pixel
 #' @param {Integer} ncols -- number of columns (pixels) to fill
-#' @param {Data Frame} chrom_bounds -- chromosome boundaries
+#' @param {DataFrame} chrom_bounds -- chromosome boundaries
 #' @param {Integer} genome_length -- length of the genome
 getNBPPerPixel <- function(ncols, chrom_bounds, genome_length) {
   n_data_pixels <- ncols - 2*(nrow(chrom_bounds) + 1) # number of pixels filled with data 
@@ -612,8 +626,8 @@ getNBPPerPixel <- function(ncols, chrom_bounds, genome_length) {
 }
 
 #' function to get information (chr, start, end, mode_cnv) for each pixel
-#' @param {Data Frame} cnv_data -- copy number variant segments data
-#' @param {Data Frame} chrom_bounds -- chromosome boundaries
+#' @param {DataFrame} cnv_data -- copy number variant segments data
+#' @param {DataFrame} chrom_bounds -- chromosome boundaries
 #' @param {Integer} n_bp_per_pixel -- number of base pairs per pixel
 getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
 
@@ -695,7 +709,7 @@ getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
 }
 
 #' function to get mutation order for targeted data
-#' @param {Data Frame} mut_data -- mutations data
+#' @param {DataFrame} mut_data -- mutations data
 getMutOrder <- function(mut_data) {
   separator <- ":"
 
@@ -744,7 +758,7 @@ getMutOrder <- function(mut_data) {
 }
 
 #' function to get targeted heatmap information 
-#' @param {Data Frame} mut_data -- mutations data
+#' @param {DataFrame} mut_data -- mutations data
 #' @param {Array} mut_order -- order of mutations for heatmap (chromosome:coordinate)
 #' @param {Number} heatmapWidth -- width of the heatmap (in pixels)
 getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
@@ -787,7 +801,7 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
   return (heatmap_info_split)
 }
 
-# function to find the mode of a vector
+#' function to find the mode of a vector
 #' @param {Vector} x -- vector of numbers
 findMode <- function(x) {
   ux <- unique(x) # each unique value

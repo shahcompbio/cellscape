@@ -1,8 +1,8 @@
 Package: cnvTree
 Title: Explores single cell copy number profiles in the context of a single cell tree.
-Version: 0.0.1.9102
+Version: 0.0.1.9103
 Authors@R: person("Maia", "Smith", email = "maiaannesmith@gmail.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Description: Displays the phylogeny and genomic content of a single cell dataset.
 Depends:
     R (>= 3.2.2)
 Imports:
