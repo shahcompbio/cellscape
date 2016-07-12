@@ -56,19 +56,31 @@
 #'
 #' @export
 #' @examples
+#' # EXAMPLE 1 - TARGETED MUTATION DATA
 #' library("cnvTree")
 #' # load single cell tree edges
-#' tree_edges <- read.csv(system.file("extdata", "tree_edges.csv", package = "cnvTree"))
+#' tree_edges <- read.csv(system.file("extdata", "targeted_tree_edges.csv", package = "cnvTree"))
 #' # load targeted mutations
 #' targeted_data <- read.csv(system.file("extdata", "targeted_muts.csv", package = "cnvTree"))
 #' # genotype tree edges
 #' gtype_tree_edges <- data.frame("source"=c("Ancestral", "Ancestral", "B","C", "D"), "target"=c("A", "B", "C", "D", "E"))
 #' # load annotations
-#' sc_annot <- read.csv(system.file("extdata", "annots.csv", package = "cnvTree"))
+#' sc_annot <- read.csv(system.file("extdata", "targeted_annots.csv", package = "cnvTree"))
 #' # load mutation order
-#' mut_order <- scan(system.file("extdata", "mut_order.txt", package = "cnvTree"), what=character())
+#' mut_order <- scan(system.file("extdata", "targeted_mut_order.txt", package = "cnvTree"), what=character())
 #' # run cnvTree
 #' cnvTree(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
+#' # EXAMPLE 2 - COPY NUMBER DATA
+#' # single cell tree edges
+#' tree_edges <- read.csv(system.file("extdata", "cnv_tree_edges.csv", package = "cnvTree"))
+#' # cnv segments data
+#' cnv_data <- read.csv(system.file("extdata", "cnv_data.csv", package = "cnvTree"))
+#' # cnv annotations
+#' sc_annot <- read.csv(system.file("extdata", "cnv_annots.tsv", package = "cnvTree"), sep="\t")
+#' # custom clone colours
+#' clone_colours <- data.frame( clone_id = c("1","2","3"), colour = c("7fc97f", "beaed4", "fdc086"))
+#' # run cnvTree
+#' cnvTree(cnv_data=cnv_data, tree_edges=tree_edges, sc_annot=sc_annot, width=800, height=475, show_warnings=FALSE, clone_colours=clone_colours)
 cnvTree <- function(cnv_data = NULL, 
                     mut_data = NULL, 
                     mut_order = NULL,
