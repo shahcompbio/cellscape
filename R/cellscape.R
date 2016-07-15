@@ -1,6 +1,6 @@
-#' cnvTree
+#' cellscape
 #'
-#' \code{cnvTree} explores single cell copy number profiles in the context of a single cell tree.
+#' \code{cellscape} explores single cell copy number profiles in the context of a single cell tree.
 #'   
 #' @import htmlwidgets
 #'
@@ -27,11 +27,11 @@
 #'                       (2) {String} "target" - edge target (single cell id)
 #'                       (2) {Number} (Optional) "dist" - edge distance
 #'
-#' @param gtype_tree_edges {DataFrame} (Required for TimeSweep/SpaceSweep) Genotype tree edges of a rooted tree.
+#' @param gtype_tree_edges {DataFrame} (Required for TimeScape) Genotype tree edges of a rooted tree.
 #'   Format: columns are (1) {String} "source" - source node id
 #'                       (2) {String} "target" - target node id.
 #'
-#' @param sc_annot {Data frame} (Required for TimeSweep/SpaceSweep) Annotations (genotype and sample id) for each single cell.
+#' @param sc_annot {Data frame} (Required for TimeScape) Annotations (genotype and sample id) for each single cell.
 #'   Format: columns are (1) {String} "single_cell_id" - single cell id
 #'                       (2) {String} "genotype" - genotype assignment
 #'                       (3) {String} (Optional) "timepoint" - id of the sampled time point. 
@@ -42,9 +42,9 @@
 #'                       (2) {String} "colour" - the corresponding Hex colour for each clone id.
 #' @param timepoint_title {String} (Optional) Legend title for timepoint groups. Default is "Timepoint".
 #' @param clone_title {String} (Optional) Legend title for clones. Default is "Clone".
-#' @param xaxis_title {String} (Optional) For TimeSweep - x-axis title. Default is "Time Point".
-#' @param yaxis_title {String} (Optional) For TimeSweep - y-axis title. Default is "Clonal Prevalence".
-#' @param phylogeny_title {String} (Optional) For TimeSweep - legend phylogeny title. Default is "Clonal Phylogeny".
+#' @param xaxis_title {String} (Optional) For TimeScape - x-axis title. Default is "Time Point".
+#' @param yaxis_title {String} (Optional) For TimeScape - y-axis title. Default is "Clonal Prevalence".
+#' @param phylogeny_title {String} (Optional) For TimeScape - legend phylogeny title. Default is "Clonal Phylogeny".
 #' @param value_type {String} (Optional) The type of value plotted in heatmap - will affect legend and heatmap tooltips. 
 #'                                       Default is "VAF" for mutation data, and "CNV" for copy number data.
 #' @param node_type {String} (Optional) The type of node plotted in single cell phylogeny - will affect phylogeny tooltips. 
@@ -56,32 +56,37 @@
 #'
 #' @export
 #' @examples
+#'
+#' library("cellscape")
+#'
 #' # EXAMPLE 1 - TARGETED MUTATION DATA
-#' library("cnvTree")
-#' # load single cell tree edges
-#' tree_edges <- read.csv(system.file("extdata", "targeted_tree_edges.csv", package = "cnvTree"))
-#' # load targeted mutations
-#' targeted_data <- read.csv(system.file("extdata", "targeted_muts.csv", package = "cnvTree"))
+#'
+#' # single cell tree edges
+#' tree_edges <- read.csv(system.file("extdata", "targeted_tree_edges.csv", package = "cellscape"))
+#' # targeted mutations
+#' targeted_data <- read.csv(system.file("extdata", "targeted_muts.csv", package = "cellscape"))
 #' # genotype tree edges
 #' gtype_tree_edges <- data.frame("source"=c("Ancestral", "Ancestral", "B","C", "D"), "target"=c("A", "B", "C", "D", "E"))
-#' # load annotations
-#' sc_annot <- read.csv(system.file("extdata", "targeted_annots.csv", package = "cnvTree"))
-#' # load mutation order
-#' mut_order <- scan(system.file("extdata", "targeted_mut_order.txt", package = "cnvTree"), what=character())
-#' # run cnvTree
-#' cnvTree(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
+#' # annotations
+#' sc_annot <- read.csv(system.file("extdata", "targeted_annots.csv", package = "cellscape"))
+#' # mutation order
+#' mut_order <- scan(system.file("extdata", "targeted_mut_order.txt", package = "cellscape"), what=character())
+#' # run cellscape
+#' cellscape(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
+#'
 #' # EXAMPLE 2 - COPY NUMBER DATA
+#'
 #' # single cell tree edges
-#' tree_edges <- read.csv(system.file("extdata", "cnv_tree_edges.csv", package = "cnvTree"))
+#' tree_edges <- read.csv(system.file("extdata", "cnv_tree_edges.csv", package = "cellscape"))
 #' # cnv segments data
-#' cnv_data <- read.csv(system.file("extdata", "cnv_data.csv", package = "cnvTree"))
-#' # cnv annotations
-#' sc_annot <- read.csv(system.file("extdata", "cnv_annots.tsv", package = "cnvTree"), sep="\t")
+#' cnv_data <- read.csv(system.file("extdata", "cnv_data.csv", package = "cellscape"))
+#' # annotations
+#' sc_annot <- read.csv(system.file("extdata", "cnv_annots.tsv", package = "cellscape"), sep="\t")
 #' # custom clone colours
 #' clone_colours <- data.frame( clone_id = c("1","2","3"), colour = c("7fc97f", "beaed4", "fdc086"))
-#' # run cnvTree
-#' cnvTree(cnv_data=cnv_data, tree_edges=tree_edges, sc_annot=sc_annot, width=800, height=475, show_warnings=FALSE, clone_colours=clone_colours)
-cnvTree <- function(cnv_data = NULL, 
+#' # run cellscape
+#' cellscape(cnv_data=cnv_data, tree_edges=tree_edges, sc_annot=sc_annot, width=800, height=475, show_warnings=FALSE, clone_colours=clone_colours)
+cellscape <- function(cnv_data = NULL, 
                     mut_data = NULL, 
                     mut_order = NULL,
                     tree_edges, 
@@ -429,7 +434,7 @@ cnvTree <- function(cnv_data = NULL,
     sc_annot_provided <- FALSE
   }
 
-  # IF ALL NECESSARY PRAMETERS ARE PRESENT FOR TIMESWEEP
+  # IF ALL NECESSARY PRAMETERS ARE PRESENT FOR TIMESCAPE
   if (!is.null(gtype_tree_edges) && 
       !is.null(sc_annot) && 
       ("timepoint" %in% colnames(sc_annot)) &&
@@ -471,8 +476,8 @@ cnvTree <- function(cnv_data = NULL,
     colnames(clonal_prev)[which(colnames(clonal_prev) == "timepoint")] <- "timepoint"
     colnames(clonal_prev)[which(colnames(clonal_prev) == "genotype")] <- "clone_id"
 
-    # GET INFORMATION FOR TIMESWEEP
-    timesweep_wanted <- TRUE
+    # GET INFORMATION FOR TIMESCAPE
+    timescape_wanted <- TRUE
     mutations <- "NA"
     alpha <- 50 
     genotype_position <- "stack" 
@@ -480,7 +485,7 @@ cnvTree <- function(cnv_data = NULL,
     sort <- FALSE 
     show_warnings <- TRUE
 
-    timesweep_userParams <- processUserData(clonal_prev, 
+    timescape_userParams <- processUserData(clonal_prev, 
                                             gtype_tree_edges, 
                                             mutations,
                                             clone_colours, 
@@ -496,13 +501,13 @@ cnvTree <- function(cnv_data = NULL,
                                             height)
   }
   else {
-    timesweep_userParams <- list()
-    timesweep_wanted <- FALSE
+    timescape_userParams <- list()
+    timescape_wanted <- FALSE
   }
 
 
   # forward options using x
-  cnvTree_userParams <- list(
+  cellscape_userParams <- list(
     clone_cols = jsonlite::toJSON(clone_colours), # clone colours
     sc_annot=sc_annot_JSON, # single cells and their associated group ids
     sc_annot_provided=sc_annot_provided, # whether or not single cell annotations are provided by the user
@@ -523,25 +528,25 @@ cnvTree <- function(cnv_data = NULL,
     display_node_ids=display_node_ids, # whether or not to display the node id labels on each node
     scs_missing_from_hm=scs_missing_from_hm, # single cells in tree but not heatmap
     continuous_cnv=continuous_cnv, # whether copy number data should be continuous or discrete
-    timesweep_wanted=timesweep_wanted # type of time/space view provided (NULL, "time", or "space")
+    timescape_wanted=timescape_wanted # type of time/space view provided (NULL, "time", or "space")
   )
-  x = append(cnvTree_userParams, timesweep_userParams)
+  x = append(cellscape_userParams, timescape_userParams)
 
   # create widget
   htmlwidgets::createWidget(
-    name = 'cnvTree',
+    name = 'cellscape',
     x,
     width = width,
     height = height,
-    package = 'cnvTree'
+    package = 'cellscape'
   )
 }
 
 #' Widget output function for use in Shiny
 #'
 #' @export
-cnvTreeOutput <- function(outputId, width = '100%', height = '400px'){
-  shinyWidgetOutput(outputId, 'cnvTree', width, height, package = 'cnvTree')
+cellscapeOutput <- function(outputId, width = '100%', height = '400px'){
+  shinyWidgetOutput(outputId, 'cellscape', width, height, package = 'cellscape')
 }
 
 #' Widget render function for use in Shiny
@@ -549,7 +554,7 @@ cnvTreeOutput <- function(outputId, width = '100%', height = '400px'){
 #' @export
 renderCnvTree <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
-  shinyRenderWidget(expr, cnvTreeOutput, env, quoted = TRUE)
+  shinyRenderWidget(expr, cellscapeOutput, env, quoted = TRUE)
 }
 
 # CNVTREE HELPERS
@@ -822,7 +827,7 @@ findMode <- function(x) {
 }
 
 
-# TIMESWEEP HELPERS
+# TIMESCAPE HELPERS
 
 #' Function to process the user data
 processUserData <- function(clonal_prev, 

@@ -1,6 +1,6 @@
 HTMLWidgets.widget({
 
-    name: 'cnvTree',
+    name: 'cellscape',
 
     type: 'output',
 
@@ -89,42 +89,37 @@ HTMLWidgets.widget({
 
         // width and height of view
         config.width = vizObj.width - 15;    
-        config.cnvTreeViewHeight;
-        // user wants timesweep 
-        if (curVizObj.userConfig.timesweep_wanted) {
-            config.cnvTreeViewHeight = (vizObj.height) * 2/3;
+        config.cellscapeViewHeight;
+        // user wants timescape 
+        if (curVizObj.userConfig.timescape_wanted) {
+            config.cellscapeViewHeight = (vizObj.height) * 2/3;
             config.tsViewHeight = (vizObj.height) * 1/3;
         } 
-        // user wants spacesweep
-        else if (curVizObj.userConfig.timesweep_wanted) {
-            // TODO
-            config.cnvTreeViewHeight = (vizObj.height);
-        }
-        // user only wants cnvTree
+        // user only wants cellscape
         else {
-            config.cnvTreeViewHeight = (vizObj.height);
+            config.cellscapeViewHeight = (vizObj.height);
         }
 
         // view container configurations
-        config.containerHeight = config.cnvTreeViewHeight - config.topBarHeight;
+        config.containerHeight = config.cellscapeViewHeight - config.topBarHeight;
         config.containerWidth = config.width;
 
         // vertical spacing required for the title of the heatmap/tree, and the space below it
         config.spacingForTitle = config.legendTitleHeight + config.rectSpacing*2;
 
         // heatmap configurations
-        config.hmHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingGeneral*2 - config.spacingForTitle;
+        config.hmHeight = config.cellscapeViewHeight - config.topBarHeight - config.paddingGeneral*2 - config.spacingForTitle;
 
         // tree configurations
-        config.treeHeight = config.cnvTreeViewHeight - config.topBarHeight - config.paddingGeneral*2 - config.spacingForTitle;
+        config.treeHeight = config.cellscapeViewHeight - config.topBarHeight - config.paddingGeneral*2 - config.spacingForTitle;
 
         // heatmap legend start
         config.heatmapLegendStartY = 1 + config.paddingGeneral; // starting y-pixel for heatmap legend
 
         // UPDATE GENERAL PARAMS, GIVEN USER PARAMS
 
-        // extend heatmapLegendWidth if timesweep present
-        if (curVizObj.userConfig.timesweep_wanted) {
+        // extend heatmapLegendWidth if timescape present
+        if (curVizObj.userConfig.timescape_wanted) {
             config.heatmapLegendWidth = 110;
         }
 
@@ -1353,8 +1348,8 @@ HTMLWidgets.widget({
                 .on("mouseover", function(d) {
                     if (_checkForSelections(view_id)) {
                         _mouseoverGenotype(d, view_id);
-                        // show labels in timesweep
-                        if (curVizObj.userConfig.timesweep_wanted) {
+                        // show labels in timescape
+                        if (curVizObj.userConfig.timescape_wanted) {
                             _showLabels(d, view_id);
                         }
                     }
@@ -1362,8 +1357,8 @@ HTMLWidgets.widget({
                 .on("mouseout", function(d) {
                     if (_checkForSelections(view_id)) {
                         _mouseoutGenotype(view_id);
-                        // hide labels in timesweep
-                        if (curVizObj.userConfig.timesweep_wanted) {
+                        // hide labels in timescape
+                        if (curVizObj.userConfig.timescape_wanted) {
                             _hideLabels(view_id);
                         }
                     }
@@ -1385,8 +1380,8 @@ HTMLWidgets.widget({
                 .on("mouseover", function(d) {
                     if (_checkForSelections(view_id)) {
                         _mouseoverGenotype(d, view_id);
-                        // show labels in timesweep
-                        if (curVizObj.userConfig.timesweep_wanted) {
+                        // show labels in timescape
+                        if (curVizObj.userConfig.timescape_wanted) {
                             _showLabels(d, view_id);
                         }
                     }
@@ -1394,8 +1389,8 @@ HTMLWidgets.widget({
                 .on("mouseout", function(d) {
                     if (_checkForSelections(view_id)) {
                         _mouseoutGenotype(view_id);
-                        // hide labels in timesweep
-                        if (curVizObj.userConfig.timesweep_wanted) {
+                        // hide labels in timescape
+                        if (curVizObj.userConfig.timescape_wanted) {
                             _hideLabels(view_id);
                         }
                     }
@@ -1482,9 +1477,9 @@ HTMLWidgets.widget({
         }
 
 
-        // RUN TIMESWEEP
-        if (curVizObj.userConfig.timesweep_wanted) {
-            _run_timesweep(el.id, config.width, config.tsViewHeight, x);
+        // RUN TIMESCAPE
+        if (curVizObj.userConfig.timescape_wanted) {
+            _run_timescape(el.id, config.width, config.tsViewHeight, x);
         }
     },
 
