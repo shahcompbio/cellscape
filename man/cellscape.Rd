@@ -2,7 +2,7 @@
 % Please edit documentation in R/cellscape.R
 \name{cellscape}
 \alias{cellscape}
-\title{cellscape}
+\title{CellScape}
 \usage{
 cellscape(cnv_data = NULL, mut_data = NULL, mut_order = NULL, tree_edges,
   gtype_tree_edges = NULL, sc_annot = NULL, clone_colours = "NA",
@@ -76,7 +76,7 @@ Default is "Cell".}
 \item{height}{{Number} (Optional) Height of the plot.}
 }
 \description{
-\code{cellscape} explores single cell copy number profiles in the context of a single cell tree.
+\code{cellscape} explores single cell copy number profiles in the context of a single cell phylogeny.
 }
 \examples{
 

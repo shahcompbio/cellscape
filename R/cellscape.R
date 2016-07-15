@@ -1,6 +1,6 @@
-#' cellscape
+#' CellScape
 #'
-#' \code{cellscape} explores single cell copy number profiles in the context of a single cell tree.
+#' \code{cellscape} explores single cell copy number profiles in the context of a single cell phylogeny.
 #'   
 #' @import htmlwidgets
 #'
