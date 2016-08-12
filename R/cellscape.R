@@ -737,8 +737,8 @@ getMutOrder <- function(mut_data) {
   cur_data$VAF_rounded[which(cur_data$VAF_rounded < 0.05)] <- -10
   cur_data$VAF_rounded[which(cur_data$VAF_rounded >= 0.05)] <- 0.5
   cur_data$VAF_rounded[which(cur_data$VAF_rounded >= 0.95)] <- 1
-  cur_data$VAF_rounded[which(is.na(cur_data$VAF_rounded))] <- NA
-  cur_data$VAF_rounded[which(is.infinite(cur_data$VAF_rounded))] <- NA
+  cur_data$VAF_rounded[which(is.na(cur_data$VAF_rounded))] <- 0
+  cur_data$VAF_rounded[which(is.infinite(cur_data$VAF_rounded))] <- 0
 
   # group data by mutation site -- get only site, rounded VAF and single cell id
   cur_data_for_mat <- cur_data[,c("site", "single_cell_id", "VAF_rounded")]
