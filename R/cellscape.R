@@ -345,7 +345,7 @@ cellscape <- function(cnv_data = NULL,
       mut_data_grouped_avg_VAF <- dplyr::summarise(mut_data_grouped, avg_VAF=sum(VAF, na.rm=TRUE)/length(VAF))
 
       # keep only those [site X genotype] combinations where the average vaf is greater than the threshold
-      vaf_thresh <- 0.2
+      vaf_thresh <- 0.1
       mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$avg_VAF > vaf_thresh), ]
 
       # for each mutation, paste the genotypes together
