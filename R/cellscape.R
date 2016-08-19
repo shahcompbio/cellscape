@@ -139,7 +139,7 @@ cellscape <- function(cnv_data = NULL,
 
     # check genotype tree inputs
 
-    checkTreeEdges(gtype_tree_edges)
+    gtype_tree_edges <- checkTreeEdges(gtype_tree_edges)
 
     # get root of tree
 
