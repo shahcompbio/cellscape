@@ -134,6 +134,36 @@ cellscape <- function(cnv_data = NULL,
     }
   }
 
+  # GENOTYPE TREE EDGES
+  if (!missing(gtype_tree_edges)) {
+
+    # check genotype tree inputs
+
+    checkTreeEdges(gtype_tree_edges)
+
+    # get root of tree
+
+    sources <- unique(gtype_tree_edges$source)
+    targets <- unique(gtype_tree_edges$target)
+    sources_for_iteration <- sources # because we will be changing the sources array over time
+    for (i in 1:length(sources_for_iteration)) {
+      cur_source <- sources_for_iteration[i]
+
+      # if the source is a target, remove it from the sources list
+      if (cur_source %in% targets) {
+        sources <- sources[sources != cur_source]
+      }
+    }
+    cur_root <- sources[1]
+
+    # GET GENOTYPE TREE DFS
+
+    dfs_gtype_tree <- dfs_tree(gtype_tree_edges, cur_root, c())
+  }
+  else {
+    dfs_gtype_tree <- NULL
+  }
+
   # VALUE TITLE (title for heatmap value legend)
 
   # not specified by user
@@ -284,12 +314,78 @@ cellscape <- function(cnv_data = NULL,
         mut_order <- setdiff(sites, sites_extra_in_mut_order)
       }
     }
-    # if user has NOT provided mutation order, 
-    # get the order of mutations based on a hierarchical clustering of the data
+    # if user has NOT provided mutation order BUT
+    # if there is genotype tree data and genotype annotations for the cells,
+    # calculate mutation order using this information
+    else if (!is.null(gtype_tree_edges) && 
+          !is.null(sc_annot) && 
+          ("genotype" %in% colnames(sc_annot))) {
+
+      # GET MUTATION GENOTYPES IN PLOTTING ORDER (e.g. ABCD, ABC, AB, A, BCD, BC, B, CD, C, D)
+      # ie. each mutation will be plotted according to which genotypes have the mutation, and the mutations
+      # in genotypes A, B, C and D will be plotted first, followed by those only in A, B and C, followed by....
+
+      mut_gtypes <- c()
+      for (i in 1:length(dfs_gtype_tree)) {
+        for (j in length(dfs_gtype_tree):1) {
+          mut_gtypes <- append(mut_gtypes, paste(dfs_gtype_tree[i:j], collapse=""))
+          if (i == j) {
+            break
+          }
+        }
+      }
+
+      # GET GENOTYPES FOR EACH TARGETED MUTATION 
+
+      # add genotypes to mutation data
+      mut_data_w_gtypes <- merge(mut_data, sc_annot, by="single_cell_id")
+
+      # get average VAF for each [site X genotype] combination
+      mut_data_grouped <- dplyr::group_by(mut_data_w_gtypes, site, genotype)
+      mut_data_grouped_avg_VAF <- dplyr::summarise(mut_data_grouped, avg_VAF=sum(VAF, na.rm=TRUE)/length(VAF))
+
+      # keep only those [site X genotype] combinations where the average vaf is greater than the threshold
+      vaf_thresh <- 0.2
+      mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$avg_VAF > vaf_thresh), ]
+
+      # for each mutation, paste the genotypes together
+      site_gtype_split_by_site <- split(mut_data_grouped_avg_VAF , f = mut_data_grouped_avg_VAF$site)
+      site_gtype_list <- lapply(site_gtype_split_by_site, function(site) { 
+        cur_gtypes <- as.character(site$genotype)
+        cur_sorted_gtypes <- cur_gtypes[order(match(cur_gtypes,dfs_gtype_tree))]
+        collapsed_gtypes <- paste(cur_sorted_gtypes, collapse="")
+        return(collapsed_gtypes)
+      })
+      site_gtype_df <- do.call(rbind.data.frame, site_gtype_list)
+      colnames(site_gtype_df) <- c("gtypes")
+      site_gtype_df$site <- rownames(site_gtype_df)
+
+      # order mutation sites by average VAF 
+      cur_data_grouped_by_site <- dplyr::group_by(mut_data, site)
+      mut_site_avg <- dplyr::summarise(cur_data_grouped_by_site, avg_VAF=sum(VAF, na.rm=TRUE)/length(VAF)) 
+      site_gtype_df <- merge(site_gtype_df, mut_site_avg, by="site")
+      site_gtype_df <- site_gtype_df[rev(order(site_gtype_df$avg_VAF)),]
+
+
+      # print("site_gtype_df")
+      # print(site_gtype_df)
+
+
+      # ORDER MUTATIONS BY WHICH GENOTYPES THEY APPEAR IN
+
+      site_gtype_df <- site_gtype_df[order(match(site_gtype_df$gtypes, mut_gtypes)),]
+      mut_order <- site_gtype_df$site
+
+      # append any mutations that have all low prevalence data, and thus not accounted for yet
+      low_prev_muts <- setdiff(unique(mut_data$site), mut_order)
+      mut_order <- append(mut_order, low_prev_muts)
+    }
+
+    # no mutation order and no genotype tree info
     else {
       mut_order <- getMutOrder(mut_data)
     }
-
+    
     # heatmap information for each cell
     heatmap_info <- getTargetedHeatmapForEachSC(mut_data, mut_order, heatmapWidth)
   }
@@ -476,7 +572,9 @@ cellscape <- function(cnv_data = NULL,
     colnames(clonal_prev)[which(colnames(clonal_prev) == "timepoint")] <- "timepoint"
     colnames(clonal_prev)[which(colnames(clonal_prev) == "genotype")] <- "clone_id"
 
+
     # GET INFORMATION FOR TIMESCAPE
+
     timescape_wanted <- TRUE
     mutations <- "NA"
     alpha <- 50 
@@ -540,6 +638,23 @@ cellscape <- function(cnv_data = NULL,
     height = height,
     package = 'cellscape'
   )
+}
+
+#' Get depth first search of a tree
+#' @export
+dfs_tree <- function(edges, cur_root, dfs_arr) {
+  if (!is.null(cur_root)) {
+    # add this root to the dfs list of nodes
+    dfs_arr <- append(dfs_arr, cur_root)
+
+    # get children of this root
+    cur_children <- edges[which(edges$source == cur_root),"target"]
+    for (cur_child in cur_children) {
+      cur_root <- cur_child
+      dfs_arr <- dfs_tree(edges, cur_root, dfs_arr)
+    }
+  }
+  return(dfs_arr)
 }
 
 #' Widget output function for use in Shiny
