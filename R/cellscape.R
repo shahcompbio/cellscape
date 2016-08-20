@@ -337,16 +337,30 @@ cellscape <- function(cnv_data = NULL,
 
       # GET GENOTYPES FOR EACH TARGETED MUTATION 
 
+      cur_mut_data <- mut_data
+      vaf_thresh <- 0.05
+
+      # take care of NA and Inf VAF values
+      cur_mut_data$VAF[which(is.na(cur_mut_data$VAF))] <- 0
+      cur_mut_data$VAF[which(is.infinite(cur_mut_data$VAF))] <- 0
+
       # add genotypes to mutation data
-      mut_data_w_gtypes <- merge(mut_data, sc_annot, by="single_cell_id")
+      mut_data_w_gtypes <- merge(cur_mut_data, sc_annot, by="single_cell_id")
 
       # get average VAF for each [site X genotype] combination
       mut_data_grouped <- dplyr::group_by(mut_data_w_gtypes, site, genotype)
-      mut_data_grouped_avg_VAF <- dplyr::summarise(mut_data_grouped, avg_VAF=sum(VAF, na.rm=TRUE)/length(VAF))
+      mut_data_grouped_avg_VAF <- dplyr::summarise(mut_data_grouped, 
+        avg_VAF=sum(VAF, na.rm=TRUE)/length(VAF),
+        n = n(),
+        n_gt = sum(VAF > vaf_thresh),
+        p_gt = n_gt / n)
+      mut_data_grouped_avg_VAF <- as.data.frame(mut_data_grouped_avg_VAF)
+
 
       # keep only those [site X genotype] combinations where the average vaf is greater than the threshold
-      vaf_thresh <- 0.1
+      # and present in more than 30% of cells with that genotype
       mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$avg_VAF > vaf_thresh), ]
+      mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$p_gt > 0.2), ]
 
       # for each mutation, paste the genotypes together
       site_gtype_split_by_site <- split(mut_data_grouped_avg_VAF , f = mut_data_grouped_avg_VAF$site)
@@ -361,23 +375,19 @@ cellscape <- function(cnv_data = NULL,
       site_gtype_df$site <- rownames(site_gtype_df)
 
       # order mutation sites by average VAF 
-      cur_data_grouped_by_site <- dplyr::group_by(mut_data, site)
+      cur_data_grouped_by_site <- dplyr::group_by(cur_mut_data, site)
       mut_site_avg <- dplyr::summarise(cur_data_grouped_by_site, avg_VAF=sum(VAF, na.rm=TRUE)/length(VAF)) 
       site_gtype_df <- merge(site_gtype_df, mut_site_avg, by="site")
       site_gtype_df <- site_gtype_df[rev(order(site_gtype_df$avg_VAF)),]
-
-
-      # print("site_gtype_df")
-      # print(site_gtype_df)
-
 
       # ORDER MUTATIONS BY WHICH GENOTYPES THEY APPEAR IN
 
       site_gtype_df <- site_gtype_df[order(match(site_gtype_df$gtypes, mut_gtypes)),]
       mut_order <- site_gtype_df$site
 
+
       # append any mutations that have all low prevalence data, and thus not accounted for yet
-      low_prev_muts <- setdiff(unique(mut_data$site), mut_order)
+      low_prev_muts <- setdiff(unique(cur_mut_data$site), mut_order)
       mut_order <- append(mut_order, low_prev_muts)
     }
 

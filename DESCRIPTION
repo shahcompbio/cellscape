@@ -1,6 +1,6 @@
 Package: cellscape
 Title: Explores single cell copy number profiles in the context of a single cell tree.
-Version: 0.0.1.9106
+Version: 0.0.1.9107
 Authors@R: person("Maia", "Smith", email = "maiaannesmith@gmail.com", role = c("aut", "cre"))
 Description: Displays the phylogeny and genomic content of a single cell dataset.
 Depends:
