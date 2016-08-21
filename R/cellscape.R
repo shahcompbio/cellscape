@@ -376,7 +376,7 @@ cellscape <- function(cnv_data = NULL,
       # print(mut_data_grouped_avg_VAF)
 
       # keep only those [site X genotype] combinations where the average vaf is greater than the threshold
-      # and present in more than 30% of cells with that genotype
+      # and present in more than a certain percentage of cells with that genotype
       mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$avg_VAF > vaf_thresh), ]
       mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$p_gt > 0.1), ]
 
