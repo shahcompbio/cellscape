@@ -332,6 +332,18 @@ cellscape <- function(cnv_data = NULL,
           if (i == j) {
             break
           }
+          else { 
+            if ((j-i) > 2) { # if there is more than one letter between i and j
+              # add internal letters in all other non-linear combinations (but still in order)
+              for (count in (j-i-2):1) { # for each length of internal letters to add
+                combos <- combn(dfs_gtype_tree[(i+1):(j-1)], count)
+                for (combo_i in 1:ncol(combos)) {
+                  combo_i_pasted <- paste(combos[,combo_i], collapse="")
+                  mut_gtypes <- append(mut_gtypes, paste(dfs_gtype_tree[i], combo_i_pasted, dfs_gtype_tree[j], sep=""))
+                }
+              }
+            }
+          }
         }
       }
 
@@ -355,12 +367,13 @@ cellscape <- function(cnv_data = NULL,
         n_gt = sum(VAF > vaf_thresh),
         p_gt = n_gt / n)
       mut_data_grouped_avg_VAF <- as.data.frame(mut_data_grouped_avg_VAF)
-
+      # print("mut_data_grouped_avg_VAF")
+      # print(mut_data_grouped_avg_VAF)
 
       # keep only those [site X genotype] combinations where the average vaf is greater than the threshold
       # and present in more than 30% of cells with that genotype
       mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$avg_VAF > vaf_thresh), ]
-      mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$p_gt > 0.2), ]
+      mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$p_gt > 0.1), ]
 
       # for each mutation, paste the genotypes together
       site_gtype_split_by_site <- split(mut_data_grouped_avg_VAF , f = mut_data_grouped_avg_VAF$site)
@@ -385,6 +398,8 @@ cellscape <- function(cnv_data = NULL,
       site_gtype_df <- site_gtype_df[order(match(site_gtype_df$gtypes, mut_gtypes)),]
       mut_order <- site_gtype_df$site
 
+      # print("site_gtype_df")
+      # print(site_gtype_df)
 
       # append any mutations that have all low prevalence data, and thus not accounted for yet
       low_prev_muts <- setdiff(unique(cur_mut_data$site), mut_order)
