@@ -50,6 +50,10 @@
 #' @param node_type {String} (Optional) The type of node plotted in single cell phylogeny - will affect phylogeny tooltips. 
 #'                                       Default is "Cell".
 #' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
+#' @param prop_of_clone_threshold {Number} (Optional) Used for the ordering of targeted mutations. The minimum proportion of a clone 
+#'                                        to have a mutation in order to consider the mutation as present within that clone. Default is 0.1.
+#' @param vaf_threshold {Number} (Optional) Used for the ordering of targeted mutations. The minimum variant allele frequency for a mutation to
+#'                                        be considered as present within a single cell. Default is 0.05.
 #' @param show_warnings {Boolean} (Optional) Whether or not to show any warnings. Default is TRUE.
 #' @param width {Number} (Optional) Width of the plot.
 #' @param height {Number} (Optional) Height of the plot.
@@ -101,6 +105,8 @@ cellscape <- function(cnv_data = NULL,
                     value_type = NULL,
                     node_type = "Cell",
                     display_node_ids = FALSE, 
+                    prop_of_clone_threshold = 0.2,
+                    vaf_threshold = 0.05,
                     show_warnings = TRUE,
                     width = 900, 
                     height = 800) {
@@ -355,7 +361,6 @@ cellscape <- function(cnv_data = NULL,
       # GET GENOTYPES FOR EACH TARGETED MUTATION 
 
       cur_mut_data <- mut_data
-      vaf_thresh <- 0.05
 
       # take care of NA and Inf VAF values
       cur_mut_data$VAF[which(is.na(cur_mut_data$VAF))] <- 0
@@ -369,7 +374,7 @@ cellscape <- function(cnv_data = NULL,
       mut_data_grouped_avg_VAF <- dplyr::summarise(mut_data_grouped, 
         avg_VAF=sum(VAF, na.rm=TRUE)/length(VAF),
         n = n(),
-        n_gt = sum(VAF > vaf_thresh),
+        n_gt = sum(VAF > vaf_threshold),
         p_gt = n_gt / n)
       mut_data_grouped_avg_VAF <- as.data.frame(mut_data_grouped_avg_VAF)
       # print("mut_data_grouped_avg_VAF")
@@ -377,8 +382,8 @@ cellscape <- function(cnv_data = NULL,
 
       # keep only those [site X genotype] combinations where the average vaf is greater than the threshold
       # and present in more than a certain percentage of cells with that genotype
-      mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$avg_VAF > vaf_thresh), ]
-      mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$p_gt > 0.1), ]
+      mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$avg_VAF > vaf_threshold), ]
+      mut_data_grouped_avg_VAF <- mut_data_grouped_avg_VAF[which(mut_data_grouped_avg_VAF$p_gt > prop_of_clone_threshold), ]
 
       # for each mutation, paste the genotypes together
       site_gtype_split_by_site <- split(mut_data_grouped_avg_VAF , f = mut_data_grouped_avg_VAF$site)
