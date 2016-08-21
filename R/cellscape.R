@@ -343,9 +343,14 @@ cellscape <- function(cnv_data = NULL,
                 }
               }
             }
+            # concatenate first and last genotype together
+            if ((j-i) >= 2) {
+              mut_gtypes <- append(mut_gtypes, paste(dfs_gtype_tree[i], dfs_gtype_tree[j], sep=""))
+            }
           }
         }
       }
+
 
       # GET GENOTYPES FOR EACH TARGETED MUTATION 
 
