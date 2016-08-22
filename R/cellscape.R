@@ -147,6 +147,18 @@ cellscape <- function(cnv_data = NULL,
 
     gtype_tree_edges <- checkTreeEdges(gtype_tree_edges)
 
+    # check that all genotypes in the annotations data are present in the genotype tree
+    if (!missing(sc_annot)) {
+      gtype_tree_gtypes <- unique(c(gtype_tree_edges$source, gtype_tree_edges$target))
+      sc_annot_gtypes <- unique(sc_annot$genotype)
+      gtypes_missing_from_gtype_tree <- setdiff(sc_annot_gtypes, gtype_tree_gtypes)
+      if (length(gtypes_missing_from_gtype_tree) > 0) {
+        stop(paste("The following clone ID(s) are present in the single cell annotations data but ",
+          "are missing from the genotype tree edges data: ",
+          paste(gtypes_missing_from_gtype_tree, collapse=", "), ".", sep=""))
+      }
+    }
+
     # get root of tree
 
     sources <- unique(gtype_tree_edges$source)
@@ -363,8 +375,8 @@ cellscape <- function(cnv_data = NULL,
       cur_mut_data <- mut_data
 
       # take care of NA and Inf VAF values
-      cur_mut_data$VAF[which(is.na(cur_mut_data$VAF))] <- 0
-      cur_mut_data$VAF[which(is.infinite(cur_mut_data$VAF))] <- 0
+      cur_mut_data$VAF[which(is.na(cur_mut_data$VAF))] <- NA
+      cur_mut_data$VAF[which(is.infinite(cur_mut_data$VAF))] <- NA
 
       # add genotypes to mutation data
       mut_data_w_gtypes <- merge(cur_mut_data, sc_annot, by="single_cell_id")
