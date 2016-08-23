@@ -61,8 +61,10 @@
 #' @export
 #' @examples
 #'
+#'
 #' library("cellscape")
 #'
+#' 
 #' # EXAMPLE 1 - TARGETED MUTATION DATA
 #'
 #' # single cell tree edges
@@ -78,6 +80,7 @@
 #' # run cellscape
 #' cellscape(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
 #'
+#' 
 #' # EXAMPLE 2 - COPY NUMBER DATA
 #'
 #' # single cell tree edges

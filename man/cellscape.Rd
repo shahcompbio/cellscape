@@ -87,7 +87,9 @@ be considered as present within a single cell. Default is 0.05.}
 }
 \examples{
 
+
 library("cellscape")
+
 
 # EXAMPLE 1 - TARGETED MUTATION DATA
 
@@ -103,6 +105,7 @@ sc_annot <- read.csv(system.file("extdata", "targeted_annots.csv", package = "ce
 mut_order <- scan(system.file("extdata", "targeted_mut_order.txt", package = "cellscape"), what=character())
 # run cellscape
 cellscape(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
+
 
 # EXAMPLE 2 - COPY NUMBER DATA
 
