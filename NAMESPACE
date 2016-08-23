@@ -2,5 +2,6 @@
 
 export(cellscape)
 export(cellscapeOutput)
+export(dfs_tree)
 export(renderCnvTree)
 import(htmlwidgets)

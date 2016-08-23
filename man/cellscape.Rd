@@ -9,8 +9,9 @@ cellscape(cnv_data = NULL, mut_data = NULL, mut_order = NULL, tree_edges,
   timepoint_title = "Timepoint", clone_title = "Clone",
   xaxis_title = "Time Point", yaxis_title = "Clonal Prevalence",
   phylogeny_title = "Clonal Phylogeny", value_type = NULL,
-  node_type = "Cell", display_node_ids = FALSE, show_warnings = TRUE,
-  width = 900, height = 800)
+  node_type = "Cell", display_node_ids = FALSE,
+  prop_of_clone_threshold = 0.2, vaf_threshold = 0.05,
+  show_warnings = TRUE, width = 900, height = 800)
 }
 \arguments{
 \item{cnv_data}{{Data frame} (Required if mut_data not provided) Single cell copy number segments data. 
@@ -68,6 +69,12 @@ Default is "VAF" for mutation data, and "CNV" for copy number data.}
 Default is "Cell".}
 
 \item{display_node_ids}{{Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.}
+
+\item{prop_of_clone_threshold}{{Number} (Optional) Used for the ordering of targeted mutations. The minimum proportion of a clone 
+to have a mutation in order to consider the mutation as present within that clone. Default is 0.1.}
+
+\item{vaf_threshold}{{Number} (Optional) Used for the ordering of targeted mutations. The minimum variant allele frequency for a mutation to
+be considered as present within a single cell. Default is 0.05.}
 
 \item{show_warnings}{{Boolean} (Optional) Whether or not to show any warnings. Default is TRUE.}
 
