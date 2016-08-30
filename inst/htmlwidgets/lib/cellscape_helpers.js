@@ -1055,8 +1055,8 @@ function _plotForceDirectedGraph(curVizObj) {
             return charge;
         })
         .gravity(0.28)
-        .nodes(userConfig.sc_tree_nodes)
-        .links(userConfig.sc_tree_edges);        
+        .nodes(_getNodesToPlot(curVizObj))
+        .links(_getEdgesToPlot(curVizObj));        
 
     // plot links
     var linksG = curVizObj.view.treeSVG
