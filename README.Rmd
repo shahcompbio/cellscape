@@ -4,7 +4,7 @@ output:
     keep_md: yes
 ---
 
-CellScape is a visualization tool for integrating single cell phylogeny with genomic content to clearly display evolutionary progression and tumour heterogeneity.
+CellScape is a visualization tool for integrating single cell phylogeny with genomic content to clearly display evolutionary progression and tumour heterogeneity. 
 
 To run CellScape:
 
@@ -22,6 +22,7 @@ The first shows single cell targeted mutation data with a time-series component:
 The second shows copy number data of a triple negative breast cancer patient published in Wang et al. (2014):
 ![](cellscape_screenshot2.png)
 
+CellScape was developed at the Shah Lab for Computational Cancer Biology at the BC Cancer Research Centre.
 
 References:  
 Wang, Yong, et al. "Clonal evolution in breast cancer revealed by single nucleus genome sequencing." Nature 512.7513 (2014): 155-160.
