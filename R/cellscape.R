@@ -389,7 +389,7 @@ cellscape <- function(cnv_data = NULL,
       mut_data_grouped_avg_VAF <- dplyr::summarise(mut_data_grouped, 
         avg_VAF=sum(VAF, na.rm=TRUE)/length(VAF),
         n = n(),
-        n_gt = sum(VAF > vaf_threshold),
+        n_gt = sum(VAF > vaf_threshold, na.rm=TRUE),
         p_gt = n_gt / n)
       mut_data_grouped_avg_VAF <- as.data.frame(mut_data_grouped_avg_VAF)
       # print("mut_data_grouped_avg_VAF")
