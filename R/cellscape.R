@@ -900,8 +900,8 @@ getMutOrder <- function(mut_data) {
   # group data by mutation site
   cur_data$VAF_rounded <- cur_data$VAF
   cur_data$VAF_rounded[which(cur_data$VAF_rounded < 0.05)] <- -10
-  cur_data$VAF_rounded[which(cur_data$VAF_rounded >= 0.05)] <- 0.5
   cur_data$VAF_rounded[which(cur_data$VAF_rounded >= 0.95)] <- 1
+  cur_data$VAF_rounded[which(cur_data$VAF_rounded >= 0.05 & cur_data$VAF_rounded < 0.95)] <- 0.5
   cur_data$VAF_rounded[which(is.na(cur_data$VAF_rounded))] <- 0
   cur_data$VAF_rounded[which(is.infinite(cur_data$VAF_rounded))] <- 0
 
