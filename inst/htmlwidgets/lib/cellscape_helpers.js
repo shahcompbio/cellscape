@@ -1410,6 +1410,39 @@ function _plotAlignedPhylogeny(curVizObj) {
             if (_checkForSelections(curVizObj.view_id)) {
                 _mouseoutNode(d.sc_id, curVizObj.view_id, curVizObj.nodeTip);
             }
+        })
+        .on('click', function(d) {
+            if (_checkForSelections(curVizObj.view_id)) {
+                // reverse y-coordinates for the descendants of this node
+
+                // get current y-coordinates for all descendants of this node
+                var cur_descs = curVizObj.data.treeDescendantsArr[d.sc_id];
+                var cur_descs_y_coords = [];
+                cur_descs.forEach(function(cur_desc) {
+                    cur_descs_y_coords.push(curVizObj.data.yCoordinates[cur_desc]);
+                })
+
+                // get the mid y-coordinate for these descendants
+                var mid_y = (Math.max(...cur_descs_y_coords)+Math.min(...cur_descs_y_coords))/2;
+
+                // for each descendant, flip its coordinate over the mid y-coordinate of the descendants
+                cur_descs.forEach(function(cur_desc) {
+                    var cur_y_coord = curVizObj.data.yCoordinates[cur_desc];
+                    var diff_to_mid_y = Math.abs(cur_y_coord - mid_y);
+                    var new_y_coord = (cur_y_coord < mid_y) ? mid_y + diff_to_mid_y : mid_y - diff_to_mid_y;
+                    curVizObj.data.yCoordinates[cur_desc] = new_y_coord;
+
+                    // translate the single cell profile in the heatmap
+                    _translateSCHeatmapProfile(curVizObj.view_id, cur_desc, (cur_y_coord < mid_y) ? -2*diff_to_mid_y : 2*diff_to_mid_y);
+                });
+
+                // remove existing phylogeny
+                d3.selectAll(".treeNodesG").remove();
+                d3.selectAll(".treeLinks").remove();
+
+                // plot new phylogeny
+                _plotAlignedPhylogeny(curVizObj);
+            }
         });
 
     // node single cell labels (if user wants to display them)
@@ -1562,6 +1595,47 @@ function _reformatGroupAnnots(curVizObj) {
     curVizObj.data.gtypes = gtypes;
 }
 
+/* function to translate the single cell heatmap profile to a new location
+*/
+function _translateSCHeatmapProfile(view_id, sc_id, diff_y) {
+    // translate copy number profile & indicator
+    d3.select("#" + view_id).select(".gridCellG.sc_" + sc_id)
+        .transition()
+        .duration(1000)
+        .attr("transform", function() {
+            return "translate(0," + diff_y + ")";
+        });
+    
+    // translate genotype annotation
+    if (curVizObj.view.gtypesSpecified) {
+        d3.select("#" + view_id).select(".gtypeAnnot.sc_" + sc_id)
+            .transition()
+            .duration(1000)
+            .attr("transform", function() {
+                return "translate(0," + diff_y + ")";
+            });
+    }
+    
+    // translate timepoint annotation
+    if (curVizObj.view.tpsSpecified) {
+        d3.select("#" + view_id).select(".tpAnnot.sc_" + sc_id)
+            .transition()
+            .duration(1000)
+            .attr("transform", function() {
+                return "translate(0," + diff_y + ")";
+            });
+    }
+
+    // translate indicator
+    d3.select("#" + view_id).select(".indic.sc_" + sc_id)
+        .transition()
+        .duration(1000)
+        .attr("transform", function() {
+            return "translate(0," + diff_y + ")";
+        });
+}
+
+
 // CNV FUNCTIONS
 
 /* function to update copy number matrix upon trimming
@@ -1581,44 +1655,11 @@ function _updateTrimmedMatrix(curVizObj) {
         // difference between original & new y-coordinates for this single cell
         var original_y = curVizObj.data.originalYCoordinates[sc_id];
         var new_y = curVizObj.data.yCoordinates[sc_id];
-        var diff_y = original_y - new_y;
+        var diff_y = new_y - original_y;
 
-        // translate copy number profile & indicator
-        d3.select("#" + curVizObj.view_id).select(".gridCellG.sc_" + sc_id)
-            .transition()
-            .duration(1000)
-            .attr("transform", function() {
-                return "translate(0," + (-1*diff_y) + ")";
-            });
-        
-        // translate genotype annotation
-        if (curVizObj.view.gtypesSpecified) {
-            d3.select("#" + curVizObj.view_id).select(".gtypeAnnot.sc_" + sc_id)
-                .transition()
-                .duration(1000)
-                .attr("transform", function() {
-                    return "translate(0," + (-1*diff_y) + ")";
-                });
-        }
-        
-        // translate timepoint annotation
-        if (curVizObj.view.tpsSpecified) {
-            d3.select("#" + curVizObj.view_id).select(".tpAnnot.sc_" + sc_id)
-                .transition()
-                .duration(1000)
-                .attr("transform", function() {
-                    return "translate(0," + (-1*diff_y) + ")";
-                });
-        }
-
-        // translate indicator
-        d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id)
-            .transition()
-            .duration(1000)
-            .attr("transform", function() {
-                return "translate(0," + (-1*diff_y) + ")";
-            });
-
+        // translate the single cell profile in the heatmap
+        _translateSCHeatmapProfile(curVizObj.view_id, sc_id, diff_y);
+    
         // update matrix height 
         matrix_height = new_y + curVizObj.view.hm.rowHeight;
 
