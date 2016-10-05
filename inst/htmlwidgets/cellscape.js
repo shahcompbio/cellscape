@@ -72,7 +72,8 @@ HTMLWidgets.widget({
         curVizObj.view = {};
         curVizObj.view_id = view_id;
 
-
+        console.log("curVizObj")
+        console.log(curVizObj)
         // get params from R
         curVizObj.userConfig = x;
         curVizObj.view.gtypesSpecified = (curVizObj.userConfig.sc_annot_provided); // (T/F) genotype annotation is specified
