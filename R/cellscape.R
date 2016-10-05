@@ -562,15 +562,12 @@ cellscape <- function(cnv_data = NULL,
       sc_annot$timepoint <- as.character(sc_annot$timepoint)
     }
 
-    # ensure that all single cells in tree have annotations
+    # ensure that at least one single cell in the tree has annotations
     scs_in_tree <- unique(c(tree_edges$source, tree_edges$target))
     scs_in_annots <- unique(sc_annot$single_cell_id)
-    scs_missing_from_annots <- setdiff(scs_in_tree, scs_in_annots)
-    if (length(scs_missing_from_annots) > 0) {
-      stop(paste("The following single cell(s) are present in the single cell phylogeny but ",
-          "are missing annotations: ",
-          paste(scs_missing_from_annots, collapse=", "), 
-          ". If the annotations parameter (sc_annots) is used, all single cells must have associated annotations.", sep=""))
+    scs_in_tree_and_annots <- intersect(scs_in_tree, scs_in_annots)
+    if (length(scs_in_tree_and_annots) == 0) {
+      stop(paste("The annotations parameter (sc_annots) has been used, but none of the single cells in the phylogeny have annotations.", sep=""))
     }
 
     # remove all single cells that are not in the tree
