@@ -1441,44 +1441,61 @@ function _plotAlignedPhylogeny(curVizObj) {
             }
         })
         .on('click', function(d) {
-            // if (_checkForSelections(curVizObj.view_id)) {
-            //     // reverse y-coordinates for the descendants of this node
+            if (_checkForSelections(curVizObj.view_id)) {
+                // reverse y-coordinates for the descendants of this node
 
-            //     // get current y-coordinates for all descendants of this node
-            //     var cur_descs = curVizObj.data.treeDescendantsArr[d.sc_id];
-            //     var cur_descs_y_coords = [];
-            //     cur_descs.forEach(function(cur_desc) {
-            //         cur_descs_y_coords.push(curVizObj.data.yCoordinates[cur_desc]);
-            //     })
+                // get current y-coordinates for all descendants of this node
+                var cur_descs = curVizObj.data.treeDescendantsArr[d.sc_id];
+                var cur_descs_y_coords = [];
+                cur_descs.forEach(function(cur_desc) {
+                    cur_descs_y_coords.push(curVizObj.data.yCoordinates[cur_desc]);
+                })
 
-            //     // get the mid y-coordinate for these descendants
-            //     var mid_y = (Math.max(...cur_descs_y_coords)+Math.min(...cur_descs_y_coords))/2;
+                // get the mid y-coordinate for these descendants
+                var mid_y = (Math.max(...cur_descs_y_coords)+Math.min(...cur_descs_y_coords))/2;
 
-            //     // for each descendant, flip its coordinate over the mid y-coordinate of the descendants
-            //     cur_descs.forEach(function(cur_desc) {
+                // for each descendant, flip its coordinate over the mid y-coordinate of the descendants
+                cur_descs.forEach(function(cur_desc) {
 
-            //         // get the new y coordinate and the difference between old and new y-coordinates
-            //         var cur_y_coord = curVizObj.data.yCoordinates[cur_desc];
-            //         var diff_y = -2*(cur_y_coord - mid_y);
-            //         var new_y_coord = cur_y_coord + diff_y;
-            //         curVizObj.data.yCoordinates[cur_desc] = new_y_coord;
+                    // get the new y coordinate and the difference between old and new y-coordinates
+                    var cur_y_coord = curVizObj.data.yCoordinates[cur_desc];
+                    var diff_y = -2*(cur_y_coord - mid_y);
+                    var new_y_coord = cur_y_coord + diff_y;
+                    curVizObj.data.yCoordinates[cur_desc] = new_y_coord;
 
-            //         // current y-coordinate translation of the sc
-            //         var t_y = _getTreeNodeYTranslation(curVizObj.view_id, cur_desc); 
+                    // current y-coordinate translation of the sc
+                    var t_y = _getTreeNodeYTranslation(curVizObj.view_id, cur_desc); 
 
-            //         // translate the single cell profile in the heatmap
-            //         _translateSCHeatmapProfile(curVizObj.view_id, cur_desc, diff_y + t_y);
+                    // translate the single cell profile in the heatmap
+                    _translateSCHeatmapProfile(curVizObj.view_id, cur_desc, diff_y + t_y);
 
-            //         // translate the single cell node
-            //         d3.select("#" + curVizObj.view_id).select(".tree.node.node_" + cur_desc)
-            //             .transition()
-            //             .duration(1000)
-            //             .attr("transform", function() {
-            //                 return "translate(0," + (diff_y + t_y) + ")";
-            //             });
+                    // translate the single cell node
+                    d3.select("#" + curVizObj.view_id).select(".tree.node.node_" + cur_desc)
+                        .transition()
+                        .duration(1000)
+                        .attr("transform", function() {
+                            return "translate(0," + (diff_y + t_y) + ")";
+                        });
+                });
 
-            //     });
-            // }
+                // for each latent cell, get its new y-coordinate and plot it
+                _getYCoordinatesLatentNodes(curVizObj, $.extend([], curVizObj.data.hm_sc_ids), curVizObj.data.yCoordinates);
+                curVizObj.data.missing_scs_to_plot.forEach(function(sc_id) {
+                    var old_y = _getTreeNodeYCoord(curVizObj.view_id, sc_id) - half_rowHeight;
+                    var old_translation = _getTreeNodeYTranslation(curVizObj.view_id, sc_id);
+                    var new_y = curVizObj.data.yCoordinates[sc_id];
+                    _translateSCNode(curVizObj.view_id, sc_id, (new_y-old_y+old_translation));
+                });
+
+                // translate aligned tree link for the edge just below the deletion
+                d3.select("#" + curVizObj.view_id).selectAll(".tree.link") 
+                    .transition()
+                    .duration(1000)       
+                    .attr("d", function(d) {
+                        return _getElbow(curVizObj, d, half_rowHeight, curVizObj.data.yCoordinates);
+                    });
+
+            }
         });
 
     // node single cell labels (if user wants to display them)
