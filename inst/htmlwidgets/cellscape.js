@@ -985,6 +985,8 @@ HTMLWidgets.widget({
         }
 
         // PLOT CHROMOSOME LEGEND
+        // note y-coordinate for chromosome legend
+        config.chromLegendStartYCoord = config.paddingGeneral + config.spacingForTitle + config.hmHeight - config.chromLegendHeight;
         var chromBoxes = curVizObj.view.cnvSVG
             .append("g")
             .classed("chromLegend", true)
@@ -997,7 +999,7 @@ HTMLWidgets.widget({
         chromBoxes.append("rect")
             .attr("class", function(d) { return "chromBox chr" + d.chr; })
             .attr("x", function(d) { return d.x; })
-            .attr("y", config.paddingGeneral + config.spacingForTitle + config.hmHeight - config.chromLegendHeight)
+            .attr("y", config.chromLegendStartYCoord)
             .attr("height", config.chromLegendHeight)
             .attr("width", function(d) { return d.width; })
             .style("fill", function(d) { 
@@ -1011,7 +1013,7 @@ HTMLWidgets.widget({
         chromBoxes.append("text")
             .attr("class", function(d) { return "chromBoxText chr" + d.chr; })
             .attr("x", function(d) { return d.x + (d.width / 2); })
-            .attr("y", config.paddingGeneral + config.spacingForTitle + config.hmHeight - (config.chromLegendHeight / 2))
+            .attr("y", config.chromLegendStartYCoord + (config.chromLegendHeight / 2))
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .attr("font-family", "Arial")
