@@ -1320,16 +1320,15 @@ function _plotNodeLabels(curVizObj, tree_type) {
 * @param {Object} curVizObj
 * @param {Object} d -- current data object
 * @param {Number} half_rowHeight -- half the height of one row in the heatmap
-* @param {Array} yCoords -- y coordinates of nodes
 */
-function _getElbow(curVizObj, d, half_rowHeight, yCoords) {
+function _getElbow(curVizObj, d, half_rowHeight) {
 
     var source = {};
     var target = {};
     // we're scaling by edge distance -- get elbow
     if (curVizObj.generalConfig.distOn) {
-        source.y = yCoords[d.source_sc_id] + half_rowHeight;
-        target.y = yCoords[d.target_sc_id] + half_rowHeight;
+        source.y = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
+        target.y = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
         source.x = curVizObj.data.xCoordinatesDist[d.source_sc_id];
         target.x = curVizObj.data.xCoordinatesDist[d.target_sc_id];
 
@@ -1341,8 +1340,8 @@ function _getElbow(curVizObj, d, half_rowHeight, yCoords) {
         var diagonal = d3.svg.diagonal()
             .projection(function(d) { return [d.y, d.x]; });
 
-        source.x = yCoords[d.source_sc_id] + half_rowHeight;
-        target.x = yCoords[d.target_sc_id] + half_rowHeight;
+        source.x = curVizObj.data.yCoordinates[d.source_sc_id] + half_rowHeight;
+        target.x = curVizObj.data.yCoordinates[d.target_sc_id] + half_rowHeight;
         source.y = curVizObj.data.xCoordinates[d.source_sc_id];
         target.y = curVizObj.data.xCoordinates[d.target_sc_id];
         
@@ -1369,7 +1368,7 @@ function _plotAlignedPhylogeny(curVizObj) {
             return "link tree " + d.link_id;
         })                
         .attr("d", function(d) {
-            return _getElbow(curVizObj, d, half_rowHeight, curVizObj.data.yCoordinates);
+            return _getElbow(curVizObj, d, half_rowHeight);
         })
         .attr("stroke",curVizObj.generalConfig.defaultLinkColour)
         .attr("stroke-width", "2px")
@@ -1445,7 +1444,7 @@ function _plotAlignedPhylogeny(curVizObj) {
                 // reverse y-coordinates for the descendants of this node
 
                 // get current y-coordinates for all descendants of this node
-                var cur_descs = curVizObj.data.treeDescendantsArr[d.sc_id];
+                var cur_descs = curVizObj.data.treeDescendantsArr[d.sc_id].concat(d.sc_id);
                 var cur_descs_y_coords = [];
                 cur_descs.forEach(function(cur_desc) {
                     cur_descs_y_coords.push(curVizObj.data.yCoordinates[cur_desc]);
@@ -1492,7 +1491,7 @@ function _plotAlignedPhylogeny(curVizObj) {
                     .transition()
                     .duration(1000)       
                     .attr("d", function(d) {
-                        return _getElbow(curVizObj, d, half_rowHeight, curVizObj.data.yCoordinates);
+                        return _getElbow(curVizObj, d, half_rowHeight);
                     });
 
             }
@@ -1582,7 +1581,7 @@ function _scaleTree(curVizObj) {
         // scale or unscale links
         curVizObj.view.treeSVG.selectAll(".tree.link")                     
             .attr("d", function(d) {
-                return _getElbow(curVizObj, d, half_rowHeight, curVizObj.data.yCoordinates);
+                return _getElbow(curVizObj, d, half_rowHeight);
             });
     }
 
@@ -1601,7 +1600,7 @@ function _scaleTree(curVizObj) {
         // scale or unscale links
         curVizObj.view.treeSVG.selectAll(".tree.link")                     
             .attr("d", function(d) {
-                return _getElbow(curVizObj, d, half_rowHeight, curVizObj.data.yCoordinates);
+                return _getElbow(curVizObj, d, half_rowHeight);
             });
     }
 
@@ -1739,7 +1738,6 @@ function _updateTrimmedMatrix(curVizObj, removal_height, removed_cell_max_y, rem
         half_rowHeight = (curVizObj.view.hm.rowHeight/2);
 
     // for each single cell that's still in the matrix
-    var scs_new_y = {}; // keep track of new y-coordinates for each single cell (top of the heatmap row for this sc)
     curVizObj.data.hm_sc_ids.forEach(function(sc_id) {
 
         var t_y = _getTreeNodeYTranslation(curVizObj.view_id, sc_id);
@@ -1747,23 +1745,23 @@ function _updateTrimmedMatrix(curVizObj, removal_height, removed_cell_max_y, rem
         
         // if this cell is below the last cut cell, translate the single cell profile in the heatmap and the node in the tree
         if (cur_y > removed_cell_max_y) {
-            scs_new_y[sc_id] = cur_y - removal_height - half_rowHeight;
+            curVizObj.data.yCoordinates[sc_id] = cur_y - removal_height - half_rowHeight;
             if (curVizObj.data.hm_sc_ids.indexOf(sc_id) != -1) {
                 _translateSCHeatmapProfile(curVizObj.view_id, sc_id, -removal_height + t_y); // if this sc is in the heatmap
             }
             _translateSCNode(curVizObj.view_id, sc_id, -removal_height + t_y);
         }
         else {
-            scs_new_y[sc_id] = cur_y - half_rowHeight;
+            curVizObj.data.yCoordinates[sc_id] = cur_y - half_rowHeight;
         }
     });
 
     // for each latent cell, get its new y-coordinate and plot it
-    _getYCoordinatesLatentNodes(curVizObj, $.extend([], curVizObj.data.hm_sc_ids), scs_new_y);
+    _getYCoordinatesLatentNodes(curVizObj, $.extend([], curVizObj.data.hm_sc_ids), curVizObj.data.yCoordinates);
     curVizObj.data.missing_scs_to_plot.forEach(function(sc_id) {
         var old_y = _getTreeNodeYCoord(curVizObj.view_id, sc_id) - half_rowHeight;
         var old_translation = _getTreeNodeYTranslation(curVizObj.view_id, sc_id);
-        var new_y = scs_new_y[sc_id];
+        var new_y = curVizObj.data.yCoordinates[sc_id];
         _translateSCNode(curVizObj.view_id, sc_id, (new_y-old_y+old_translation));
     });
 
@@ -1772,7 +1770,7 @@ function _updateTrimmedMatrix(curVizObj, removal_height, removed_cell_max_y, rem
         .transition()
         .duration(1000)       
         .attr("d", function(d) {
-            return _getElbow(curVizObj, d, half_rowHeight, scs_new_y);
+            return _getElbow(curVizObj, d, half_rowHeight);
         });
 
     // move chromosome legend up
@@ -1785,9 +1783,6 @@ function _updateTrimmedMatrix(curVizObj, removal_height, removed_cell_max_y, rem
         .transition()
         .duration(1000)
         .attr("y", curVizObj.generalConfig.chromLegendStartYCoord + (config.chromLegendHeight / 2));
-
-    // update y-coordinates
-    curVizObj.data.yCoordinates = $.extend([], scs_new_y);
 }
 
 /* function to get chromosome min and max values
