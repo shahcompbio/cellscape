@@ -71,7 +71,7 @@ Default is "Cell".}
 \item{display_node_ids}{{Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.}
 
 \item{prop_of_clone_threshold}{{Number} (Optional) Used for the ordering of targeted mutations. The minimum proportion of a clone 
-to have a mutation in order to consider the mutation as present within that clone. Default is 0.1.}
+to have a mutation in order to consider the mutation as present within that clone. Default is 0.2.}
 
 \item{vaf_threshold}{{Number} (Optional) Used for the ordering of targeted mutations. The minimum variant allele frequency for a mutation to
 be considered as present within a single cell. Default is 0.05.}
