@@ -17,6 +17,10 @@ The first shows single cell targeted mutation data from xenograft SA501 publishe
 The second shows copy number data of a triple negative breast cancer patient published in Wang et al. (2014).
 ![](cellscape_screenshot2.png)
 
+To view the documentation for CellScape, type the following command in R:
+
+?cellscape
+
 CellScape was developed at the Shah Lab for Computational Cancer Biology at the BC Cancer Research Centre.
 
 References:  
