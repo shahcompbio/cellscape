@@ -1,6 +1,25 @@
 #' CellScape
 #'
 #' \code{cellscape} explores single cell copy number profiles in the context of a single cell phylogeny.
+#' 
+#' Interactive components: \cr
+#'
+#' 1. Mouseover any single cell in the phylogeny to view its corresponding genomic profile in the heatmap, and vice versa. \cr
+#' 2. Mouseover any part of the heatmap to view the CNV or VAF value for that copy number segment or mutation site, respectively. \cr
+#' 3. Mouseover any branch of the phylogeny to view downstream single cells, both in the phylogeny and heatmap. \cr
+#' 4. Mouseover any clone to view its corresponding single cells in the phylogeny and heatmap. \cr
+#' 5. Click any node in the phylogeny to flip the order of its descendant branches. \cr
+#' 6. Use the selection tool in the tool bar to select single cell genomic profiles and view their corresponding single cells in the phylogeny. \cr
+#' 7. Use the tree trimming tool in the tool bar to remove any branch of the phylogeny by clicking it. \cr
+#' 8. Use the switch view tool in the tool bar to change the phylogeny view from force-directed to unidirectional, and vice versa. \cr
+#' 9. If present, use the scale tree/graph tool in the tool bar to scale the phylogeny by the provided edge distances. \cr
+#' 10. If time-series information is present such that the TimeScape is displayed below the CellScape, clones and time points are interactively linked in both views on mouseover. \cr
+#'
+#'
+#' Note: \cr
+#' 
+#' See TimeScape repo (https://bitbucket.org/MO_BCCRC/timescape) for more information about TimeScape. \cr
+#'
 #'   
 #' @import htmlwidgets
 #'
@@ -27,7 +46,7 @@
 #'                       (2) {String} "target" - edge target (single cell id)
 #'                       (2) {Number} (Optional) "dist" - edge distance
 #'
-#' @param gtype_tree_edges {DataFrame} (Required for TimeScape) Genotype tree edges of a rooted tree.
+#' @param gtype_tree_edges {Data frame} (Required for TimeScape) Genotype tree edges of a rooted tree.
 #'   Format: columns are (1) {String} "source" - source node id
 #'                       (2) {String} "target" - target node id.
 #'
@@ -37,7 +56,7 @@
 #'                       (3) {String} (Optional) "timepoint" - id of the sampled time point. 
 #'                                                  Note: in the case of time points, they will be ordered alphabetically
 #'
-#' @param clone_colours {DataFrame} (Optional) Clone ids and their corresponding colours 
+#' @param clone_colours {Data frame} (Optional) Clone ids and their corresponding colours 
 #'   Format: columns are (1) {String} "clone_id" - the clone ids
 #'                       (2) {String} "colour" - the corresponding Hex colour for each clone id.
 #' @param timepoint_title {String} (Optional) Legend title for timepoint groups. Default is "Timepoint".
