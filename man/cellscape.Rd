@@ -98,6 +98,7 @@ Interactive components: \cr
 8. Use the switch view tool in the tool bar to change the phylogeny view from force-directed to unidirectional, and vice versa. \cr
 9. If present, use the scale tree/graph tool in the tool bar to scale the phylogeny by the provided edge distances. \cr
 10. If time-series information is present such that the TimeScape is displayed below the CellScape, clones and time points are interactively linked in both views on mouseover. \cr
+11. Click the download buttons to download a PNG or SVG of the view. \cr
 
 Note: \cr
 
