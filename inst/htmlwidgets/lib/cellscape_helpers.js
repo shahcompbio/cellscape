@@ -743,6 +743,31 @@ function _linkClick(curVizObj, link_id) {
             if (index_not_hm != -1) {
                 curVizObj.data.missing_scs_to_plot.splice(index_not_hm, 1);
             }
+
+            // remove single cell from tree ancestors / descendants arrays
+            delete curVizObj.data.treeAncestorsArr[sc_id];
+            delete curVizObj.data.direct_ancestors[sc_id];
+            delete curVizObj.data.treeDescendantsArr[sc_id];
+            delete curVizObj.data.direct_descendants[sc_id];
+            Object.keys(curVizObj.data.treeDescendantsArr).forEach(function(key) {
+                var cur_descs = curVizObj.data.treeDescendantsArr[key];
+                var cur_i = cur_descs.indexOf(sc_id);
+                if (cur_i > -1) {
+                    cur_descs.splice(cur_i, 1);
+                }
+            });
+            Object.keys(curVizObj.data.direct_descendants).forEach(function(key) {
+                var cur_descs = curVizObj.data.direct_descendants[key];
+                var cur_i = cur_descs.indexOf(sc_id);
+                if (cur_i > -1) {
+                    cur_descs.splice(cur_i, 1);
+                }
+            });
+
+            // remove single cell from y- and x-coordinates lists
+            delete curVizObj.data.yCoordinates[sc_id];
+            delete curVizObj.data.xCoordinates[sc_id];
+            delete curVizObj.data.xCoordinatesDist[sc_id];
         });
 
         // height of removed cells (+ 1 row for the two row halves on either side)
