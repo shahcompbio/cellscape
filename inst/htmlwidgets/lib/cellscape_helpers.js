@@ -726,12 +726,13 @@ function _linkClick(curVizObj, link_id) {
             }
 
             // remove the single cell in the view
-            d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id).remove(); // remove node in tree
+            d3.select("#" + curVizObj.view_id).selectAll(".node_" + sc_id).remove(); // remove node in tree and graph
             d3.select("#" + curVizObj.view_id).selectAll(".nodeLabel_" + sc_id).remove(); // remove node labels
             d3.select("#" + curVizObj.view_id).select(".gridCellG.sc_" + sc_id).remove(); // remove copy number profile
             d3.select("#" + curVizObj.view_id).select(".gtypeAnnot.sc_" + sc_id).remove(); // remove genotype annotation
             d3.select("#" + curVizObj.view_id).select(".tpAnnot.sc_" + sc_id).remove(); // remove timepoint annotation
             d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id).remove(); // remove indicator
+
 
             // remove single cell from list of single cells in heatmap
             index_hm = curVizObj.data.hm_sc_ids.indexOf(sc_id);
@@ -1154,7 +1155,9 @@ function _plotForceDirectedGraph(curVizObj) {
         .data(_getNodesToPlot(curVizObj))
         .enter()
         .append("g")
-        .attr("class", "graphNodesG");
+        .attr("class", function(d) { 
+            return "graphNodesG node_" + d.sc_id;
+        });
 
     // node circles
     var nodeCircle = nodeG.append("circle")
@@ -1260,7 +1263,7 @@ function _rePlotForceLayout(curVizObj) {
             .size([config.treeWidth, config.treeHeight])
             .charge(function(d){
                 var charge = -10;
-                if (curVizObj.data.treeDescendantsArr[d.sc_id].length > 0) charge = 10 * charge;
+                if (curVizObj.data.treeDescendantsArr[d.sc_id] && curVizObj.data.treeDescendantsArr[d.sc_id].length > 0) charge = 10 * charge;
                 return charge;
             })
             .gravity(0.28)
@@ -1425,7 +1428,9 @@ function _plotAlignedPhylogeny(curVizObj) {
         .data(_getNodesToPlot(curVizObj))
         .enter()
         .append("g")
-        .attr("class", "treeNodesG");;
+        .attr("class", function(d) { 
+            return "treeNodesG node_" + d.sc_id;
+        });
 
     nodeG.append("circle")   
         .attr("class", function(d) {
