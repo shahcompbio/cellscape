@@ -3,11 +3,14 @@ CellScape is a visualization tool for integrating single cell phylogeny with gen
 
 To run CellScape, type the following commands in R:
 
+
+```r
 install.packages("devtools") # if not already installed  
 library(devtools)  
 install_bitbucket("MO_BCCRC/cellscape")  
 library(cellscape)  
 example(cellscape) # to run examples
+```
 
 And two visualizations will appear in your browser (optimized for Chrome).
 
@@ -19,7 +22,10 @@ The second shows copy number data of a triple negative breast cancer patient pub
 
 To view the documentation for CellScape, type the following command in R:
 
+
+```r
 ?cellscape
+```
 
 CellScape was developed at the Shah Lab for Computational Cancer Biology at the BC Cancer Research Centre.
 

@@ -719,6 +719,9 @@ cellscape <- function(cnv_data = NULL,
 }
 
 #' Get depth first search of a tree
+#' @param edges -- edges of tree
+#' @param cur_root -- current root of the tree
+#' @param dfs_arr -- array of depth first search results to be filled
 #' @export
 dfs_tree <- function(edges, cur_root, dfs_arr) {
   if (!is.null(cur_root)) {
@@ -737,6 +740,9 @@ dfs_tree <- function(edges, cur_root, dfs_arr) {
 
 #' Widget output function for use in Shiny
 #'
+#' @param outputId -- id of output
+#' @param width -- width of output
+#' @param height -- height of output
 #' @export
 cellscapeOutput <- function(outputId, width = '100%', height = '400px'){
   shinyWidgetOutput(outputId, 'cellscape', width, height, package = 'cellscape')
@@ -744,6 +750,9 @@ cellscapeOutput <- function(outputId, width = '100%', height = '400px'){
 
 #' Widget render function for use in Shiny
 #'
+#' @param expr -- expression for Shiny
+#' @param env -- environment for Shiny
+#' @param quoted -- default is FALSE 
 #' @export
 renderCnvTree <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
@@ -753,6 +762,8 @@ renderCnvTree <- function(expr, env = parent.frame(), quoted = FALSE) {
 # CNVTREE HELPERS
 
 #' Function to get data frame of pixels
+#' @param hm_sc_ids_ordered -- array of single cell ids in order
+#' @param ncols -- number of columns in heatmap/grid
 getEmptyGrid <- function(hm_sc_ids_ordered, ncols) {
   sc_ids <- rep(hm_sc_ids_ordered, each=ncols)
   cols <- rep(seq(0:(ncols-1)), length(hm_sc_ids_ordered))
@@ -762,6 +773,7 @@ getEmptyGrid <- function(hm_sc_ids_ordered, ncols) {
 
 #' function to get min and max values for each chromosome
 #' @param chroms -- vector of chromosome names
+#' @param cnv_data -- copy number data
 getChromBounds <- function(chroms, cnv_data) {
 
   # get min & max for each chromosome
@@ -797,8 +809,8 @@ getChromBounds <- function(chroms, cnv_data) {
 }
 
 #' function to get chromosome box pixel info
-#' @param {DataFrame} chrom_bounds -- chromosome boundaries
-#' @param {Integer} n_bp_per_pixel -- number of base pairs per pixel
+#' @param chrom_bounds -- data frame of chromosome boundaries
+#' @param n_bp_per_pixel -- integer of number of base pairs per pixel
 getChromBoxInfo <- function(chrom_bounds, n_bp_per_pixel) {
   chrom_boxes <- data.frame(chr=chrom_bounds$chrom, 
                             # x coordinate (start of chromosome)
@@ -811,7 +823,7 @@ getChromBoxInfo <- function(chrom_bounds, n_bp_per_pixel) {
 }
 
 #' function to get the genome length
-#' @param {DataFrame} chrom_bounds -- chromosome boundaries
+#' @param chrom_bounds -- data frame of chromosome boundaries
 getGenomeLength <- function(chrom_bounds) {
 
   tmp_chrom_bounds <- chrom_bounds
@@ -822,9 +834,9 @@ getGenomeLength <- function(chrom_bounds) {
 }
 
 #' function to get the number of base pairs per pixel
-#' @param {Integer} ncols -- number of columns (pixels) to fill
-#' @param {DataFrame} chrom_bounds -- chromosome boundaries
-#' @param {Integer} genome_length -- length of the genome
+#' @param ncols --  integer of number of columns (pixels) to fill
+#' @param chrom_bounds --  data frame of chromosome boundaries
+#' @param genome_length --  integer of length of the genome
 getNBPPerPixel <- function(ncols, chrom_bounds, genome_length) {
   n_data_pixels <- ncols - 2*(nrow(chrom_bounds) + 1) # number of pixels filled with data 
                                                       # (subtract number chromosome separators:
@@ -836,9 +848,9 @@ getNBPPerPixel <- function(ncols, chrom_bounds, genome_length) {
 }
 
 #' function to get information (chr, start, end, mode_cnv) for each pixel
-#' @param {DataFrame} cnv_data -- copy number variant segments data
-#' @param {DataFrame} chrom_bounds -- chromosome boundaries
-#' @param {Integer} n_bp_per_pixel -- number of base pairs per pixel
+#' @param cnv_data -- data frame of copy number variant segments data
+#' @param chrom_bounds -- data frame of chromosome boundaries
+#' @param n_bp_per_pixel -- integer of number of base pairs per pixel
 getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
 
   # get the pixel start and end for each segment (account for chromosome separators in pixel info)
@@ -919,7 +931,7 @@ getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
 }
 
 #' function to get mutation order for targeted data
-#' @param {DataFrame} mut_data -- mutations data
+#' @param mut_data -- data frame of mutations data
 getMutOrder <- function(mut_data) {
   separator <- ":"
 
@@ -969,9 +981,9 @@ getMutOrder <- function(mut_data) {
 }
 
 #' function to get targeted heatmap information 
-#' @param {DataFrame} mut_data -- mutations data
-#' @param {Array} mut_order -- order of mutations for heatmap (chromosome:coordinate)
-#' @param {Number} heatmapWidth -- width of the heatmap (in pixels)
+#' @param mut_data -- data frame of mutations data
+#' @param mut_order -- array of order of mutations for heatmap (chromosome:coordinate)
+#' @param heatmapWidth -- number for width of the heatmap (in pixels)
 getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
 
   # sort mutations by single cell, genomic position
@@ -1013,7 +1025,7 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
 }
 
 #' function to find the mode of a vector
-#' @param {Vector} x -- vector of numbers
+#' @param x -- vector of numbers
 findMode <- function(x) {
   ux <- unique(x) # each unique value
   n_appearances <- tabulate(match(x, ux)) # number of appearances for each unique value
@@ -1024,6 +1036,43 @@ findMode <- function(x) {
 # TIMESCAPE HELPERS
 
 #' Function to process the user data
+#' @param clonal_prev -- data frame of Clonal prevalence. Note: timepoints will be alphanumerically sorted in the view.
+#'   Format: columns are (1) {String} "timepoint" - time point
+#'                       (2) {String} "clone_id" - clone id
+#'                       (3) {Number} "clonal_prev" - clonal prevalence.
+#' @param tree_edges -- data frame of Tree edges of a rooted tree.
+#'   Format: columns are (1) {String} "source" - source node id
+#'                       (2) {String} "target" - target node id.
+#' @param mutations -- data frame (Optional) of Mutations occurring at each clone. Any additional field will be shown in the mutation table.
+#'   Format: columns are (1) {String} "chrom" - chromosome number
+#'                       (2) {Number} "coord" - coordinate of mutation on chromosome
+#'                       (3) {String} "clone_id" - clone id
+#'                       (4) {String} "timepoint" - time point
+#'                       (5) {Number} "VAF" - variant allele frequency of the mutation in the corresponding timepoint. 
+#' @param clone_colours -- data frame (Optional) of Clone ids and their corresponding colours 
+#'   Format: columns are (1) {String} "clone_id" - the clone ids
+#'                       (2) {String} "colour" - the corresponding Hex colour for each clone id.
+#' @param xaxis_title -- String (Optional) of x-axis title. Default is "Time Point".
+#' @param yaxis_title -- String (Optional) of y-axis title. Default is "Clonal Prevalence".
+#' @param phylogeny_title -- String (Optional) of Legend phylogeny title. Default is "Clonal Phylogeny".
+#' @param alpha -- Number (Optional) of Alpha value for sweeps, range [0, 100].
+#' @param genotype_position -- String (Optional) of How to position the genotypes from ["centre", "stack", "space"] 
+#'   "centre" -- genotypes are centred with respect to their ancestors
+#'   "stack" -- genotypes are stacked such that no genotype is split at any time point
+#'   "space" -- genotypes are stacked but with a bit of spacing at the bottom
+#' @param perturbations -- data frame (Optional) of any perturbations that occurred between two time points, 
+#'   and the fraction of total tumour content remaining.
+#'   Format: columns are (1) {String} "pert_name" - the perturbation name
+#'                       (2) {String} "prev_tp" - the time point (as labelled in clonal prevalence data) 
+#'                                                BEFORE perturbation
+#'                       (3) {Number} "frac" - the fraction of total tumour content remaining at the 
+#'                                             time of perturbation, range [0, 1].
+#' @param sort -- Boolean (Optional) of whether (TRUE) or not (FALSE) to vertically sort the genotypes by their emergence values (descending). 
+#'                       Default is FALSE. 
+#'                       Note that genotype sorting will always retain the phylogenetic hierarchy, and this parameter will only affect the ordering of siblings.
+#' @param show_warnings -- Boolean (Optional) of  Whether or not to show any warnings. Default is TRUE.
+#' @param width -- Number (Optional) of width of the plot. Minimum width is 450.
+#' @param height -- Number (Optional) of height of the plot. Minimum height with and without mutations is 500 and 260, respectively. 
 processUserData <- function(clonal_prev, 
                       tree_edges, 
                       mutations,
