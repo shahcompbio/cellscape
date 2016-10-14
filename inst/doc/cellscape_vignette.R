@@ -6,6 +6,9 @@
 #  example(cellscape) # to run examples
 
 ## ---- echo=FALSE---------------------------------------------------------
+library(devtools)  
+install_bitbucket("MO_BCCRC/cellscape")  
+library(cellscape) 
 # EXAMPLE 2 - COPY NUMBER DATA
 # single cell tree edges
 tree_edges <- read.csv(system.file("extdata", "cnv_tree_edges.csv", package = "cellscape"))

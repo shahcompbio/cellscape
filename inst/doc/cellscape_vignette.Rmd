@@ -21,6 +21,9 @@ example(cellscape) # to run examples
 
 One of these, for example, is copy number data of a triple negative breast cancer patient published in Wang et al. (2014).
 ```{r, echo=FALSE}
+library(devtools)  
+install_bitbucket("MO_BCCRC/cellscape")  
+library(cellscape) 
 # EXAMPLE 2 - COPY NUMBER DATA
 # single cell tree edges
 tree_edges <- read.csv(system.file("extdata", "cnv_tree_edges.csv", package = "cellscape"))
