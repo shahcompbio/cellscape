@@ -1026,6 +1026,9 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
 
 #' function to find the mode of a vector
 #' @param x -- vector of numbers
+#' @examples
+#' findMode(c(1,1,19,1))
+#' @export
 findMode <- function(x) {
   ux <- unique(x) # each unique value
   n_appearances <- tabulate(match(x, ux)) # number of appearances for each unique value
@@ -1098,7 +1101,9 @@ processUserData <- function(clonal_prev,
   checkAlpha(alpha)
 
   # SORTED GENOTYPES
-  checkSort(sort)
+  if (!is.logical(sort)) {
+    stop("Sort parameter must be a boolean.")
+  }
 
   # CLONAL PREVALENCE DATA
   clonal_prev <- checkClonalPrev(clonal_prev)
@@ -1161,6 +1166,9 @@ processUserData <- function(clonal_prev,
 #' @param mutations -- mutations provided by user
 #' @param height -- height provided by user
 #' @param width -- width provided by user
+#' @examples
+#' checkMinDims(data.frame(chr = c("11"), coord = c(104043), VAF = c(0.1)), "700px", "700px")
+#' @export
 checkMinDims <- function(mutations, height, width) {
 
   # set height if not set by user
@@ -1195,6 +1203,12 @@ checkMinDims <- function(mutations, height, width) {
 #' 
 #' @param clonal_prev -- clonal_prev provided by user
 #' @param tree_edges -- tree_edges provided by user
+#' @examples
+#' checkRequiredInputs(data.frame(timepoint = c(rep("Diagnosis", 6), rep("Relapse", 1)), clone_id = c("1","2","3","4","5","6","7"), clonal_prev = c("0.1","0.22","0.08","0.53","0.009","0.061","1")), 
+#' data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")))
+#' checkRequiredInputs(data.frame(timepoint = c(rep("Diagnosis", 6), rep("Relapse", 1)), clone_id = c("1","2","3","4","5","6","7"), clonal_prev = c("0.12","0.12","0.18","0.13","0.009","0.061","1")), 
+#' data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")))
+#' @export
 checkRequiredInputs <- function(clonal_prev, tree_edges) {
 
   if (missing(clonal_prev)) {
@@ -1208,6 +1222,10 @@ checkRequiredInputs <- function(clonal_prev, tree_edges) {
 #' check alpha value input is correct
 #' 
 #' @param alpha -- alpha provided by user
+#' @examples
+#' checkAlpha(4)
+#' checkAlpha(100)
+#' @export
 checkAlpha <- function(alpha) {
   if (!is.numeric(alpha)) {
     stop("Alpha value must be numeric.")
@@ -1218,18 +1236,12 @@ checkAlpha <- function(alpha) {
   }
 }
 
-#' check sort genotypes parameter input is correct
-#' 
-#' @param sort -- sort param provided by user
-checkSort <- function(sort) {
-  if (!is.logical(sort)) {
-    stop("Sort parameter must be a boolean.")
-  }
-}
-
 #' check clonal_prev parameter data
 #'
 #' @param clonal_prev -- clonal prevalence provided by user
+#' @examples
+#' checkClonalPrev(data.frame(timepoint=c(1), clone_id=c(2), clonal_prev=c(0.1)))
+#' @export
 checkClonalPrev <- function(clonal_prev) {
 
   # ensure column names are correct
@@ -1251,6 +1263,9 @@ checkClonalPrev <- function(clonal_prev) {
 #' check tree_edges parameter data
 #'
 #' @param tree_edges -- tree edges provided by user
+#' @examples
+#' checkTreeEdges(data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")))
+#' @export
 checkTreeEdges <- function(tree_edges) {
 
   # ensure column names are correct
@@ -1295,6 +1310,9 @@ checkTreeEdges <- function(tree_edges) {
 #' check genotype_position parameter
 #'
 #' @param genotype_position -- genotype_position provided by user
+#' @examples
+#' checkGtypePositioning("centre")
+#' @export
 checkGtypePositioning <- function(genotype_position) {
   if (!(genotype_position %in% c("stack", "centre", "space"))) {
     stop("Genotype position must be one of c(\"stack\", \"centre\", \"space\")")
@@ -1304,6 +1322,9 @@ checkGtypePositioning <- function(genotype_position) {
 #' check clone_colours parameter
 #'
 #' @param clone_colours -- clone_colours provided by user
+#' @examples
+#' checkCloneColours(data.frame(clone_id = c("1","2","3", "4"), colour = c("#beaed4", "#fdc086", "#beaed4", "#beaed4")))
+#' @export
 checkCloneColours <- function(clone_colours) {
   if (is.data.frame(clone_colours)) {
 
@@ -1319,6 +1340,9 @@ checkCloneColours <- function(clone_colours) {
 #' check perturbations parameter
 #'
 #' @param perturbations -- perturbations provided by user
+#' @examples
+#' checkPerts(data.frame(pert_name = c("New Drug"), prev_tp = c("Diagnosis"), frac = c(0.1)))
+#' @export
 checkPerts <- function(perturbations) {
 
   if (is.data.frame(perturbations)) {
@@ -1345,6 +1369,11 @@ checkPerts <- function(perturbations) {
 #' @param mutations -- mutations data from user
 #' @param tree_edges -- tree edges data from user
 #' @param clonal_prev -- clonal prevalence data from user
+#' @examples
+#' getMutationsData(data.frame(chrom = c("11"), coord = c(104043), VAF = c(0.1), clone_id=c(1), timepoint=c("Relapse")), 
+#' data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")), 
+#' data.frame(timepoint = c(rep("Diagnosis", 6), rep("Relapse", 1)), clone_id = c("1","2","3","4","5","6","7"), clonal_prev = c("0.12","0.12","0.18","0.13","0.009","0.061","1")))
+#' @export
 getMutationsData <- function(mutations, tree_edges, clonal_prev) {
 
   if (is.data.frame(mutations)) {
@@ -1451,6 +1480,13 @@ getMutationsData <- function(mutations, tree_edges, clonal_prev) {
 #' @param mutation_info -- processed mutation_info 
 #' @param mutations -- mutations data from user
 #' @param mutation_prevalences -- mutation_prevalences data from user
+#' @export
+#' @examples
+#' replaceSpaces(mutations = data.frame(chrom = c("11"), coord = c(104043), VAF = c(0.1), clone_id=c(1), timepoint=c("Relapse")), 
+#' tree_edges = data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")), 
+#' clonal_prev = data.frame(timepoint = c(rep("Diagnosis", 6), rep("Relapse", 1)), clone_id = c("1","2","3","4","5","6","7"), clonal_prev = c("0.12","0.12","0.18","0.13","0.009","0.061","1")),
+#' mutation_prevalences = list("X:6154028" = data.frame(timepoint = c("Diagnosis"), VAF = c(0.5557))), mutation_info=data.frame(clone_id=c(1)),
+#' clone_colours = data.frame(clone_id = c("1","2","3", "4"), colour = c("#beaed4", "#fdc086", "#beaed4", "#beaed4")))
 replaceSpaces <- function(clonal_prev, tree_edges, clone_colours, mutation_info, mutations, mutation_prevalences) {
 
   # create map of original sample ids to space-replaced sample ids
