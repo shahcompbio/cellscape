@@ -16,4 +16,8 @@ cellscapeOutput(outputId, width = "100\%", height = "400px")
 \description{
 Widget output function for use in Shiny
 }
+\examples{
+cellscapeOutput(1, '100\%', '300px')
+cellscapeOutput(1, '80\%', '300px')
+}
 

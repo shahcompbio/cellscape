@@ -723,6 +723,8 @@ cellscape <- function(cnv_data = NULL,
 #' @param cur_root -- current root of the tree
 #' @param dfs_arr -- array of depth first search results to be filled
 #' @export
+#' @examples
+#' dfs_tree(data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")), "1", c())
 dfs_tree <- function(edges, cur_root, dfs_arr) {
   if (!is.null(cur_root)) {
     # add this root to the dfs list of nodes
@@ -743,6 +745,9 @@ dfs_tree <- function(edges, cur_root, dfs_arr) {
 #' @param outputId -- id of output
 #' @param width -- width of output
 #' @param height -- height of output
+#' @examples
+#' cellscapeOutput(1, '100%', '300px')
+#' cellscapeOutput(1, '80%', '300px')
 #' @export
 cellscapeOutput <- function(outputId, width = '100%', height = '400px'){
   shinyWidgetOutput(outputId, 'cellscape', width, height, package = 'cellscape')
