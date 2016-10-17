@@ -681,7 +681,6 @@ cellscape <- function(cnv_data = NULL,
     timescape_wanted <- FALSE
   }
 
-
   # forward options using x
   cellscape_userParams <- list(
     clone_cols = jsonlite::toJSON(clone_colours), # clone colours

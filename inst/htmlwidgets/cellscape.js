@@ -179,28 +179,8 @@ HTMLWidgets.widget({
             curVizObj.data.gtypeTreeStructure = root_tree; 
         }
 
-        // get tree structures for each node
-        curVizObj.data.treeStructures = _getTreeStructures(curVizObj.userConfig.sc_tree_edges);
-        
-        // the root tree structure
-        curVizObj.data.treeStructure = _.findWhere(curVizObj.data.treeStructures, {sc_id: curVizObj.userConfig.root});
-
-        // get descendants for each node
-        curVizObj.data.treeDescendantsArr = {};
-        curVizObj.userConfig.sc_tree_nodes.forEach(function(node, idx) {
-            var curRoot = _.findWhere(curVizObj.data.treeStructures, {sc_id: node.sc_id});
-            var curDescendants = _getDescendantIds(curRoot, []);
-            curVizObj.data.treeDescendantsArr[node.sc_id] = curDescendants;
-        })
-
-        // get direct descendants for each node
-        curVizObj.data.direct_descendants = _getDirectDescendants(curVizObj.data.treeStructure, {});
-
-        // get ancestors for each node
-        curVizObj.data.treeAncestorsArr = _getAncestorIds(curVizObj);
-
-        // get direct ancestors for each ndoe
-        curVizObj.data.direct_ancestors = _getDirectAncestors(curVizObj.data.treeStructure, {});
+        // get all the tree info (descendants, ancestors, etc)
+        _getTreeInfo(curVizObj, curVizObj.userConfig.sc_tree_edges, curVizObj.userConfig.root);
 
         // get nodes missing heatmap data that we should still plot (and note those that we shouldn't)
         _handleMissingScs(curVizObj);
