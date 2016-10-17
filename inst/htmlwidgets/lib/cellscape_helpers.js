@@ -411,6 +411,34 @@ function _pushScissorsButton(curVizObj) {
     }
 }
 
+/* push reroot button
+*/
+function _pushRerootButton(curVizObj) {
+    // if this button is not selected
+    if (d3.select("#" + curVizObj.view_id).selectAll(".rerootButtonSelected")[0].length === 0) {
+        d3.select("#" + curVizObj.view_id).selectAll(".rerootButton").classed("rerootButtonSelected", true);
+        d3.select("#" + curVizObj.view_id).selectAll("rect.rerootButton").attr("fill", curVizObj.generalConfig.topBarHighlight);
+    }
+    else {
+        d3.select("#" + curVizObj.view_id).selectAll(".rerootButton").classed("rerootButtonSelected", false);
+        d3.select("#" + curVizObj.view_id).selectAll("rect.rerootButton").attr("fill", curVizObj.generalConfig.topBarColour);
+    }
+}
+
+/* push branch flip button
+*/
+function _pushBranchFlipButton(curVizObj) {
+    // if this button is not selected
+    if (d3.select("#" + curVizObj.view_id).selectAll(".flipBranchButtonSelected")[0].length === 0) {
+        d3.select("#" + curVizObj.view_id).selectAll(".flipBranchButton").classed("flipBranchButtonSelected", true);
+        d3.select("#" + curVizObj.view_id).selectAll("rect.flipBranchButton").attr("fill", curVizObj.generalConfig.topBarHighlight);
+    }
+    else {
+        d3.select("#" + curVizObj.view_id).selectAll(".flipBranchButton").classed("flipBranchButtonSelected", false);
+        d3.select("#" + curVizObj.view_id).selectAll("rect.flipBranchButton").attr("fill", curVizObj.generalConfig.topBarColour);
+    }
+}
+
 // TREE FUNCTIONS
 
 /* function to find a key by its name - if the key doesn't exist, it will be created and added to the list of nodes
@@ -852,7 +880,17 @@ function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
     }
 
     return nodeOrder;
- }
+}
+
+/* function to remove single cell ids that are in the tree but not the heatmap 
+*/
+function _removeSCsNotInHeatmap(scs_missing_from_hm, hm_sc_ids){
+    for (var i = 0; i < scs_missing_from_hm.length; i++) {
+            var cur_sc_missing = scs_missing_from_hm[i];
+            var index = hm_sc_ids.indexOf(cur_sc_missing);
+            hm_sc_ids.splice(index, 1);
+        }
+}
 
 /* function to get font size for labels, given their content the size of the nodes that contain them
 * @param {Array} labels -- array of node labels
@@ -1461,8 +1499,8 @@ function _plotAlignedPhylogeny(curVizObj) {
             }
         })
         .on('click', function(d) {
-            if (_checkForSelections(curVizObj.view_id)) {
-
+            // if we're in re-root mode
+            if (d3.select("#" + curVizObj.view_id).selectAll(".rerootButtonSelected")[0].length != 0) {
                 // re-root the single cell tree
                 _reRootSCTree(curVizObj.userConfig.sc_tree_edges, d.sc_id, curVizObj.data.direct_descendants, curVizObj.data.direct_ancestors);
                 curVizObj.userConfig.root = d.sc_id;
@@ -1477,12 +1515,18 @@ function _plotAlignedPhylogeny(curVizObj) {
                                                          curVizObj.userConfig.root, 
                                                          []);
 
+                // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
+                _removeSCsNotInHeatmap(curVizObj.userConfig.scs_missing_from_hm, curVizObj.data.hm_sc_ids);
+
                 // get new coordinates
                 _getYCoordinates(curVizObj);
                 _getXCoordinates(curVizObj);
 
+                // for each latent cell, get its new y-coordinate and plot it
+                _getYCoordinatesLatentNodes(curVizObj, $.extend([], curVizObj.data.hm_sc_ids), curVizObj.data.yCoordinates);
+
                 // translate nodes in tree
-                curVizObj.data.hm_sc_ids.forEach(function(sc) {
+                curVizObj.data.hm_sc_ids.concat(curVizObj.data.missing_scs_to_plot).forEach(function(sc) {
                     d3.select("#" + curVizObj.view_id).select(".tree.node.node_" + sc)
                         .transition()
                         .duration(1000)
@@ -1494,9 +1538,11 @@ function _plotAlignedPhylogeny(curVizObj) {
                             d.y = curVizObj.data.yCoordinates[d.sc_id] + half_rowHeight;
                             return d.y;
                         })
-                })
+                });
+
                 // translate the single cell profiles in the heatmap
                 _moveSCHeatmapProfiles(curVizObj.view_id, curVizObj.data.yCoordinates);
+
                 // translate edges
                 d3.select("#" + curVizObj.view_id).selectAll(".tree.link") 
                     .transition()
@@ -1504,75 +1550,63 @@ function _plotAlignedPhylogeny(curVizObj) {
                     .attr("d", function(d) {
                         return _getElbow(curVizObj, d, half_rowHeight);
                     });
+            }
 
-                
+            // if we're in flip-branch mode
+            else if (d3.select("#" + curVizObj.view_id).selectAll(".flipBranchButtonSelected")[0].length != 0) { 
 
+                // *** reverse y-coordinates for the descendants of this node ***
 
-                console.log("new curVizObj");
-                console.log(curVizObj);
+                // get current y-coordinates for all descendants of this node
+                var cur_descs = curVizObj.data.treeDescendantsArr[d.sc_id].concat(d.sc_id);
+                var cur_descs_y_coords = [];
+                cur_descs.forEach(function(cur_desc) {
+                    cur_descs_y_coords.push(curVizObj.data.yCoordinates[cur_desc]);
+                })
 
-                // // remove prior tree
-                // d3.select("#" + curVizObj.view_id).selectAll(".treeNodesG").remove();
-                // d3.select("#" + curVizObj.view_id).selectAll(".treeLinks").remove();
+                // get the mid y-coordinate for these descendants
+                var mid_y = (Math.max(...cur_descs_y_coords)+Math.min(...cur_descs_y_coords))/2;
 
-                // // re-plot the aligned phylogeny
-                // _plotAlignedPhylogeny(curVizObj);
+                // for each descendant, flip its coordinate over the mid y-coordinate of the descendants
+                cur_descs.forEach(function(cur_desc) {
 
+                    // get the new y coordinate and the difference between old and new y-coordinates
+                    var cur_y_coord = curVizObj.data.yCoordinates[cur_desc];
+                    var diff_y = -2*(cur_y_coord - mid_y);
+                    var new_y_coord = cur_y_coord + diff_y;
+                    curVizObj.data.yCoordinates[cur_desc] = new_y_coord;
 
-                // TODO -- uncomment!!!
+                    // current y-coordinate translation of the sc
+                    var t_y = _getTreeNodeYTranslation(curVizObj.view_id, cur_desc); 
 
-                // // *** reverse y-coordinates for the descendants of this node ***
+                    // translate the single cell profile in the heatmap
+                    _translateSCHeatmapProfile(curVizObj.view_id, cur_desc, diff_y + t_y);
 
-                // // get current y-coordinates for all descendants of this node
-                // var cur_descs = curVizObj.data.treeDescendantsArr[d.sc_id].concat(d.sc_id);
-                // var cur_descs_y_coords = [];
-                // cur_descs.forEach(function(cur_desc) {
-                //     cur_descs_y_coords.push(curVizObj.data.yCoordinates[cur_desc]);
-                // })
+                    // translate the single cell node
+                    d3.select("#" + curVizObj.view_id).select(".tree.node.node_" + cur_desc)
+                        .transition()
+                        .duration(1000)
+                        .attr("transform", function() {
+                            return "translate(0," + (diff_y + t_y) + ")";
+                        });
+                });
 
-                // // get the mid y-coordinate for these descendants
-                // var mid_y = (Math.max(...cur_descs_y_coords)+Math.min(...cur_descs_y_coords))/2;
+                // for each latent cell, get its new y-coordinate and plot it
+                _getYCoordinatesLatentNodes(curVizObj, $.extend([], curVizObj.data.hm_sc_ids), curVizObj.data.yCoordinates);
+                curVizObj.data.missing_scs_to_plot.forEach(function(sc_id) {
+                    var old_y = _getTreeNodeYCoord(curVizObj.view_id, sc_id) - half_rowHeight;
+                    var old_translation = _getTreeNodeYTranslation(curVizObj.view_id, sc_id);
+                    var new_y = curVizObj.data.yCoordinates[sc_id];
+                    _translateSCNode(curVizObj.view_id, sc_id, (new_y-old_y+old_translation));
+                });
 
-                // // for each descendant, flip its coordinate over the mid y-coordinate of the descendants
-                // cur_descs.forEach(function(cur_desc) {
-
-                //     // get the new y coordinate and the difference between old and new y-coordinates
-                //     var cur_y_coord = curVizObj.data.yCoordinates[cur_desc];
-                //     var diff_y = -2*(cur_y_coord - mid_y);
-                //     var new_y_coord = cur_y_coord + diff_y;
-                //     curVizObj.data.yCoordinates[cur_desc] = new_y_coord;
-
-                //     // current y-coordinate translation of the sc
-                //     var t_y = _getTreeNodeYTranslation(curVizObj.view_id, cur_desc); 
-
-                //     // translate the single cell profile in the heatmap
-                //     _translateSCHeatmapProfile(curVizObj.view_id, cur_desc, diff_y + t_y);
-
-                //     // translate the single cell node
-                //     d3.select("#" + curVizObj.view_id).select(".tree.node.node_" + cur_desc)
-                //         .transition()
-                //         .duration(1000)
-                //         .attr("transform", function() {
-                //             return "translate(0," + (diff_y + t_y) + ")";
-                //         });
-                // });
-
-                // // for each latent cell, get its new y-coordinate and plot it
-                // _getYCoordinatesLatentNodes(curVizObj, $.extend([], curVizObj.data.hm_sc_ids), curVizObj.data.yCoordinates);
-                // curVizObj.data.missing_scs_to_plot.forEach(function(sc_id) {
-                //     var old_y = _getTreeNodeYCoord(curVizObj.view_id, sc_id) - half_rowHeight;
-                //     var old_translation = _getTreeNodeYTranslation(curVizObj.view_id, sc_id);
-                //     var new_y = curVizObj.data.yCoordinates[sc_id];
-                //     _translateSCNode(curVizObj.view_id, sc_id, (new_y-old_y+old_translation));
-                // });
-
-                // // translate aligned tree link for the edge just below the deletion
-                // d3.select("#" + curVizObj.view_id).selectAll(".tree.link") 
-                //     .transition()
-                //     .duration(1000)       
-                //     .attr("d", function(d) {
-                //         return _getElbow(curVizObj, d, half_rowHeight);
-                //     });
+                // translate aligned tree link for the edge just below the deletion
+                d3.select("#" + curVizObj.view_id).selectAll(".tree.link") 
+                    .transition()
+                    .duration(1000)       
+                    .attr("d", function(d) {
+                        return _getElbow(curVizObj, d, half_rowHeight);
+                    });
 
             }
         });
@@ -1606,6 +1640,21 @@ function _getTreeInfo(curVizObj, sc_tree_edges, root) {
 
     // get direct ancestors for each ndoe
     curVizObj.data.direct_ancestors = _getDirectAncestors(curVizObj.data.treeStructure, {});
+
+    // get linear chains in genotype tree 
+    if (curVizObj.userConfig.gtype_tree_edges) {
+        curVizObj.data.gtypeTreeChainRoots = []; // keep track of linear chain segment roots
+        curVizObj.data.gtypeTreeChains = _gt_getLinearTreeSegments(curVizObj, curVizObj.data.gtypeTreeStructure, {}, "");
+    }
+
+    // get the height of the tree (# nodes)
+    curVizObj.data.tree_height = 0;
+    Object.keys(curVizObj.data.treeAncestorsArr).forEach(function(key) {
+        var ancestor_arr = curVizObj.data.treeAncestorsArr[key];
+        if ((ancestor_arr.length + 1) > curVizObj.data.tree_height) {
+            curVizObj.data.tree_height = (ancestor_arr.length + 1);
+        }
+    })
 }
 
 /* function to re-root the single cell tree
