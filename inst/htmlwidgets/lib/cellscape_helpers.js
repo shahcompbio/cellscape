@@ -645,9 +645,6 @@ function _getXCoordinates(curVizObj) {
                 spaceBeforeStart + (curVizObj.data.pathDists[node.sc_id] / curVizObj.data.max_tree_path_dist)*treeWidth;
         }
     });
-    
-    console.log("curVizObj.data.max_tree_path_dist = " + curVizObj.data.max_tree_path_dist);
-
 }
 
 /* function for mouseout of link
@@ -1064,8 +1061,7 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
     // for each descendant
     curVizObj.data.direct_descendants[cur_sc_id].forEach(function(desc) {
         // get link distance for the link connecting this descendant to its ancestor
-        var cur_link = _.findWhere(curVizObj.userConfig.sc_tree_edges, 
-            {source_sc_id: cur_sc_id, target_sc_id: desc});
+        var cur_link = _.findWhere(curVizObj.userConfig.sc_tree_edges, {source_sc_id: cur_sc_id, target_sc_id: desc});
         var cur_dist = cur_link.dist;
 
         // update minimum target link distance for this node
@@ -1073,7 +1069,7 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
             curVizObj.data.minTargetLink[cur_sc_id] = cur_dist;
         }
 
-        // update maximum (and runner-up) path distance
+        // update maximum path distance
         var cumulative_dist = dist_thus_far+cur_dist;
         if (cumulative_dist > curVizObj.data.max_tree_path_dist) {
             curVizObj.data.max_tree_path_dist = cumulative_dist;
@@ -1082,6 +1078,19 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
         // get the path lengths for its descendants
         _getDistToNodes(curVizObj, desc, cumulative_dist);
     });
+}
+
+/* companion to _getDistToNodes() function -- resets objects before the start of _getDistToNode()
+*/
+function _resetDistanceObjects(curVizObj) {
+    // set up minimum target link distance object (of all targets for a given node, what is the minimum edge distance)
+    curVizObj.data.minTargetLink = {};
+
+    // set up path distance object
+    curVizObj.data.pathDists = {};
+
+    // set up maximum (and runner up) path distance variable
+    curVizObj.data.max_tree_path_dist = 0;
 }
 
 /* scaled elbow function (takes into account the minimum link distance for the single cell)
@@ -1661,6 +1670,7 @@ function _getTreeInfo(curVizObj, sc_tree_edges, sc_tree_nodes, root) {
 
     // get the cumulative distances to each node & the maximum cumulative path distance
     if (curVizObj.userConfig.distances_provided) {
+        _resetDistanceObjects(curVizObj);
         _getDistToNodes(curVizObj, root, 0); 
     }
 }
