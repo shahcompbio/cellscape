@@ -16,4 +16,7 @@ dfs_tree(edges, cur_root, dfs_arr)
 \description{
 Get depth first search of a tree
 }
+\examples{
+dfs_tree(data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")), "1", c())
+}
 
