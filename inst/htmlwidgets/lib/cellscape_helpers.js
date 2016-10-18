@@ -1518,7 +1518,7 @@ function _plotAlignedPhylogeny(curVizObj) {
             if (d3.select("#" + curVizObj.view_id).selectAll(".rerootButtonSelected")[0].length != 0) {
 
                 // re-root the single cell tree
-                _reRootSCTree(curVizObj.userConfig.sc_tree_edges, d.sc_id, curVizObj.data.direct_descendants, curVizObj.data.direct_ancestors);
+                _reRootSCTree(curVizObj.userConfig.sc_tree_edges, d.sc_id, curVizObj.data.direct_descendants, curVizObj.data.direct_ancestors, curVizObj.view_id);
                 curVizObj.userConfig.root = d.sc_id;
                 curVizObj.userConfig.link_ids = curVizObj.userConfig.sc_tree_edges.map(function(a) {return a.link_id;});
 
@@ -1680,17 +1680,18 @@ function _getTreeInfo(curVizObj, sc_tree_edges, sc_tree_nodes, root) {
 * @param newRoot -- the new root single cell id
 * @param dir_descs -- object of direct descendants for each node
 * @param dir_ancs -- object of direct ancestor for each node
+* @param view_id -- id of the view
 */
-function _reRootSCTree(tree, newRoot, dir_descs, dir_anc) {
+function _reRootSCTree(tree, newRoot, dir_descs, dir_anc, view_id) {
     // previous ancestor of this new root
     var prevAnc = dir_anc[newRoot];
 
     var edgeToFlipOriginal = _.findWhere(tree, {target_sc_id: newRoot});
     var edgeI = tree.indexOf(edgeToFlipOriginal); // index of this edge in the array of edges
     if (prevAnc && (edgeI != -1)) {
-
-        // flip the edge
         var edgeToFlip = $.extend({}, edgeToFlipOriginal);
+
+        // flip the edge in the data
         edgeToFlip.old_source_sc_id = edgeToFlip.source_sc_id;
         edgeToFlip.old_source = edgeToFlip.source;
         edgeToFlip.source_sc_id = edgeToFlip.target_sc_id;
@@ -1702,10 +1703,24 @@ function _reRootSCTree(tree, newRoot, dir_descs, dir_anc) {
         delete edgeToFlip.old_source_sc_id;
 
         // flip the next edge
-        _reRootSCTree(tree, edgeToFlip.target_sc_id, dir_descs, dir_anc);
+        _reRootSCTree(tree, edgeToFlip.target_sc_id, dir_descs, dir_anc, view_id);
 
         // save this flipped edge in the original array
         tree[edgeI] = edgeToFlip;
+
+        // flip the edge in the DOM
+        d3.select("#" + view_id).select(".link.tree.link_source_" + edgeToFlipOriginal.source_sc_id + "_target_" + edgeToFlipOriginal.target_sc_id)
+            .attr("class", function(d) { // select random attribute so we can change 
+                d.source_sc_id = edgeToFlip.source_sc_id;
+                d.source = edgeToFlip.source;
+                d.target_sc_id = edgeToFlip.target_sc_id;
+                d.target = edgeToFlip.target;
+                console.log("d.source_sc_id " + d.source_sc_id);
+                console.log("d.target_sc_id " + d.target_sc_id);
+                d.link_id = "link_source_" + d.target_sc_id + "_target_" + d.source_sc_id;
+                return ("tree link " + d.link_id);
+            })
+
     }
 }
 
