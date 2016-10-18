@@ -645,6 +645,9 @@ function _getXCoordinates(curVizObj) {
                 spaceBeforeStart + (curVizObj.data.pathDists[node.sc_id] / curVizObj.data.max_tree_path_dist)*treeWidth;
         }
     });
+    
+    console.log("curVizObj.data.max_tree_path_dist = " + curVizObj.data.max_tree_path_dist);
+
 }
 
 /* function for mouseout of link
@@ -1050,7 +1053,6 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
     // set up maximum (and runner up) path distance variable
     if (!curVizObj.data.max_tree_path_dist) {
         curVizObj.data.max_tree_path_dist = 0;
-        curVizObj.data.secondMax_tree_path_dist = 0;
     }
 
     // set the distance for the current node
@@ -1074,7 +1076,6 @@ function _getDistToNodes(curVizObj, cur_sc_id, dist_thus_far) {
         // update maximum (and runner-up) path distance
         var cumulative_dist = dist_thus_far+cur_dist;
         if (cumulative_dist > curVizObj.data.max_tree_path_dist) {
-            curVizObj.data.secondMax_tree_path_dist = curVizObj.data.max_tree_path_dist;
             curVizObj.data.max_tree_path_dist = cumulative_dist;
         }
 
@@ -1506,6 +1507,7 @@ function _plotAlignedPhylogeny(curVizObj) {
         .on('click', function(d) {
             // if we're in re-root mode
             if (d3.select("#" + curVizObj.view_id).selectAll(".rerootButtonSelected")[0].length != 0) {
+
                 // re-root the single cell tree
                 _reRootSCTree(curVizObj.userConfig.sc_tree_edges, d.sc_id, curVizObj.data.direct_descendants, curVizObj.data.direct_ancestors);
                 curVizObj.userConfig.root = d.sc_id;
@@ -1656,6 +1658,11 @@ function _getTreeInfo(curVizObj, sc_tree_edges, sc_tree_nodes, root) {
             curVizObj.data.tree_height = (ancestor_arr.length + 1);
         }
     })
+
+    // get the cumulative distances to each node & the maximum cumulative path distance
+    if (curVizObj.userConfig.distances_provided) {
+        _getDistToNodes(curVizObj, root, 0); 
+    }
 }
 
 /* function to re-root the single cell tree
@@ -1696,6 +1703,11 @@ function _reRootSCTree(tree, newRoot, dir_descs, dir_anc) {
 */
 function _getTreeNodeYTranslation(view_id, sc_id) {
     return d3.transform(d3.select("#" + view_id).select(".tree.node.node_" + sc_id).attr("transform")).translate[1];
+}
+/* function to get the tree node's x-coordinate translation
+*/
+function _getTreeNodeXTranslation(view_id, sc_id) {
+    return d3.transform(d3.select("#" + view_id).select(".tree.node.node_" + sc_id).attr("transform")).translate[0];
 }
 
 /* function to get the tree node's absolute y-coordinate (including translation)
