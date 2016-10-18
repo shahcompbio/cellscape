@@ -907,6 +907,10 @@ HTMLWidgets.widget({
                     if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 1) {
                         _pushBrushSelectionButton(brush, curVizObj);
                     }
+                    // if reroot button is selected, turn it off
+                    if (d3.select("#" + view_id).selectAll(".rerootButtonSelected")[0].length !== 0) {
+                        _pushRerootButton(curVizObj);
+                    }
                     // scale or unscale tree
                     _scaleTree(curVizObj);
                 })
@@ -934,6 +938,10 @@ HTMLWidgets.widget({
                     // if brush selection button is selected, turn it off
                     if (d3.select("#" + view_id).selectAll(".brushButtonSelected")[0].length == 1) {
                         _pushBrushSelectionButton(brush, curVizObj);
+                    }
+                    // if reroot button is selected, turn it off
+                    if (d3.select("#" + view_id).selectAll(".rerootButtonSelected")[0].length !== 0) {
+                        _pushRerootButton(curVizObj);
                     }
                     // scale or unscale tree
                     _scaleTree(curVizObj);
