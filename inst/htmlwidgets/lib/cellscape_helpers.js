@@ -859,8 +859,9 @@ function _downstreamEffects(curVizObj, link_id) {
 * param link_ids -- ids for all links in tree
 * param node_name -- the name of the current node - start with root
 * param nodeOrder -- array of node order - starts empty, appended to as function executes
+* @param scs_not_in_hm -- single cells not in the heatmap (don't add them to node order)
 */
-function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
+function _getNodeOrder(descendants, link_ids, node_name, nodeOrder, scs_not_in_hm) {
 
     // get the targets of this node
     var targetRX = new RegExp("link_source_" + node_name + "_target_(.+)");
@@ -873,8 +874,8 @@ function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
         }
     });
 
-    // if there are no targets, append the current node to the node order array
-    if (targets.length === 0) {
+    // if there are no targets, and this node is in the heatmap, append the current node to the node order array
+    if ((targets.length === 0) && (scs_not_in_hm.indexOf(node_name) == -1)) {
         nodeOrder.push(node_name);
     }
     // there are targets
@@ -885,33 +886,15 @@ function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
         // for each of the targets
         targets.map(function(target, target_i) {
             // if we're at the middle target, append the current node to the node order array
-            if (target_i == Math.floor(targets.length/2)) {
+            if ((target_i == Math.floor(targets.length/2)) && (scs_not_in_hm.indexOf(node_name) == -1)) {
                 nodeOrder.push(node_name);
             }
             // get targets of this target
-            _getNodeOrder(descendants, link_ids, target.sc_id, nodeOrder);
+            _getNodeOrder(descendants, link_ids, target.sc_id, nodeOrder, scs_not_in_hm);
         });
     }
 
     return nodeOrder;
-}
-
-/* function to remove single cell ids that are in the tree but not the heatmap 
-*/
-function _removeSCsNotInHeatmap(scs_missing_from_hm, hm_sc_ids){
-
-    // find indeces to splice
-    var indeces_to_splice = [];
-    for (var i = 0; i < scs_missing_from_hm.length; i++) {
-        var cur_sc_missing = scs_missing_from_hm[i];
-        indeces_to_splice.push(hm_sc_ids.indexOf(cur_sc_missing));
-    }
-
-    // reverse indeces to splice, and start spicing
-    indeces_to_splice.sort().reverse();
-    indeces_to_splice.forEach(function(i) {
-        hm_sc_ids.splice(i, 1);
-    });
 }
 
 /* function to get font size for labels, given their content the size of the nodes that contain them
@@ -1535,10 +1518,8 @@ function _plotAlignedPhylogeny(curVizObj) {
                 curVizObj.data.hm_sc_ids = _getNodeOrder(curVizObj.data.treeDescendantsArr, 
                                                          curVizObj.userConfig.link_ids, 
                                                          curVizObj.userConfig.root, 
-                                                         []);
-
-                // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
-                _removeSCsNotInHeatmap(curVizObj.data.missing_scs_to_plot, curVizObj.data.hm_sc_ids);
+                                                         [],
+                                                         curVizObj.data.missing_scs_to_plot);
 
                 // get new coordinates
                 _getYCoordinates(curVizObj);

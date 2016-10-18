@@ -194,15 +194,12 @@ HTMLWidgets.widget({
         curVizObj.data.hm_sc_ids = _getNodeOrder(curVizObj.data.treeDescendantsArr, 
                                                  curVizObj.userConfig.link_ids, 
                                                  curVizObj.userConfig.root, 
-                                                 []);
-
-        // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
-        _removeSCsNotInHeatmap(curVizObj.data.missing_scs_to_plot, curVizObj.data.hm_sc_ids);
-
-        // keep track of original list of scs, for tree pruning purposes
-        curVizObj.view.original_sc_list = $.extend([], curVizObj.data.hm_sc_ids);
-
+                                                 [], 
+                                                 curVizObj.data.missing_scs_to_plot);
         // GET CNV CONTENT
+        console.log("curVizObj.data.hm_sc_ids");
+        console.log(curVizObj.data.hm_sc_ids);
+        console.log("curVizObj.data.hm_sc_ids length " + curVizObj.data.hm_sc_ids.length);
 
         // cnv plot number of rows
         curVizObj.view.hm = {};
@@ -920,7 +917,7 @@ HTMLWidgets.widget({
                 .text("Scale Tree/Graph");
             topBarSVG.append("image")
                 .attr("xlink:href", rulerIcon_base64)
-                .attr("x", config.width - 2*bigButtonWidth - 4*smallButtonWidth + (smallButtonWidth - rulerIconWidth)/2)
+                .attr("x", config.width - 2*bigButtonWidth - 6*smallButtonWidth + (smallButtonWidth - rulerIconWidth)/2)
                 .attr("y", 5)
                 .attr("width", rulerIconWidth)
                 .attr("height", rulerIconWidth)
