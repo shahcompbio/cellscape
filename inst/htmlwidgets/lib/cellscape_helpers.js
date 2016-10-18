@@ -1715,8 +1715,6 @@ function _reRootSCTree(tree, newRoot, dir_descs, dir_anc, view_id) {
                 d.source = edgeToFlip.source;
                 d.target_sc_id = edgeToFlip.target_sc_id;
                 d.target = edgeToFlip.target;
-                console.log("d.source_sc_id " + d.source_sc_id);
-                console.log("d.target_sc_id " + d.target_sc_id);
                 d.link_id = "link_source_" + d.target_sc_id + "_target_" + d.source_sc_id;
                 return ("tree link " + d.link_id);
             })
