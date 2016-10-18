@@ -180,7 +180,7 @@ HTMLWidgets.widget({
         }
 
         // get all the tree info (descendants, ancestors, etc)
-        _getTreeInfo(curVizObj, curVizObj.userConfig.sc_tree_edges, curVizObj.userConfig.root);
+        _getTreeInfo(curVizObj, curVizObj.userConfig.sc_tree_edges, curVizObj.userConfig.sc_tree_nodes, curVizObj.userConfig.root);
 
         // get nodes missing heatmap data that we should still plot (and note those that we shouldn't)
         _handleMissingScs(curVizObj);
@@ -197,7 +197,7 @@ HTMLWidgets.widget({
                                                  []);
 
         // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
-        _removeSCsNotInHeatmap(curVizObj.userConfig.scs_missing_from_hm, curVizObj.data.hm_sc_ids);
+        _removeSCsNotInHeatmap(curVizObj.data.missing_scs_to_plot, curVizObj.data.hm_sc_ids);
 
         // keep track of original list of scs, for tree pruning purposes
         curVizObj.view.original_sc_list = $.extend([], curVizObj.data.hm_sc_ids);

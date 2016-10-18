@@ -320,7 +320,7 @@ function _getNodeFill(curVizObj, sc_id) {
     }
     // no genotype annotations -- default colour, unless heatmap data is missing for this cell
     else {
-        return (curVizObj.userConfig.scs_missing_from_hm.indexOf(sc_id) != -1) ? 
+        return (curVizObj.data.missing_scs_to_plot.indexOf(sc_id) != -1) ? 
             missingColour : curVizObj.generalConfig.defaultNodeColour;
     }
 }
@@ -713,8 +713,10 @@ function _linkMouseover(curVizObj, link_id) {
 function _linkClick(curVizObj, link_id) {
     var userConfig = curVizObj.userConfig,
         index_link,
+        index_edge,
         index_hm,
-        index_not_hm;
+        index_not_hm,
+        index_sc_tree_nodes;
 
     // if scissors button is selected
     if (d3.select("#" + curVizObj.view_id).selectAll(".scissorsButtonSelected")[0].length == 1) {
@@ -731,6 +733,13 @@ function _linkClick(curVizObj, link_id) {
             // remove link from list of links
             index_link = userConfig.link_ids.indexOf(link_id);
             userConfig.link_ids.splice(index_link, 1);
+
+            // remove link from list of edges
+            var foundLink = _.findWhere(curVizObj.userConfig.sc_tree_edges, {link_id: link_id});
+            index_edge = curVizObj.userConfig.sc_tree_edges.indexOf(foundLink);
+            if (index_edge != -1) {
+                curVizObj.userConfig.sc_tree_edges.splice(index_edge, 1);
+            }
         });
         // for each single cell
         curVizObj.view.selectedSCs.forEach(function(sc_id) {
@@ -754,7 +763,12 @@ function _linkClick(curVizObj, link_id) {
             d3.select("#" + curVizObj.view_id).select(".tpAnnot.sc_" + sc_id).remove(); // remove timepoint annotation
             d3.select("#" + curVizObj.view_id).select(".indic.sc_" + sc_id).remove(); // remove indicator
 
-
+            // remove single cell from userConfig nodes list
+            var foundNode = _.findWhere(curVizObj.userConfig.sc_tree_nodes, {sc_id: sc_id});
+            index_sc_tree_nodes = curVizObj.userConfig.sc_tree_nodes.indexOf(foundNode);
+            if (index_sc_tree_nodes != -1) {
+                curVizObj.userConfig.sc_tree_nodes.splice(index_sc_tree_nodes, 1);
+            }
             // remove single cell from list of single cells in heatmap
             index_hm = curVizObj.data.hm_sc_ids.indexOf(sc_id);
             if (index_hm != -1) {
@@ -885,11 +899,19 @@ function _getNodeOrder(descendants, link_ids, node_name, nodeOrder) {
 /* function to remove single cell ids that are in the tree but not the heatmap 
 */
 function _removeSCsNotInHeatmap(scs_missing_from_hm, hm_sc_ids){
+
+    // find indeces to splice
+    var indeces_to_splice = [];
     for (var i = 0; i < scs_missing_from_hm.length; i++) {
-            var cur_sc_missing = scs_missing_from_hm[i];
-            var index = hm_sc_ids.indexOf(cur_sc_missing);
-            hm_sc_ids.splice(index, 1);
-        }
+        var cur_sc_missing = scs_missing_from_hm[i];
+        indeces_to_splice.push(hm_sc_ids.indexOf(cur_sc_missing));
+    }
+
+    // reverse indeces to splice, and start spicing
+    indeces_to_splice.sort().reverse();
+    indeces_to_splice.forEach(function(i) {
+        hm_sc_ids.splice(i, 1);
+    });
 }
 
 /* function to get font size for labels, given their content the size of the nodes that contain them
@@ -1507,7 +1529,7 @@ function _plotAlignedPhylogeny(curVizObj) {
                 curVizObj.userConfig.link_ids = curVizObj.userConfig.sc_tree_edges.map(function(a) {return a.link_id;});
 
                 // get all the tree info (descendants, ancestors, etc)
-                _getTreeInfo(curVizObj, curVizObj.userConfig.sc_tree_edges, curVizObj.userConfig.root);
+                _getTreeInfo(curVizObj, curVizObj.userConfig.sc_tree_edges, curVizObj.userConfig.sc_tree_nodes, curVizObj.userConfig.root);
 
                 // order single cells by tree
                 curVizObj.data.hm_sc_ids = _getNodeOrder(curVizObj.data.treeDescendantsArr, 
@@ -1516,14 +1538,11 @@ function _plotAlignedPhylogeny(curVizObj) {
                                                          []);
 
                 // for plotting the heatmap, remove single cell ids that are in the tree but not the heatmap
-                _removeSCsNotInHeatmap(curVizObj.userConfig.scs_missing_from_hm, curVizObj.data.hm_sc_ids);
+                _removeSCsNotInHeatmap(curVizObj.data.missing_scs_to_plot, curVizObj.data.hm_sc_ids);
 
                 // get new coordinates
                 _getYCoordinates(curVizObj);
                 _getXCoordinates(curVizObj);
-
-                // for each latent cell, get its new y-coordinate and plot it
-                _getYCoordinatesLatentNodes(curVizObj, $.extend([], curVizObj.data.hm_sc_ids), curVizObj.data.yCoordinates);
 
                 // translate nodes in tree
                 curVizObj.data.hm_sc_ids.concat(curVizObj.data.missing_scs_to_plot).forEach(function(sc) {
@@ -1538,6 +1557,7 @@ function _plotAlignedPhylogeny(curVizObj) {
                             d.y = curVizObj.data.yCoordinates[d.sc_id] + half_rowHeight;
                             return d.y;
                         })
+                        .attr("transform", "translate(0,0)");
                 });
 
                 // translate the single cell profiles in the heatmap
@@ -1549,7 +1569,8 @@ function _plotAlignedPhylogeny(curVizObj) {
                     .duration(1000)       
                     .attr("d", function(d) {
                         return _getElbow(curVizObj, d, half_rowHeight);
-                    });
+                    })
+                    .attr("transform", "translate(0,0)");
             }
 
             // if we're in flip-branch mode
@@ -1591,8 +1612,7 @@ function _plotAlignedPhylogeny(curVizObj) {
                         });
                 });
 
-                // for each latent cell, get its new y-coordinate and plot it
-                _getYCoordinatesLatentNodes(curVizObj, $.extend([], curVizObj.data.hm_sc_ids), curVizObj.data.yCoordinates);
+                // plot each latent cell
                 curVizObj.data.missing_scs_to_plot.forEach(function(sc_id) {
                     var old_y = _getTreeNodeYCoord(curVizObj.view_id, sc_id) - half_rowHeight;
                     var old_translation = _getTreeNodeYTranslation(curVizObj.view_id, sc_id);
@@ -1617,7 +1637,7 @@ function _plotAlignedPhylogeny(curVizObj) {
     }
 }
 
-function _getTreeInfo(curVizObj, sc_tree_edges, root) {
+function _getTreeInfo(curVizObj, sc_tree_edges, sc_tree_nodes, root) {
     // get tree structures for each node
     curVizObj.data.treeStructures = _getTreeStructures(sc_tree_edges);
     
@@ -1626,7 +1646,7 @@ function _getTreeInfo(curVizObj, sc_tree_edges, root) {
 
     // get descendants for each node
     curVizObj.data.treeDescendantsArr = {};
-    curVizObj.userConfig.sc_tree_nodes.forEach(function(node, idx) {
+    sc_tree_nodes.forEach(function(node, idx) {
         var curRoot = _.findWhere(curVizObj.data.treeStructures, {sc_id: node.sc_id});
         var curDescendants = _getDescendantIds(curRoot, []);
         curVizObj.data.treeDescendantsArr[node.sc_id] = curDescendants;
@@ -1636,7 +1656,7 @@ function _getTreeInfo(curVizObj, sc_tree_edges, root) {
     curVizObj.data.direct_descendants = _getDirectDescendants(curVizObj.data.treeStructure, {});
 
     // get ancestors for each node
-    curVizObj.data.treeAncestorsArr = _getAncestorIds(curVizObj.data.treeDescendantsArr, curVizObj.userConfig.sc_tree_nodes);
+    curVizObj.data.treeAncestorsArr = _getAncestorIds(curVizObj.data.treeDescendantsArr, sc_tree_nodes);
 
     // get direct ancestors for each ndoe
     curVizObj.data.direct_ancestors = _getDirectAncestors(curVizObj.data.treeStructure, {});
@@ -1895,53 +1915,49 @@ function _translateSCHeatmapProfile(view_id, sc_id, diff_y) {
 * @param new_ycoords -- new y coordinates for each single cell
 */
 function _moveSCHeatmapProfiles(view_id, new_ycoords) {
-    // translate copy number profile & indicator
+
+    // untranslate gridCell groups
+    d3.select("#" + view_id).selectAll(".gridCellG")
+        .attr("transform", "translate(0,0)");
+
+    // move copy number profile & indicator
     d3.select("#" + view_id).selectAll(".gridCell")
         .transition()
         .duration(1000)
-        .attr("transform", function() {
-            return "translate(0,0)";
-        })
         .attr("y", function(d) { 
             d.y = new_ycoords[d.sc_id];
             return d.y; 
         });
     
-    // translate genotype annotation
+    // move genotype annotation
     if (curVizObj.view.gtypesSpecified) {
         d3.select("#" + view_id).selectAll(".gtypeAnnot")
             .transition()
             .duration(1000)
-            .attr("transform", function() {
-                return "translate(0,0)";
-            })
+            .attr("transform", "translate(0,0)")
             .attr("y", function(d) { 
                 d.y = new_ycoords[d.single_cell_id];
                 return d.y; 
             });
     }
     
-    // translate timepoint annotation
+    // move timepoint annotation
     if (curVizObj.view.tpsSpecified) {
         d3.select("#" + view_id).selectAll(".tpAnnot")
             .transition()
             .duration(1000)
-            .attr("transform", function() {
-                return "translate(0,0)";
-            })
+            .attr("transform", "translate(0,0)")
             .attr("y", function(d) { 
                 d.y = new_ycoords[d.single_cell_id];
                 return d.y; 
             });
     }
 
-    // translate indicator
+    // move indicator
     d3.select("#" + view_id).selectAll(".indic")
         .transition()
         .duration(1000)
-        .attr("transform", function() {
-                return "translate(0,0)";
-        })
+        .attr("transform", "translate(0,0)")
         .attr("y", function(d) { 
             return new_ycoords[d];
         });
