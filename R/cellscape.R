@@ -24,59 +24,59 @@
 #'   
 #' @import htmlwidgets
 #'
-#' @param cnv_data {Data frame} (Required if mut_data not provided) Single cell copy number segments data. 
+#' @param cnv_data (data frame) (Required if mut_data not provided) Single cell copy number segments data. 
 #'   Note that every single cell id must be present in the tree_edges data frame.
-#'   Format: columns are (1) {String} "single_cell_id" - single cell id
-#'                       (2) {String} "chr" - chromosome number
-#'                       (3) {Number} "start" - start position
-#'                       (4) {Number} "end" - end position
-#'                       (5) {Number} "integer_copy_number" - copy number state.
+#'   Format: columns are (1) character() "single_cell_id" - single cell id
+#'                       (2) character() "chr" - chromosome number
+#'                       (3) numeric() "start" - start position
+#'                       (4) numeric() "end" - end position
+#'                       (5) numeric() "integer_copy_number" - copy number state.
 #'
-#' @param mut_data {Data frame} (Required if cnv_data not provided) Single cell targeted mutation data frame.
+#' @param mut_data (data frame) (Required if cnv_data not provided) Single cell targeted mutation data frame.
 #'   Note that every single cell id must be present in the tree_edges data frame.
-#'   Format: columns are (1) {String} "single_cell_id" - single cell id
-#'                       (2) {String} "chr" - chromosome number
-#'                       (3) {Number} "coord" - genomic coordinate
-#'                       (5) {Number} "VAF" - variant allele frequency [0, 1].
+#'   Format: columns are (1) character() "single_cell_id" - single cell id
+#'                       (2) character() "chr" - chromosome number
+#'                       (3) numeric() "coord" - genomic coordinate
+#'                       (4) numeric() "VAF" - variant allele frequency [0, 1].
 #'
-#' @param mut_order {Array} (Optional) Mutation order for targeted mutation heatmap 
+#' @param mut_order (vector) (Optional) Mutation order for targeted mutation heatmap 
 #'                                     (each mutation should consist of a string in the form "chrom:coord"). 
 #'                                     Default will use a clustering function to determine mutation order.
-#' @param tree_edges {Data frame} Edges for the single cell phylogenetic tree.
-#'   Format: columns are (1) {String} "source" - edge source (single cell id)
-#'                       (2) {String} "target" - edge target (single cell id)
-#'                       (2) {Number} (Optional) "dist" - edge distance
+#' @param tree_edges (data frame) Edges for the single cell phylogenetic tree.
+#'   Format: columns are (1) character() "source" - edge source (single cell id)
+#'                       (2) character() "target" - edge target (single cell id)
+#'                       (3) numeric() (Optional) "dist" - edge distance
 #'
-#' @param gtype_tree_edges {Data frame} (Required for TimeScape) Genotype tree edges of a rooted tree.
-#'   Format: columns are (1) {String} "source" - source node id
-#'                       (2) {String} "target" - target node id.
+#' @param gtype_tree_edges (data frame) (Required for TimeScape) Genotype tree edges of a rooted tree.
+#'   Format: columns are (1) character() "source" - source node id
+#'                       (2) character() "target" - target node id.
 #'
-#' @param sc_annot {Data frame} (Required for TimeScape) Annotations (genotype and sample id) for each single cell.
-#'   Format: columns are (1) {String} "single_cell_id" - single cell id
-#'                       (2) {String} "genotype" - genotype assignment
-#'                       (3) {String} (Optional) "timepoint" - id of the sampled time point. 
+#' @param sc_annot (data frame) (Required for TimeScape) Annotations (genotype and sample id) for each single cell.
+#'   Format: columns are (1) character() "single_cell_id" - single cell id
+#'                       (2) character() "genotype" - genotype assignment
+#'                       (3) character() (Optional) "timepoint" - id of the sampled time point. 
 #'                                                  Note: in the case of time points, they will be ordered alphabetically
 #'
-#' @param clone_colours {Data frame} (Optional) Clone ids and their corresponding colours 
-#'   Format: columns are (1) {String} "clone_id" - the clone ids
-#'                       (2) {String} "colour" - the corresponding Hex colour for each clone id.
-#' @param timepoint_title {String} (Optional) Legend title for timepoint groups. Default is "Timepoint".
-#' @param clone_title {String} (Optional) Legend title for clones. Default is "Clone".
-#' @param xaxis_title {String} (Optional) For TimeScape - x-axis title. Default is "Time Point".
-#' @param yaxis_title {String} (Optional) For TimeScape - y-axis title. Default is "Clonal Prevalence".
-#' @param phylogeny_title {String} (Optional) For TimeScape - legend phylogeny title. Default is "Clonal Phylogeny".
-#' @param value_type {String} (Optional) The type of value plotted in heatmap - will affect legend and heatmap tooltips. 
+#' @param clone_colours (data frame) (Optional) Clone ids and their corresponding colours 
+#'   Format: columns are (1) character() "clone_id" - the clone ids
+#'                       (2) character() "colour" - the corresponding Hex colour for each clone id.
+#' @param timepoint_title character() (Optional) Legend title for timepoint groups. Default is "Timepoint".
+#' @param clone_title character() (Optional) Legend title for clones. Default is "Clone".
+#' @param xaxis_title character() (Optional) For TimeScape - x-axis title. Default is "Time Point".
+#' @param yaxis_title character() (Optional) For TimeScape - y-axis title. Default is "Clonal Prevalence".
+#' @param phylogeny_title character() (Optional) For TimeScape - legend phylogeny title. Default is "Clonal Phylogeny".
+#' @param value_type character() (Optional) The type of value plotted in heatmap - will affect legend and heatmap tooltips. 
 #'                                       Default is "VAF" for mutation data, and "CNV" for copy number data.
-#' @param node_type {String} (Optional) The type of node plotted in single cell phylogeny - will affect phylogeny tooltips. 
+#' @param node_type character() (Optional) The type of node plotted in single cell phylogeny - will affect phylogeny tooltips. 
 #'                                       Default is "Cell".
-#' @param display_node_ids {Boolean} (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
-#' @param prop_of_clone_threshold {Number} (Optional) Used for the ordering of targeted mutations. The minimum proportion of a clone 
+#' @param display_node_ids logical() (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.
+#' @param prop_of_clone_threshold numeric() (Optional) Used for the ordering of targeted mutations. The minimum proportion of a clone 
 #'                                        to have a mutation in order to consider the mutation as present within that clone. Default is 0.2.
-#' @param vaf_threshold {Number} (Optional) Used for the ordering of targeted mutations. The minimum variant allele frequency for a mutation to
+#' @param vaf_threshold numeric() (Optional) Used for the ordering of targeted mutations. The minimum variant allele frequency for a mutation to
 #'                                        be considered as present within a single cell. Default is 0.05.
-#' @param show_warnings {Boolean} (Optional) Whether or not to show any warnings. Default is TRUE.
-#' @param width {Number} (Optional) Width of the plot.
-#' @param height {Number} (Optional) Height of the plot.
+#' @param show_warnings logical() (Optional) Whether or not to show any warnings. Default is TRUE.
+#' @param width numeric() (Optional) Width of the plot.
+#' @param height numeric() (Optional) Height of the plot.
 #'
 #' @export
 #' @examples
@@ -137,12 +137,12 @@ cellscape <- function(cnv_data = NULL,
   # CHECK REQUIRED INPUTS ARE PRESENT 
 
   if (is.null(cnv_data) && is.null(mut_data)) {
-    stop(paste("User must provide either copy number data (parameter cnv_data)",
-      " or mutation data (parameter mut_data).",sep=""))
+    stop("User must provide either copy number data (parameter cnv_data)",
+      " or mutation data (parameter mut_data).")
   }
   if (!is.null(cnv_data) && !is.null(mut_data)) {
-    stop(paste("User can only provide copy number (parameter cnv_data) OR targeted mutations",
-      " data (parameter mut_data), not both.", sep=""))
+    stop("User can only provide copy number (parameter cnv_data) OR targeted mutations",
+      " data (parameter mut_data), not both.")
   }
   if (missing(tree_edges)) {
     stop("User must provide tree edge data (parameter tree_edges).")
@@ -158,8 +158,8 @@ cellscape <- function(cnv_data = NULL,
     # ensure column names are correct
     if (!("clone_id" %in% colnames(clone_colours)) ||
         !("colour" %in% colnames(clone_colours))) {
-      stop(paste("Node colour data frame must have the following column names: ", 
-          "\"clone_id\", \"colour\"", sep=""))
+      stop("Node colour data frame must have the following column names: ", 
+          "\"clone_id\", \"colour\"")
     }
   }
 
@@ -176,9 +176,9 @@ cellscape <- function(cnv_data = NULL,
       sc_annot_gtypes <- unique(sc_annot$genotype)
       gtypes_missing_from_gtype_tree <- setdiff(sc_annot_gtypes, gtype_tree_gtypes)
       if (length(gtypes_missing_from_gtype_tree) > 0) {
-        stop(paste("The following clone ID(s) are present in the single cell annotations data but ",
+        stop("The following clone ID(s) are present in the single cell annotations data but ",
           "are missing from the genotype tree edges data: ",
-          paste(gtypes_missing_from_gtype_tree, collapse=", "), ".", sep=""))
+          paste(gtypes_missing_from_gtype_tree, collapse=", "), ".")
       }
     }
 
@@ -240,8 +240,8 @@ cellscape <- function(cnv_data = NULL,
         !("start" %in% colnames(cnv_data)) ||
         !("end" %in% colnames(cnv_data)) ||
         !("integer_copy_number" %in% colnames(cnv_data))) {
-      stop(paste("CNV data frame (parameter cnv_data) must have the following column names: ", 
-          "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"", sep=""))
+      stop("CNV data frame (parameter cnv_data) must have the following column names: ", 
+          "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"")
     }
 
     # ensure data is of the correct type
@@ -262,8 +262,8 @@ cellscape <- function(cnv_data = NULL,
     # check that the number of single cells does not exceed the height of the plot
     n_scs <- length(unique(cnv_data$single_cell_id))
     if ((height - 45) < n_scs) { # - 45 for top bar height (30) and space between top bar and main view (15)
-      stop(paste("The number of single cells (",n_scs,") cannot exceed the plot height minus 45px (",
-        (height - 45),"). Either reduce the number of cells, or increase the plot height.",sep=""))
+      stop("The number of single cells (",n_scs,") cannot exceed the plot height minus 45px (",
+        (height - 45),"). Either reduce the number of cells, or increase the plot height.")
     }
 
     # get chromosomes, chromosome bounds (min & max bp), genome length
@@ -297,8 +297,8 @@ cellscape <- function(cnv_data = NULL,
         !("chr" %in% colnames(mut_data)) ||
         !("coord" %in% colnames(mut_data)) ||
         !("VAF" %in% colnames(mut_data))) {
-      stop(paste("Targeted mutations data frame must have the following column names: ", 
-          "\"single_cell_id\", \"chr\", \"coord\", \"VAF\"", sep=""))
+      stop("Targeted mutations data frame must have the following column names: ", 
+          "\"single_cell_id\", \"chr\", \"coord\", \"VAF\"")
     }
 
     # ensure data is of the correct type
@@ -338,10 +338,10 @@ cellscape <- function(cnv_data = NULL,
       sites <- unique(mut_data$site)
       sites_missing_from_mut_order <- setdiff(sites, mut_order)
       if (length(sites_missing_from_mut_order) > 0) {
-        stop(paste("The following mutation(s) are present in the targeted mutation data but ",
+        stop("The following mutation(s) are present in the targeted mutation data but ",
             "are missing from the mutation order data: ",
             paste(sites_missing_from_mut_order, collapse=", "), 
-            ". All mutation sites must be present in the mutation order data.", sep=""))
+            ". All mutation sites must be present in the mutation order data.")
       }
       sites_extra_in_mut_order <- setdiff(mut_order, sites)
       if (length(sites_extra_in_mut_order) > 0) {
@@ -470,8 +470,8 @@ cellscape <- function(cnv_data = NULL,
   # ensure column names are correct
   if (!("source" %in% colnames(tree_edges)) ||
       !("target" %in% colnames(tree_edges))) {
-    stop(paste("Tree edges data frame must have the following column names: ", 
-        "\"source\", \"target\"", sep=""))
+    stop("Tree edges data frame must have the following column names: ", 
+        "\"source\", \"target\"")
   }
 
   # ensure data is of the correct type
@@ -536,8 +536,8 @@ cellscape <- function(cnv_data = NULL,
 
   # if multiple roots are detected, throw error
   if (length(sources) > 1) {
-    stop(paste("Multiple roots detected in tree (",paste(sources,collapse=", "),
-      ") - tree must have only one root.",sep=""))
+    stop("Multiple roots detected in tree (",paste(sources,collapse=", "),
+      ") - tree must have only one root.")
   }
   # otherwise, set the root
   else {
@@ -571,8 +571,8 @@ cellscape <- function(cnv_data = NULL,
     # ensure column names are correct
     if (!("single_cell_id" %in% colnames(sc_annot)) ||
         !("genotype" %in% colnames(sc_annot))) {
-      stop(paste("Single cell group assignment data frame must have the following column names: ", 
-          "\"single_cell_id\", \"genotype\"", sep=""))
+      stop("Single cell group assignment data frame must have the following column names: ", 
+          "\"single_cell_id\", \"genotype\"")
     }
 
     # ensure data is of the correct type
@@ -587,7 +587,7 @@ cellscape <- function(cnv_data = NULL,
     scs_in_annots <- unique(sc_annot$single_cell_id)
     scs_in_tree_and_annots <- intersect(scs_in_tree, scs_in_annots)
     if (length(scs_in_tree_and_annots) == 0) {
-      stop(paste("The annotations parameter (sc_annots) has been used, but none of the single cells in the phylogeny have annotations.", sep=""))
+      stop("The annotations parameter (sc_annots) has been used, but none of the single cells in the phylogeny have annotations.")
     }
 
     # remove all single cells that are not in the tree
@@ -625,10 +625,10 @@ cellscape <- function(cnv_data = NULL,
     gtypes_in_annots <- unique(sc_annot$genotype)
     gtypes_missing_from_tree <- setdiff(gtypes_in_annots, gtypes_in_gtype_tree)
     if (length(gtypes_missing_from_tree) > 0) {
-      stop(paste("The following genotype(s) are present in the single cell annotations data but ",
+      stop("The following genotype(s) are present in the single cell annotations data but ",
           "are missing from the genotype tree: ",
           paste(gtypes_missing_from_tree, collapse=", "), 
-          ". All genotypes must be present in the genotype tree data.", sep=""))
+          ". All genotypes must be present in the genotype tree data.")
     }
 
 
@@ -722,6 +722,7 @@ cellscape <- function(cnv_data = NULL,
 #' @param cur_root -- current root of the tree
 #' @param dfs_arr -- array of depth first search results to be filled
 #' @export
+#' @rdname helpers
 #' @examples
 #' dfs_tree(data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")), "1", c())
 dfs_tree <- function(edges, cur_root, dfs_arr) {
@@ -748,6 +749,7 @@ dfs_tree <- function(edges, cur_root, dfs_arr) {
 #' cellscapeOutput(1, '100%', '300px')
 #' cellscapeOutput(1, '80%', '300px')
 #' @export
+#' @rdname helpers
 cellscapeOutput <- function(outputId, width = '100%', height = '400px'){
   shinyWidgetOutput(outputId, 'cellscape', width, height, package = 'cellscape')
 }
@@ -758,6 +760,7 @@ cellscapeOutput <- function(outputId, width = '100%', height = '400px'){
 #' @param env -- environment for Shiny
 #' @param quoted -- default is FALSE 
 #' @export
+#' @rdname helpers
 renderCnvTree <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   shinyRenderWidget(expr, cellscapeOutput, env, quoted = TRUE)
@@ -768,6 +771,7 @@ renderCnvTree <- function(expr, env = parent.frame(), quoted = FALSE) {
 #' Function to get data frame of pixels
 #' @param hm_sc_ids_ordered -- array of single cell ids in order
 #' @param ncols -- number of columns in heatmap/grid
+#' @rdname helpers
 getEmptyGrid <- function(hm_sc_ids_ordered, ncols) {
   sc_ids <- rep(hm_sc_ids_ordered, each=ncols)
   cols <- rep(seq(0:(ncols-1)), length(hm_sc_ids_ordered))
@@ -778,6 +782,7 @@ getEmptyGrid <- function(hm_sc_ids_ordered, ncols) {
 #' function to get min and max values for each chromosome
 #' @param chroms -- vector of chromosome names
 #' @param cnv_data -- copy number data
+#' @rdname helpers
 getChromBounds <- function(chroms, cnv_data) {
 
   # get min & max for each chromosome
@@ -815,6 +820,7 @@ getChromBounds <- function(chroms, cnv_data) {
 #' function to get chromosome box pixel info
 #' @param chrom_bounds -- data frame of chromosome boundaries
 #' @param n_bp_per_pixel -- integer of number of base pairs per pixel
+#' @rdname helpers
 getChromBoxInfo <- function(chrom_bounds, n_bp_per_pixel) {
   chrom_boxes <- data.frame(chr=chrom_bounds$chrom, 
                             # x coordinate (start of chromosome)
@@ -828,6 +834,7 @@ getChromBoxInfo <- function(chrom_bounds, n_bp_per_pixel) {
 
 #' function to get the genome length
 #' @param chrom_bounds -- data frame of chromosome boundaries
+#' @rdname helpers
 getGenomeLength <- function(chrom_bounds) {
 
   tmp_chrom_bounds <- chrom_bounds
@@ -841,6 +848,7 @@ getGenomeLength <- function(chrom_bounds) {
 #' @param ncols --  integer of number of columns (pixels) to fill
 #' @param chrom_bounds --  data frame of chromosome boundaries
 #' @param genome_length --  integer of length of the genome
+#' @rdname helpers
 getNBPPerPixel <- function(ncols, chrom_bounds, genome_length) {
   n_data_pixels <- ncols - 2*(nrow(chrom_bounds) + 1) # number of pixels filled with data 
                                                       # (subtract number chromosome separators:
@@ -855,6 +863,7 @@ getNBPPerPixel <- function(ncols, chrom_bounds, genome_length) {
 #' @param cnv_data -- data frame of copy number variant segments data
 #' @param chrom_bounds -- data frame of chromosome boundaries
 #' @param n_bp_per_pixel -- integer of number of base pairs per pixel
+#' @rdname helpers
 getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
 
   # get the pixel start and end for each segment (account for chromosome separators in pixel info)
@@ -936,6 +945,7 @@ getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
 
 #' function to get mutation order for targeted data
 #' @param mut_data -- data frame of mutations data
+#' @rdname helpers
 getMutOrder <- function(mut_data) {
   separator <- ":"
 
@@ -988,6 +998,7 @@ getMutOrder <- function(mut_data) {
 #' @param mut_data -- data frame of mutations data
 #' @param mut_order -- array of order of mutations for heatmap (chromosome:coordinate)
 #' @param heatmapWidth -- number for width of the heatmap (in pixels)
+#' @rdname helpers
 getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
 
   # sort mutations by single cell, genomic position
@@ -1003,8 +1014,8 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
 
   # check that the number of mutation sites does not exceed 1 pixel per mutation site
   if (heatmapWidth < n_sites) {
-    stop(paste("The number of mutation sites (",n_sites,") cannot exceed the width of the plot (",
-      heatmapWidth,"). Either reduce the number of mutation sites, or increase the plot width.",sep=""))
+    stop("The number of mutation sites (",n_sites,") cannot exceed the width of the plot (",
+      heatmapWidth,"). Either reduce the number of mutation sites, or increase the plot width.")
   }
 
   # heatmap cell width
@@ -1033,6 +1044,7 @@ getTargetedHeatmapForEachSC <- function(mut_data, mut_order, heatmapWidth) {
 #' @examples
 #' findMode(c(1,1,19,1))
 #' @export
+#' @rdname helpers
 findMode <- function(x) {
   ux <- unique(x) # each unique value
   n_appearances <- tabulate(match(x, ux)) # number of appearances for each unique value
@@ -1044,21 +1056,21 @@ findMode <- function(x) {
 
 #' Function to process the user data
 #' @param clonal_prev -- data frame of Clonal prevalence. Note: timepoints will be alphanumerically sorted in the view.
-#'   Format: columns are (1) {String} "timepoint" - time point
-#'                       (2) {String} "clone_id" - clone id
-#'                       (3) {Number} "clonal_prev" - clonal prevalence.
+#'   Format: columns are (1) character() "timepoint" - time point
+#'                       (2) character() "clone_id" - clone id
+#'                       (3) numeric() "clonal_prev" - clonal prevalence.
 #' @param tree_edges -- data frame of Tree edges of a rooted tree.
-#'   Format: columns are (1) {String} "source" - source node id
-#'                       (2) {String} "target" - target node id.
+#'   Format: columns are (1) character() "source" - source node id
+#'                       (2) character() "target" - target node id.
 #' @param mutations -- data frame (Optional) of Mutations occurring at each clone. Any additional field will be shown in the mutation table.
-#'   Format: columns are (1) {String} "chrom" - chromosome number
-#'                       (2) {Number} "coord" - coordinate of mutation on chromosome
-#'                       (3) {String} "clone_id" - clone id
-#'                       (4) {String} "timepoint" - time point
-#'                       (5) {Number} "VAF" - variant allele frequency of the mutation in the corresponding timepoint. 
+#'   Format: columns are (1) character() "chrom" - chromosome number
+#'                       (2) numeric() "coord" - coordinate of mutation on chromosome
+#'                       (3) character() "clone_id" - clone id
+#'                       (4) character() "timepoint" - time point
+#'                       (5) numeric() "VAF" - variant allele frequency of the mutation in the corresponding timepoint. 
 #' @param clone_colours -- data frame (Optional) of Clone ids and their corresponding colours 
-#'   Format: columns are (1) {String} "clone_id" - the clone ids
-#'                       (2) {String} "colour" - the corresponding Hex colour for each clone id.
+#'   Format: columns are (1) character() "clone_id" - the clone ids
+#'                       (2) character() "colour" - the corresponding Hex colour for each clone id.
 #' @param xaxis_title -- String (Optional) of x-axis title. Default is "Time Point".
 #' @param yaxis_title -- String (Optional) of y-axis title. Default is "Clonal Prevalence".
 #' @param phylogeny_title -- String (Optional) of Legend phylogeny title. Default is "Clonal Phylogeny".
@@ -1069,10 +1081,10 @@ findMode <- function(x) {
 #'   "space" -- genotypes are stacked but with a bit of spacing at the bottom
 #' @param perturbations -- data frame (Optional) of any perturbations that occurred between two time points, 
 #'   and the fraction of total tumour content remaining.
-#'   Format: columns are (1) {String} "pert_name" - the perturbation name
-#'                       (2) {String} "prev_tp" - the time point (as labelled in clonal prevalence data) 
+#'   Format: columns are (1) character() "pert_name" - the perturbation name
+#'                       (2) character() "prev_tp" - the time point (as labelled in clonal prevalence data) 
 #'                                                BEFORE perturbation
-#'                       (3) {Number} "frac" - the fraction of total tumour content remaining at the 
+#'                       (3) numeric() "frac" - the fraction of total tumour content remaining at the 
 #'                                             time of perturbation, range [0, 1].
 #' @param sort -- Boolean (Optional) of whether (TRUE) or not (FALSE) to vertically sort the genotypes by their emergence values (descending). 
 #'                       Default is FALSE. 
@@ -1080,6 +1092,7 @@ findMode <- function(x) {
 #' @param show_warnings -- Boolean (Optional) of  Whether or not to show any warnings. Default is TRUE.
 #' @param width -- Number (Optional) of width of the plot. Minimum width is 450.
 #' @param height -- Number (Optional) of height of the plot. Minimum height with and without mutations is 500 and 260, respectively. 
+#' @rdname helpers
 processUserData <- function(clonal_prev, 
                       tree_edges, 
                       mutations,
@@ -1173,6 +1186,7 @@ processUserData <- function(clonal_prev,
 #' @examples
 #' checkMinDims(data.frame(chr = c("11"), coord = c(104043), VAF = c(0.1)), "700px", "700px")
 #' @export
+#' @rdname helpers
 checkMinDims <- function(mutations, height, width) {
 
   # set height if not set by user
@@ -1195,10 +1209,10 @@ checkMinDims <- function(mutations, height, width) {
   }
 
   if (height < min_height) {
-    stop(paste("Height must be greater than or equal to ", min_height, "px.", sep=""))
+    stop("Height must be greater than or equal to ", min_height, "px.")
   }
   if (width < min_width) {
-    stop(paste("Width must be greater than or equal to ", min_width, "px.", sep=""))
+    stop("Width must be greater than or equal to ", min_width, "px.")
   }
 }
 
@@ -1213,6 +1227,7 @@ checkMinDims <- function(mutations, height, width) {
 #' checkRequiredInputs(data.frame(timepoint = c(rep("Diagnosis", 6), rep("Relapse", 1)), clone_id = c("1","2","3","4","5","6","7"), clonal_prev = c("0.12","0.12","0.18","0.13","0.009","0.061","1")), 
 #' data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")))
 #' @export
+#' @rdname helpers
 checkRequiredInputs <- function(clonal_prev, tree_edges) {
 
   if (missing(clonal_prev)) {
@@ -1230,6 +1245,7 @@ checkRequiredInputs <- function(clonal_prev, tree_edges) {
 #' checkAlpha(4)
 #' checkAlpha(100)
 #' @export
+#' @rdname helpers
 checkAlpha <- function(alpha) {
   if (!is.numeric(alpha)) {
     stop("Alpha value must be numeric.")
@@ -1246,14 +1262,15 @@ checkAlpha <- function(alpha) {
 #' @examples
 #' checkClonalPrev(data.frame(timepoint=c(1), clone_id=c(2), clonal_prev=c(0.1)))
 #' @export
+#' @rdname helpers
 checkClonalPrev <- function(clonal_prev) {
 
   # ensure column names are correct
   if (!("timepoint" %in% colnames(clonal_prev)) ||
       !("clone_id" %in% colnames(clonal_prev)) ||
       !("clonal_prev" %in% colnames(clonal_prev))) {
-    stop(paste("Clonal prevalence data frame must have the following column names: ", 
-        "\"timepoint\", \"clone_id\", \"clonal_prev\"", sep=""))
+    stop("Clonal prevalence data frame must have the following column names: ", 
+        "\"timepoint\", \"clone_id\", \"clonal_prev\"")
   }
 
   # ensure data is of the correct type
@@ -1270,13 +1287,14 @@ checkClonalPrev <- function(clonal_prev) {
 #' @examples
 #' checkTreeEdges(data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")))
 #' @export
+#' @rdname helpers
 checkTreeEdges <- function(tree_edges) {
 
   # ensure column names are correct
   if (!("source" %in% colnames(tree_edges)) ||
       !("target" %in% colnames(tree_edges))) {
-    stop(paste("Tree edges data frame must have the following column names: ", 
-        "\"source\", \"target\"", sep=""))
+    stop("Tree edges data frame must have the following column names: ", 
+        "\"source\", \"target\"")
   }
 
   # ensure data is of the correct type
@@ -1298,8 +1316,8 @@ checkTreeEdges <- function(tree_edges) {
 
   # if multiple roots are detected, throw error
   if (length(sources) > 1) {
-    stop(paste("Multiple roots detected in tree (",paste(sources,collapse=", "),
-      ") - tree must have only one root.",sep=""))
+    stop("Multiple roots detected in tree (",paste(sources,collapse=", "),
+      ") - tree must have only one root.")
   }
 
   # if an edge is found whose source and target are equal, throw an error
@@ -1317,6 +1335,7 @@ checkTreeEdges <- function(tree_edges) {
 #' @examples
 #' checkGtypePositioning("centre")
 #' @export
+#' @rdname helpers
 checkGtypePositioning <- function(genotype_position) {
   if (!(genotype_position %in% c("stack", "centre", "space"))) {
     stop("Genotype position must be one of c(\"stack\", \"centre\", \"space\")")
@@ -1329,14 +1348,15 @@ checkGtypePositioning <- function(genotype_position) {
 #' @examples
 #' checkCloneColours(data.frame(clone_id = c("1","2","3", "4"), colour = c("#beaed4", "#fdc086", "#beaed4", "#beaed4")))
 #' @export
+#' @rdname helpers
 checkCloneColours <- function(clone_colours) {
   if (is.data.frame(clone_colours)) {
 
     # ensure column names are correct
     if (!("clone_id" %in% colnames(clone_colours)) ||
         !("colour" %in% colnames(clone_colours))) {
-      stop(paste("Node colour data frame must have the following column names: ", 
-          "\"clone_id\", \"colour\"", sep=""))
+      stop("Node colour data frame must have the following column names: ", 
+          "\"clone_id\", \"colour\"")
     }
   }
 }
@@ -1347,6 +1367,7 @@ checkCloneColours <- function(clone_colours) {
 #' @examples
 #' checkPerts(data.frame(pert_name = c("New Drug"), prev_tp = c("Diagnosis"), frac = c(0.1)))
 #' @export
+#' @rdname helpers
 checkPerts <- function(perturbations) {
 
   if (is.data.frame(perturbations)) {
@@ -1355,8 +1376,8 @@ checkPerts <- function(perturbations) {
     if (!("pert_name" %in% colnames(perturbations)) ||
         !("prev_tp" %in% colnames(perturbations)) ||
         !("frac" %in% colnames(perturbations))) {
-      stop(paste("Perturbations data frame must have the following column names: ", 
-          "\"pert_name\", \"prev_tp\", \"frac\"", sep=""))
+      stop("Perturbations data frame must have the following column names: ", 
+          "\"pert_name\", \"prev_tp\", \"frac\"")
     }
 
     # check that columns are of the correct type
@@ -1378,6 +1399,7 @@ checkPerts <- function(perturbations) {
 #' data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")), 
 #' data.frame(timepoint = c(rep("Diagnosis", 6), rep("Relapse", 1)), clone_id = c("1","2","3","4","5","6","7"), clonal_prev = c("0.12","0.12","0.18","0.13","0.009","0.061","1")))
 #' @export
+#' @rdname helpers
 getMutationsData <- function(mutations, tree_edges, clonal_prev) {
 
   if (is.data.frame(mutations)) {
@@ -1388,8 +1410,8 @@ getMutationsData <- function(mutations, tree_edges, clonal_prev) {
         !("clone_id" %in% colnames(mutations)) ||
         !("timepoint" %in% colnames(mutations)) ||
         !("VAF" %in% colnames(mutations))) {
-      stop(paste("Mutations data frame must have the following column names: ", 
-          "\"chrom\", \"coord\", \"clone_id\", \"timepoint\", \"VAF\".", sep=""))
+      stop("Mutations data frame must have the following column names: ", 
+          "\"chrom\", \"coord\", \"clone_id\", \"timepoint\", \"VAF\".")
     }
 
     # ensure data is of the correct type
@@ -1408,9 +1430,9 @@ getMutationsData <- function(mutations, tree_edges, clonal_prev) {
     tree_edges_clone_ids <- c(unique(tree_edges$source), unique(tree_edges$target))
     clone_ids_missing_from_tree_edges_data <- setdiff(mutations_clone_ids, tree_edges_clone_ids)
     if (length(clone_ids_missing_from_tree_edges_data) > 0) {
-      stop(paste("The following clone ID(s) are present in the mutations data but ",
+      stop("The following clone ID(s) are present in the mutations data but ",
         "are missing from the tree edges data: ",
-        paste(clone_ids_missing_from_tree_edges_data, collapse=", "), ".", sep=""))
+        paste(clone_ids_missing_from_tree_edges_data, collapse=", "), ".")
     }
 
     # check that all TIMEPOINTS in the mutations data are present in the clonal prev data
@@ -1418,9 +1440,9 @@ getMutationsData <- function(mutations, tree_edges, clonal_prev) {
     clonal_prev_tps <- unique(clonal_prev$timepoint)
     tps_missing_from_clonal_prev_data <- setdiff(mutations_tps, clonal_prev_tps)
     if (length(tps_missing_from_clonal_prev_data) > 0) {
-      stop(paste("The following timepoint(s) are present in the mutations data but ",
+      stop("The following timepoint(s) are present in the mutations data but ",
         "are missing from the clonal prevalence data: ",
-        paste(tps_missing_from_clonal_prev_data, collapse=", "), ".", sep=""))
+        paste(tps_missing_from_clonal_prev_data, collapse=", "), ".")
     }
 
     # create a location column, combining the chromosome and the coordinate
@@ -1432,8 +1454,8 @@ getMutationsData <- function(mutations, tree_edges, clonal_prev) {
     # check X & Y chromosomes are labelled "X" and "Y", not "23", "24"
     num_23 <- mutations[which(mutations$chrom == "23"),]
     if (nrow(num_23) > 0) {
-      stop(paste("Chromosome numbered \"23\" was detected in mutations data frame - X and Y chromosomes ",
-        "must be labelled \"X\" and \"Y\".", sep=""))
+      stop("Chromosome numbered \"23\" was detected in mutations data frame - X and Y chromosomes ",
+        "must be labelled \"X\" and \"Y\".")
     }
 
 
@@ -1485,6 +1507,7 @@ getMutationsData <- function(mutations, tree_edges, clonal_prev) {
 #' @param mutations -- mutations data from user
 #' @param mutation_prevalences -- mutation_prevalences data from user
 #' @export
+#' @rdname helpers
 #' @examples
 #' replaceSpaces(mutations = data.frame(chrom = c("11"), coord = c(104043), VAF = c(0.1), clone_id=c(1), timepoint=c("Relapse")), 
 #' tree_edges = data.frame(source = c("1","1","2","2","5","6"), target=c("2","5","3","4","6","7")), 

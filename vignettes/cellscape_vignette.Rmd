@@ -9,20 +9,28 @@ vignette: >
 
 CellScape is a visualization tool for integrating single cell phylogeny with genomic content to clearly display evolutionary progression and tumour heterogeneity. 
 
-To run CellScape, type the following commands in R:
+# Installation 
+
+To install CellScape, type the following commands in R:
 
 ```{r, eval=FALSE}
-install.packages("devtools") # if not already installed  
-library(devtools)  
-install_bitbucket("MO_BCCRC/cellscape")  
-library(cellscape)  
-example(cellscape) # to run examples
+# try http:// if https:// URLs are not supported
+source("https://bioconductor.org/biocLite.R")
+biocLite("cellscape")
+```
+
+# Examples 
+
+Run the examples by: 
+
+```{r, eval=FALSE}
+example("cellscape")
 ```
 
 One of these, for example, is copy number data of a triple negative breast cancer patient published in Wang et al. (2014).
 ```{r, echo=FALSE}
 library(devtools)  
-install_bitbucket("MO_BCCRC/cellscape")  
+install_bitbucket("shahlabbcca/cellscape")  
 library(cellscape) 
 # EXAMPLE 2 - COPY NUMBER DATA
 # single cell tree edges
@@ -37,16 +45,113 @@ clone_colours <- data.frame( clone_id = c("1","2","3"), colour = c("7fc97f", "be
 cellscape(cnv_data=cnv_data, tree_edges=tree_edges, sc_annot=sc_annot, width=800, height=475, show_warnings=FALSE, clone_colours=clone_colours)
 ```
 
+# Required parameters
+
+$cnv\_data$ (data frame) (Required if mut\_data not provided) Single cell copy number segments data. This data frame includes the following columns:
+
+1. character() $single\_cell\_id$ - single cell id
+2. character() $chr$ - chromosome number
+3. numeric() $start$ - start position
+4. numeric() $end$ - end position
+5. numeric() $integer\_copy\_number$ - copy number state.
+
+$mut\_data$ (data frame) (Required if cnv\_data not provided) Single cell targeted mutation data frame. This data frame includes the following columns:
+
+1. character() $single\_cell\_id$ - single cell id
+2. character() $chr$ - chromosome number
+3. numeric() $coord$ - genomic coordinate
+4. numeric() $VAF$ - variant allele frequency [0, 1].
+
+$tree\_edges$ (data frame) Edges for the single cell phylogenetic tree. This data frame includes the following columns:
+
+1. character() $source$ - edge source (single cell id)
+2. character() $target$ - edge target (single cell id)
+3. numeric() (Optional) $dist$ - edge distance
+
+# Parameters that are optional for CellScape, but required for a TimeScape
+
+These parameters may be included if the data is time-series, and the user would like to view a TimeScape of the data alongside the CellScape:
+
+$gtype\_tree\_edges$ (data frame) Genotype tree edges of a rooted tree. This data frame includes the following columns:
+
+1. character() $source$ - source node id
+2. character() $target$ - target node id.
+
+$sc\_annot$ (data frame) (Required for TimeScape) Annotations (genotype and sample id) for each single cell. This data frame includes the following columns:
+
+1. character() "single\_cell\_id" - single cell id
+2. character() "genotype" - genotype assignment
+3. character() (Optional) "timepoint" - id of the sampled time point. 
+
+If these two additional parameters are included, a TimeScape will be appended to the bottom of the view, like so:
+
+```{r, echo=FALSE}
+#' # single cell tree edges
+tree_edges <- read.csv(system.file("extdata", "targeted_tree_edges.csv", package = "cellscape"))
+#' # targeted mutations
+targeted_data <- read.csv(system.file("extdata", "targeted_muts.csv", package = "cellscape"))
+#' # genotype tree edges
+gtype_tree_edges <- data.frame("source"=c("Ancestral", "Ancestral", "B","C", "D"), "target"=c("A", "B", "C", "D", "E"))
+#' # annotations
+sc_annot <- read.csv(system.file("extdata", "targeted_annots.csv", package = "cellscape"))
+#' # mutation order
+mut_order <- scan(system.file("extdata", "targeted_mut_order.txt", package = "cellscape"), what=character())
+#' # run cellscape
+cellscape(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
+```
+
+# Optional parameters
+
+## Clone colours
+
+The colours of each clone may be changed by the $clone\_colours$ parameter. This data frame includes the following columns:
+
+1. character() $clone\_id$ - the clone ids
+2. character() $colour$ - the corresponding Hex colour for each clone id.
+
+## Titles
+
+Many titles throughout the view can be changed by the following parameters:
+
+1. $timepoint\_title$ character() (Optional) Legend title for timepoint groups. Default is "Timepoint".
+2. $clone\_title$ character() (Optional) Legend title for clones. Default is "Clone".
+3. $xaxis\_title$ character() (Optional) For TimeScape - x-axis title. Default is "Time Point".
+4. $yaxis\_title$ character() (Optional) For TimeScape - y-axis title. Default is "Clonal Prevalence".
+
+# Interactivity
+
+Interactive components: 
+
+1. Mouseover any single cell in the phylogeny to view its corresponding genomic profile in the heatmap, and vice versa. 
+2. Mouseover any part of the heatmap to view the CNV or VAF value for that copy number segment or mutation site, respectively. 
+3. Mouseover any branch of the phylogeny to view downstream single cells, both in the phylogeny and heatmap. 
+4. Mouseover any clone to view its corresponding single cells in the phylogeny and heatmap.
+5. Click any node in the phylogeny to flip the order of its descendant branches. 
+6. Use the selection tool in the tool bar to select single cell genomic profiles and view their corresponding single cells in the phylogeny. 
+7. Use the tree trimming tool in the tool bar to remove any branch of the phylogeny by clicking it. 
+8. Use the switch view tool in the tool bar to change the phylogeny view from force-directed to unidirectional, and vice versa. 
+9. If present, use the scale tree/graph tool in the tool bar to scale the phylogeny by the provided edge distances. 
+10. If time-series information is present such that the TimeScape is displayed below the CellScape, clones and time points are interactively linked in both views on mouseover. 
+11. Click the download buttons to download a PNG or SVG of the view. 
+
+# Documentation 
+
 To view the documentation for CellScape, type the following command in R:
 
 ```{r, eval=FALSE}
 ?cellscape
 ```
 
+# References
+
 CellScape was developed at the Shah Lab for Computational Cancer Biology at the BC Cancer Research Centre.
 
 References:  
 
 Eirew, Peter, et al. "Dynamics of genomic clones in breast cancer patient xenografts at single-cell resolution." Nature 518.7539 (2015): 422-426.
+
+Malikic, Salem, et al. "Clonality inference in multiple tumor samples using phylogeny." Bioinformatics 31.9 (2015): 1349-1356.
+
+Roth, Andrew, et al. "PyClone: statistical inference of clonal population structure in cancer." Nature methods 11.4 (2014): 396-398.
 
 Wang, Yong, et al. "Clonal evolution in breast cancer revealed by single nucleus genome sequencing." Nature 512.7513 (2014): 155-160.
