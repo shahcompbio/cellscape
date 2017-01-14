@@ -14,95 +14,193 @@ cellscape(cnv_data = NULL, mut_data = NULL, mut_order = NULL, tree_edges,
   show_warnings = TRUE, width = 900, height = 800)
 }
 \arguments{
-\item{cnv_data}{(data frame) (Required if mut_data not provided) Single cell copy number segments data. 
-Note that every single cell id must be present in the tree_edges data frame.
-Format: columns are (1) character() "single_cell_id" - single cell id
-                    (2) character() "chr" - chromosome number
-                    (3) numeric() "start" - start position
-                    (4) numeric() "end" - end position
-                    (5) numeric() "integer_copy_number" - copy number state.}
+\item{cnv_data}{\code{data.frame} (Required if mut_data not provided) 
+    Single cell copy number segments data. Note that every single cell id
+    must be present in the tree_edges data frame. Required columns are:
+    \describe{
 
-\item{mut_data}{(data frame) (Required if cnv_data not provided) Single cell targeted mutation data frame.
-Note that every single cell id must be present in the tree_edges data frame.
-Format: columns are (1) character() "single_cell_id" - single cell id
-                    (2) character() "chr" - chromosome number
-                    (3) numeric() "coord" - genomic coordinate
-                    (5) numeric() "VAF" - variant allele frequency [0, 1].}
+      \item{single_cell_id:}{\code{character()} single cell id.}
 
-\item{mut_order}{(vector) (Optional) Mutation order for targeted mutation heatmap 
-(each mutation should consist of a string in the form "chrom:coord"). 
-Default will use a clustering function to determine mutation order.}
+      \item{chr:}{\code{character()} chromosome number.}
 
-\item{tree_edges}{(data frame) Edges for the single cell phylogenetic tree.
-Format: columns are (1) character() "source" - edge source (single cell id)
-                    (2) character() "target" - edge target (single cell id)
-                    (2) numeric() (Optional) "dist" - edge distance}
+      \item{start:}{\code{numeric()} start position.}
 
-\item{gtype_tree_edges}{(data frame) (Required for TimeScape) Genotype tree edges of a rooted tree.
-Format: columns are (1) character() "source" - source node id
-                    (2) character() "target" - target node id.}
+      \item{end:}{\code{numeric()} end position.}
 
-\item{sc_annot}{(data frame) (Required for TimeScape) Annotations (genotype and sample id) for each single cell.
-Format: columns are (1) character() "single_cell_id" - single cell id
-                    (2) character() "genotype" - genotype assignment
-                    (3) character() (Optional) "timepoint" - id of the sampled time point. 
-                                               Note: in the case of time points, they will be ordered alphabetically}
+      \item{integer_copy_number:}{\code{numeric()} copy number state.}
 
-\item{clone_colours}{(data frame) (Optional) Clone ids and their corresponding colours 
-Format: columns are (1) character() "clone_id" - the clone ids
-                    (2) character() "colour" - the corresponding Hex colour for each clone id.}
+    }}
 
-\item{timepoint_title}{character() (Optional) Legend title for timepoint groups. Default is "Timepoint".}
+\item{mut_data}{\code{data.frame} (Required if cnv_data not provided) 
+    Single cell targeted mutation data frame. Note that every single cell id 
+    must be present in the tree_edges data frame. Required columns are:
+    \describe{
 
-\item{clone_title}{character() (Optional) Legend title for clones. Default is "Clone".}
+      \item{single_cell_id:}{\code{character()} single cell id.}
 
-\item{xaxis_title}{character() (Optional) For TimeScape - x-axis title. Default is "Time Point".}
+      \item{chr:}{\code{character()} chromosome number.}
 
-\item{yaxis_title}{character() (Optional) For TimeScape - y-axis title. Default is "Clonal Prevalence".}
+      \item{coord:}{\code{numeric()} genomic coordinate.}
 
-\item{phylogeny_title}{character() (Optional) For TimeScape - legend phylogeny title. Default is "Clonal Phylogeny".}
+      \item{VAF:}{\code{numeric()} variant allele frequency [0, 1].}
 
-\item{value_type}{character() (Optional) The type of value plotted in heatmap - will affect legend and heatmap tooltips. 
-Default is "VAF" for mutation data, and "CNV" for copy number data.}
+    }}
 
-\item{node_type}{character() (Optional) The type of node plotted in single cell phylogeny - will affect phylogeny tooltips. 
-Default is "Cell".}
+\item{mut_order}{\code{vector} (Optional) Mutation order for targeted 
+mutation heatmap (each mutation should consist of a string in the 
+form "chrom:coord"). Default will use a clustering function to 
+determine mutation order.}
 
-\item{display_node_ids}{logical() (Optional) Whether or not to display the single cell ID within the tree nodes. Default is FALSE.}
+\item{tree_edges}{\code{data.frame} Edges for the single cell phylogenetic 
+    tree. Required columns are:
+    \describe{
 
-\item{prop_of_clone_threshold}{numeric() (Optional) Used for the ordering of targeted mutations. The minimum proportion of a clone 
-to have a mutation in order to consider the mutation as present within that clone. Default is 0.2.}
+      \item{source:}{\code{character()} edge source (single cell id).}
 
-\item{vaf_threshold}{numeric() (Optional) Used for the ordering of targeted mutations. The minimum variant allele frequency for a mutation to
+      \item{target:}{\code{character()} edge target (single cell id).}
+
+    }
+    Optional columns are:
+    \describe{
+
+      \item{dist:}{\code{numeric()} edge distance.}
+
+    }}
+
+\item{gtype_tree_edges}{\code{data.frame} (Required for TimeScape) Genotype 
+    tree edges of a rooted tree. Required columns are:
+    \describe{
+
+      \item{source:}{\code{character()} source node id.}
+
+      \item{target:}{\code{character()} target node id.}
+
+    }}
+
+\item{sc_annot}{\code{data.frame} (Required for TimeScape) Annotations 
+    (genotype and sample id) for each single cell. Required columns are:
+    \describe{
+
+      \item{single_cell_id:}{\code{character()} single cell id.}
+
+      \item{genotype:}{\code{character()} genotype assignment.}
+
+    }
+    Optional columns are:
+    \describe{
+
+      \item{timepoint:}{\code{character()} id of the sampled time point. 
+          Note: time points will be ordered alphabetically. }
+
+    }}
+
+\item{clone_colours}{\code{data.frame} (Optional) Clone ids and their 
+    corresponding colours (in hex format). Required columns are:
+    \describe{
+
+      \item{clone_id:}{\code{character()} clone id.}
+
+      \item{colour:}{\code{character()} the corresponding Hex colour 
+         for each clone id.}
+
+    }}
+
+\item{timepoint_title}{\code{character()} (Optional) Legend title for 
+timepoint groups. Default is "Timepoint".}
+
+\item{clone_title}{\code{character()} (Optional) Legend title for clones. 
+Default is "Clone".}
+
+\item{xaxis_title}{\code{character()} (Optional) For TimeScape - x-axis title. 
+Default is "Time Point".}
+
+\item{yaxis_title}{\code{character()} (Optional) For TimeScape - y-axis title. 
+Default is "Clonal Prevalence".}
+
+\item{phylogeny_title}{\code{character()} (Optional) For TimeScape - legend 
+phylogeny title. Default is "Clonal Phylogeny".}
+
+\item{value_type}{\code{character()} (Optional) The type of value plotted in 
+heatmap - will affect legend and heatmap tooltips. Default is "VAF" for 
+mutation data, and "CNV" for copy number data.}
+
+\item{node_type}{\code{character()} (Optional) The type of node plotted in 
+single cell phylogeny - will affect phylogeny tooltips. Default is "Cell".}
+
+\item{display_node_ids}{\code{logical()} (Optional) Whether or not to display 
+the single cell ID within the tree nodes. Default is FALSE.}
+
+\item{prop_of_clone_threshold}{\code{numeric()} (Optional) Used for the 
+ordering of targeted mutations. The minimum proportion of a clone to have 
+a mutation in order to consider the mutation as present within that clone. 
+Default is 0.2.}
+
+\item{vaf_threshold}{\code{numeric()} (Optional) Used for the ordering of 
+targeted mutations. The minimum variant allele frequency for a mutation to 
 be considered as present within a single cell. Default is 0.05.}
 
-\item{show_warnings}{logical() (Optional) Whether or not to show any warnings. Default is TRUE.}
+\item{show_warnings}{\code{logical()} (Optional) Whether or not to show any 
+warnings. Default is TRUE.}
 
-\item{width}{numeric() (Optional) Width of the plot.}
+\item{width}{\code{numeric()} (Optional) Width of the plot.}
 
-\item{height}{numeric() (Optional) Height of the plot.}
+\item{height}{\code{numeric()} (Optional) Height of the plot.}
 }
 \description{
-\code{cellscape} explores single cell copy number profiles in the context of a single cell phylogeny.
+\code{cellscape} explores single cell copy number profiles in the 
+    context of a single cell phylogeny.
 }
 \details{
-Interactive components: \cr
+Interactive components:
+  \enumerate{
 
-1. Mouseover any single cell in the phylogeny to view its corresponding genomic profile in the heatmap, and vice versa. \cr
-2. Mouseover any part of the heatmap to view the CNV or VAF value for that copy number segment or mutation site, respectively. \cr
-3. Mouseover any branch of the phylogeny to view downstream single cells, both in the phylogeny and heatmap. \cr
-4. Mouseover any clone to view its corresponding single cells in the phylogeny and heatmap. \cr
-5. Click any node in the phylogeny to flip the order of its descendant branches. \cr
-6. Use the selection tool in the tool bar to select single cell genomic profiles and view their corresponding single cells in the phylogeny. \cr
-7. Use the tree trimming tool in the tool bar to remove any branch of the phylogeny by clicking it. \cr
-8. Use the switch view tool in the tool bar to change the phylogeny view from force-directed to unidirectional, and vice versa. \cr
-9. If present, use the scale tree/graph tool in the tool bar to scale the phylogeny by the provided edge distances. \cr
-10. If time-series information is present such that the TimeScape is displayed below the CellScape, clones and time points are interactively linked in both views on mouseover. \cr
-11. Click the download buttons to download a PNG or SVG of the view. \cr
+\item Mouseover any single cell in the phylogeny to view its 
+    corresponding genomic profile in the heatmap, and vice versa.
 
-Note: \cr
+\item Mouseover any part of the heatmap to view the CNV or VAF 
+    value for that copy number segment or mutation site, respectively.
 
-See TimeScape repo (https://bitbucket.org/MO_BCCRC/timescape) for more information about TimeScape. \cr
+\item Mouseover any branch of the phylogeny to view downstream 
+    single cells, both in the phylogeny and heatmap.
+
+\item Mouseover any clone to view its corresponding single cells 
+    in the phylogeny and heatmap.
+
+\item Click any node in the phylogeny to flip the order of its 
+    descendant branches.
+
+\item Use the selection tool in the tool bar to select single cell 
+    genomic profiles and view their corresponding single cells in the 
+    phylogeny.
+
+\item Use the tree trimming tool in the tool bar to remove any
+     branch of the phylogeny by clicking it.
+
+\item Use the switch view tool in the tool bar to change the 
+    phylogeny view from force-directed to unidirectional, and vice 
+    versa.
+
+\item Use the re-root phylogeny tool to root the phylogeny at a 
+    clicked node.
+
+\item Use the flip branch tool to vertically rotate any branch by 
+    clicking its root node.
+
+\item If present, use the scale tree/graph tool in the tool bar to 
+    scale the phylogeny by the provided edge distances.
+
+\item If time-series information is present such that the TimeScape 
+    is displayed below the CellScape, clones and time points are 
+    interactively linked in both views on mouseover.
+
+\item Click the download buttons to download a PNG or SVG of the view.
+
+}
+
+Note:
+
+See TimeScape repo (https://bitbucket.org/MO_BCCRC/timescape) for more 
+    information about TimeScape.
 }
 \examples{
 
@@ -113,30 +211,51 @@ library("cellscape")
 # EXAMPLE 1 - TARGETED MUTATION DATA
 
 # single cell tree edges
-tree_edges <- read.csv(system.file("extdata", "targeted_tree_edges.csv", package = "cellscape"))
+tree_edges <- read.csv(system.file("extdata", "targeted_tree_edges.csv", 
+    package = "cellscape"))
+
 # targeted mutations
-targeted_data <- read.csv(system.file("extdata", "targeted_muts.csv", package = "cellscape"))
+targeted_data <- read.csv(system.file("extdata", "targeted_muts.csv", 
+    package = "cellscape"))
+
 # genotype tree edges
-gtype_tree_edges <- data.frame("source"=c("Ancestral", "Ancestral", "B","C", "D"), "target"=c("A", "B", "C", "D", "E"))
+gtype_tree_edges <- data.frame("source"=c("Ancestral", "Ancestral", "B",
+    "C", "D"), "target"=c("A", "B", "C", "D", "E"))
+
 # annotations
-sc_annot <- read.csv(system.file("extdata", "targeted_annots.csv", package = "cellscape"))
+sc_annot <- read.csv(system.file("extdata", "targeted_annots.csv", 
+    package = "cellscape"))
+
 # mutation order
-mut_order <- scan(system.file("extdata", "targeted_mut_order.txt", package = "cellscape"), what=character())
+mut_order <- scan(system.file("extdata", "targeted_mut_order.txt", 
+    package = "cellscape"), what=character())
+
 # run cellscape
-cellscape(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
+cellscape(mut_data=targeted_data, tree_edges=tree_edges, sc_annot = 
+    sc_annot, gtype_tree_edges=gtype_tree_edges, mut_order=mut_order)
 
 
 # EXAMPLE 2 - COPY NUMBER DATA
 
 # single cell tree edges
-tree_edges <- read.csv(system.file("extdata", "cnv_tree_edges.csv", package = "cellscape"))
+tree_edges <- read.csv(system.file("extdata", "cnv_tree_edges.csv", 
+    package = "cellscape"))
+
 # cnv segments data
-cnv_data <- read.csv(system.file("extdata", "cnv_data.csv", package = "cellscape"))
+cnv_data <- read.csv(system.file("extdata", "cnv_data.csv", package = 
+    "cellscape"))
+
 # annotations
-sc_annot <- read.csv(system.file("extdata", "cnv_annots.tsv", package = "cellscape"), sep="\\t")
+sc_annot <- read.csv(system.file("extdata", "cnv_annots.tsv", package = 
+    "cellscape"), sep="\\t")
+
 # custom clone colours
-clone_colours <- data.frame( clone_id = c("1","2","3"), colour = c("7fc97f", "beaed4", "fdc086"))
+clone_colours <- data.frame( clone_id = c("1","2","3"), 
+    colour = c("7fc97f", "beaed4", "fdc086"))
+
 # run cellscape
-cellscape(cnv_data=cnv_data, tree_edges=tree_edges, sc_annot=sc_annot, width=800, height=475, show_warnings=FALSE, clone_colours=clone_colours)
+cellscape(cnv_data=cnv_data, tree_edges=tree_edges, sc_annot=sc_annot, 
+    width=800, height=475, show_warnings=FALSE, 
+    clone_colours = clone_colours)
 }
 

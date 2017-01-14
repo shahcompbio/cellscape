@@ -30,7 +30,8 @@ example("cellscape")
 One of these, for example, is copy number data of a triple negative breast cancer patient published in Wang et al. (2014).
 ```{r, echo=FALSE}
 library(devtools)  
-install_bitbucket("shahlabbcca/cellscape")  
+source("https://bioconductor.org/biocLite.R")
+biocLite("cellscape")
 library(cellscape) 
 # EXAMPLE 2 - COPY NUMBER DATA
 # single cell tree edges
@@ -133,6 +134,10 @@ Interactive components:
 9. If present, use the scale tree/graph tool in the tool bar to scale the phylogeny by the provided edge distances. 
 10. If time-series information is present such that the TimeScape is displayed below the CellScape, clones and time points are interactively linked in both views on mouseover. 
 11. Click the download buttons to download a PNG or SVG of the view. 
+
+# Obtaining the data 
+
+To obtain clonal composition information (optional for the use of this package), first use PyClone (Roth et al., 2014; source code available at https://bitbucket.org/aroth85/pyclone/wiki/Home) to obtain mutation clusters, then input these mutation clusters into CITUP (Malikic et al., 2016; source code available at https://github.com/sfu-compbio/citup), which will provide a clonal phylogeny and the prevalences of each clone.
 
 # Documentation 
 
