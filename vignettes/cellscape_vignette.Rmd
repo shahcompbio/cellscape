@@ -54,7 +54,7 @@ $cnv\_data$ (data frame) (Required if mut\_data not provided) Single cell copy n
 2. character() $chr$ - chromosome number
 3. numeric() $start$ - start position
 4. numeric() $end$ - end position
-5. numeric() $integer\_copy\_number$ - copy number state.
+5. numeric() $copy\_number$ - copy number state.
 
 $mut\_data$ (data frame) (Required if cnv\_data not provided) Single cell targeted mutation data frame. This data frame includes the following columns:
 
@@ -136,6 +136,10 @@ Interactive components:
 11. Click the download buttons to download a PNG or SVG of the view. 
 
 # Obtaining the data 
+
+To obtain single cell targeted mutation data, extract allele counts and compute variant allele frequencies (variant_count / total_count).
+
+To obtain single cell copy number data, there are two main approaches. The first approach is to use methods based on Hidden Markov Models (e.g. HMMcopy - http://compbio.bccrc.ca/software/hmmcopy/). The second approach is to use methods based on circular binary segmentation (CBS).
 
 To obtain clonal composition information (optional for the use of this package), first use PyClone (Roth et al., 2014; source code available at https://bitbucket.org/aroth85/pyclone/wiki/Home) to obtain mutation clusters, then input these mutation clusters into CITUP (Malikic et al., 2016; source code available at https://github.com/sfu-compbio/citup), which will provide a clonal phylogeny and the prevalences of each clone.
 

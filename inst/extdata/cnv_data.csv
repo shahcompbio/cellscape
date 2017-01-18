@@ -1,4 +1,4 @@
-"chr","start","end","integer_copy_number","single_cell_id"
+"chr","start","end","copy_number","single_cell_id"
 1,0,977835,NA,"c0"
 1,977836,3562166,0.866937563515,"c0"
 1,3562167,4151406,NA,"c0"

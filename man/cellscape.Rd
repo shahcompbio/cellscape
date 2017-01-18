@@ -27,7 +27,7 @@ cellscape(cnv_data = NULL, mut_data = NULL, mut_order = NULL, tree_edges,
 
       \item{end:}{\code{numeric()} end position.}
 
-      \item{integer_copy_number:}{\code{numeric()} copy number state.}
+      \item{copy_number:}{\code{numeric()} copy number state.}
 
     }}
 

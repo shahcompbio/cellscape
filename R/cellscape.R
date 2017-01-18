@@ -70,7 +70,7 @@
 #'
 #'       \item{end:}{\code{numeric()} end position.}
 #'
-#'       \item{integer_copy_number:}{\code{numeric()} copy number state.}
+#'       \item{copy_number:}{\code{numeric()} copy number state.}
 #'
 #'     }
 #' @param mut_data \code{data.frame} (Required if cnv_data not provided) 
@@ -352,9 +352,9 @@ cellscape <- function(cnv_data = NULL,
         !("chr" %in% colnames(cnv_data)) ||
         !("start" %in% colnames(cnv_data)) ||
         !("end" %in% colnames(cnv_data)) ||
-        !("integer_copy_number" %in% colnames(cnv_data))) {
+        !("copy_number" %in% colnames(cnv_data))) {
       stop("CNV data frame (parameter cnv_data) must have the following column names: ", 
-          "\"single_cell_id\", \"chr\", \"start\", \"end\", \"integer_copy_number\"")
+          "\"single_cell_id\", \"chr\", \"start\", \"end\", \"copy_number\"")
     }
 
     # ensure data is of the correct type
@@ -362,14 +362,14 @@ cellscape <- function(cnv_data = NULL,
     cnv_data$chr <- as.character(cnv_data$chr)
     cnv_data$start <- as.numeric(as.character(cnv_data$start))
     cnv_data$end <- as.numeric(as.character(cnv_data$end))
-    cnv_data$integer_copy_number <- as.numeric(as.character(cnv_data$integer_copy_number))
+    cnv_data$copy_number <- as.numeric(as.character(cnv_data$copy_number))
 
     # change "23" to "X", "24" to "Y"
     cnv_data$chr[which(cnv_data$chr == "23")] <- "X"
     cnv_data$chr[which(cnv_data$chr == "24")] <- "Y"
 
     # determine whether the data is discrete or continuous
-    cnvs_without_nas <- na.omit(cnv_data$integer_copy_number)
+    cnvs_without_nas <- na.omit(cnv_data$copy_number)
     continuous_cnv <- !all(cnvs_without_nas == floor(cnvs_without_nas))
 
     # check that the number of single cells does not exceed the height of the plot
@@ -1004,9 +1004,9 @@ getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
   # save their middles (for segments with length greater than 2)
   segs_gt_2 <- segment_ends_info[which(segment_ends_info$px_width > 2),]
   segs_gt_2$px_width <- segs_gt_2$px_width - 2 # subtract 2 (for 2 ends) from pixel width
-  middles <- segs_gt_2[,c("single_cell_id", "start_px", "px_width", "integer_copy_number", "chr", "chrom_index")]
+  middles <- segs_gt_2[,c("single_cell_id", "start_px", "px_width", "copy_number", "chr", "chrom_index")]
   colnames(middles)[which(colnames(middles) == "start_px")] <- "px"
-  colnames(middles)[which(colnames(middles) == "integer_copy_number")] <- "mode_cnv"
+  colnames(middles)[which(colnames(middles) == "copy_number")] <- "mode_cnv"
   middles$px <- middles$px + 1 # first pixel will be a start pixel, so we shift 1
 
   # note any segments that occupy one pixel only
@@ -1019,7 +1019,7 @@ getCNVHeatmapForEachSC <- function(cnv_data, chrom_bounds, n_bp_per_pixel) {
 
   # find the mode cnv of all starts, ends, and singles
   starts_ends_singles_grouped <- dplyr::group_by(starts_ends_singles, single_cell_id, px, px_width, chr, chrom_index)
-  starts_ends_singles_w_mode <- dplyr::summarise(starts_ends_singles_grouped, mode_cnv=findMode(integer_copy_number)[["mode"]])
+  starts_ends_singles_w_mode <- dplyr::summarise(starts_ends_singles_grouped, mode_cnv=findMode(copy_number)[["mode"]])
   starts_ends_singles_w_mode <- as.data.frame(starts_ends_singles_w_mode)
 
   # bind the starts, ends, singles and middles
