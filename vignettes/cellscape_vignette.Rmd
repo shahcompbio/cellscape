@@ -137,9 +137,15 @@ Interactive components:
 
 # Obtaining the data 
 
-To obtain single cell targeted mutation data, extract allele counts and compute variant allele frequencies (variant_count / total_count).
+### Targeted mutation data:
 
-To obtain single cell copy number data, there are two main approaches. The first approach is to use methods based on Hidden Markov Models (e.g. HMMcopy - http://compbio.bccrc.ca/software/hmmcopy/). The second approach is to use methods based on circular binary segmentation (CBS).
+To obtain single-cell targeted mutation data, extract reference and variant allele counts for target positions from your single-cell BAM files. Then compute variant allele frequencies (variant\_count / (variant\_count + reference\_count)). Finally, import the data into R, and wrangle it into a data frame with single cell ID, chromosome, coordinate, and VAF.
+
+### Copy number data:
+
+To obtain single-cell copy number data, extract binned read counts from single-cell BAM files, apply GC and/or mappability correction to the raw counts, and infer copy number segments. Segments can be inferred using tools based on Hidden Markov Models (e.g. HMMcopy, http://bioconductor.org/packages/release/bioc/html/HMMcopy.html), or Circular Binary Segmentation (e.g. DNAcopy, https://bioconductor.org/packages/release/bioc/html/DNAcopy.html). For HMMcopy, the function HMMsegment provides the chromosome, start position, end position, copy number state, and median copy number value for all inferred segments. This can be wangled into a data frame with single cell ID, chromosome start, chromosome end, and copy number (either the integer copy number state, or the segment median). Recommended parameter settings for single-cell copy number inference with HMMcopy can be found here: http://www.nature.com/nmeth/journal/vaop/ncurrent/full/nmeth.4140.html.
+
+### Clonal composition data:
 
 To obtain clonal composition information (optional for the use of this package), first use PyClone (Roth et al., 2014; source code available at https://bitbucket.org/aroth85/pyclone/wiki/Home) to obtain mutation clusters, then input these mutation clusters into CITUP (Malikic et al., 2016; source code available at https://github.com/sfu-compbio/citup), which will provide a clonal phylogeny and the prevalences of each clone.
 
