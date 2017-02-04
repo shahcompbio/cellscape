@@ -157,6 +157,12 @@ To view the documentation for CellScape, type the following command in R:
 ?cellscape
 ```
 
+or:
+
+```{r, eval=FALSE}
+browseVignettes("cellscape") 
+```
+
 # References
 
 CellScape was developed at the Shah Lab for Computational Cancer Biology at the BC Cancer Research Centre.
